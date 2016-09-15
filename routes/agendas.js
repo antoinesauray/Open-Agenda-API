@@ -9,7 +9,7 @@ const MAX_DAY=31;
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-    return res.send('{\"id\": 1,\"name\": "Polytechno" "img": "https://scontent-cdg2-1.xx.fbcdn.net/v/t1.0-9/13062217_622303644601590_6052671287158016227_n.png?oh=7e1b2fea484cd25c59daf24d52e95f32&oe=583A9CDA"}');
+    return res.send('{\"agendas\": [{\"identifier\": "polytechno",\"name\": \"Polytechno\", \"image\": \"https://scontent-cdg2-1.xx.fbcdn.net/v/t1.0-9/13062217_622303644601590_6052671287158016227_n.png?oh=7e1b2fea484cd25c59daf24d52e95f32&oe=583A9CDA\"}]}');
 });
 
 router.get('/:id', function(req, res, next) {
@@ -18,7 +18,7 @@ router.get('/:id', function(req, res, next) {
         return res.send('Error 404: No week found');
     }
     res.statusCode=200;
-    return res.send('{\"id\": 1,\"name\": "Polytechno" "img": "https://scontent-cdg2-1.xx.fbcdn.net/v/t1.0-9/13062217_622303644601590_6052671287158016227_n.png?oh=7e1b2fea484cd25c59daf24d52e95f32&oe=583A9CDA"}');
+    return res.send('{\"id\": 1,\"name\": "Polytechno" "image": "https://scontent-cdg2-1.xx.fbcdn.net/v/t1.0-9/13062217_622303644601590_6052671287158016227_n.png?oh=7e1b2fea484cd25c59daf24d52e95f32&oe=583A9CDA"}');
 });
 
 // wi stands for week identifier. Here we consider the number in the calendar.
