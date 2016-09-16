@@ -16,7 +16,7 @@ router.get('/', function(req, res, next) {
 router.post('/', function(req, res, next) {
     if(req.body.access_token!=null){
         FB.setAccessToken(req.body.access_token);
-        FB.api('/me', { fields: ['id', 'mail', 'first_name', 'last_name'] }, function (response) {
+        FB.api('/me', { fields: ['id', 'email', 'first_name', 'last_name'] }, function (response) {
             console.log("response: "+response);
             if(!response || response.error) {
                 res.statusCode=400;
@@ -32,12 +32,12 @@ router.post('/', function(req, res, next) {
                     User.create({
                             firstName: response.first_name,
                             lastName: response.last_name,
-                            mail: response.mail,
+                            mail: response.email,
                             facebookId: response.id,
                             facebookToken: req.body.access_token
                     });
                     res.statusCode=201;
-                    res.json({first_name: response.first_name, last_name: response.last_name, mail: response.mail})
+                    res.json({first_name: response.first_name, last_name: response.last_name, mail: response.email})
                 }
                 else{
                     res.statusCode=200;
