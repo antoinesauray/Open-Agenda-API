@@ -37,13 +37,11 @@ router.post('/', function(req, res, next) {
                             facebookToken: req.body.access_token
                     });
                     res.statusCode=201;
-                    res.json({"first_name": \""+response.first_name+"\", last_name": \""+response.last_name+"\", mail": \""+response.mail+"\""})
-                    console.log(response.first_name);
+                    res.json({first_name: response.first_name, last_name: response.last_name+, mail: response.mail})
                 }
                 else{
                     res.statusCode=200;
-                    res.json({"first_name": \""+user.firstName+"\", last_name": \""+user.lastName+"\", mail": \""+user.mail+"\""})
-                    console.log(response.first_name);
+                    res.json({first_name: user.firstName, last_name: user.lastName+, mail: user.mail})
                 }
             });
 
