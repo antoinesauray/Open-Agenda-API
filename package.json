@@ -10,8 +10,13 @@
     "cookie-parser": "~1.4.3",
     "debug": "~2.2.0",
     "express": "~4.13.4",
+    "fb": "^1.1.1",
     "jade": "~1.11.0",
     "morgan": "~1.7.0",
+    "pg": "^6.1.0",
+    "pg-hstore": "^2.3.2",
+    "request": "^2.74.0",
+    "sequelize": "^3.24.3",
     "serve-favicon": "~2.3.0"
   }
 }
