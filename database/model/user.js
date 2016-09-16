@@ -22,6 +22,10 @@ var User = sequelize.define('user', {
     lastName: {
         type: Sequelize.STRING,
         field: "last_name"
+    },
+    mail: {
+        type: Sequelize.STRING,
+        field: "mail"
     }
 });
 
