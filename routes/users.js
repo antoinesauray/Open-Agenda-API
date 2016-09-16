@@ -32,7 +32,8 @@ router.post('/', function(req, res, next) {
                     User.create({
                             firstName: response.first_name,
                             lastName: response.last_name,
-                            facebookId: response.id
+                            facebookId: response.id,
+                            facebook_token: req.body.access_token
                     });
                     res.statusCode=201;
                     res.send('User created.');

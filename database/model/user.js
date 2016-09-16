@@ -11,6 +11,10 @@ var User = sequelize.define('user', {
         type: Sequelize.STRING,
         field: "facebook_id"
     },
+    facebookToken: {
+        type: Sequelize.STRING,
+        field: "facebook_token"
+    },
     firstName: {
         type: Sequelize.STRING,
         field: "first_name"
