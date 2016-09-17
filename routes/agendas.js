@@ -52,7 +52,7 @@ router.get('/:id/:date', function(req, res, next) {
             date: req.params.date
         }
     }).then(function(events){
-        if(events!=null){
+        if(events){
             res.statusCode=200;
             res.send(events);
         }
