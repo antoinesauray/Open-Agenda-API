@@ -2,7 +2,6 @@ var Sequelize = require('sequelize');
 var database = new Sequelize('edt', 'edt_admin', 'pass', {
   host: 'localhost',
   dialect: 'postgres',
-
   pool: {
     max: 5,
     min: 0,

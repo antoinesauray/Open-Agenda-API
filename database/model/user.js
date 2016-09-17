@@ -27,11 +27,13 @@ var User = sequelize.define('user', {
         type: Sequelize.STRING,
         field: "mail"
     }
-});
+},
+{
+    underscored: true
+}
+);
 
-// force: true will drop the table if it already exists
-User.sync({force: true}).then(function () {
-    return;
-});
-
+// perform the database creation and synchronisation.
+sequelize.sync();
+// export the variable to make it available to other files.
 exports.User = User;
