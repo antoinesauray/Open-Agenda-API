@@ -66,17 +66,31 @@ router.get('/:id/:date', function(req, res, next) {
 // wi stands for week identifier. Here we consider the number in the calendar.
 // di stands for day identifier. Here we consider the number the the provided week.
 // 0 is for Monday. 6 is for Sunday.
-router.get('/:id/week/:wi/:di', function(req, res, next) {
-    if(req.params.wi == null || req.params.wi > MAX_WEEK || req.params.wi<MIN_WEEK){
-        res.statusCode=404;
-        return res.send('Error 404: No week found');
+router.get('/:id/:start_date/:end_date', function(req, res, next) {
+    if(req.params.id && req.params.start_date && req.params.end_date){
+        AgendaEvent.findAll({
+            where: {
+                date:{
+                    $lte: req.params.end_date,
+                    $gte: req.params.start_date
+                },
+                agenda_id: req.params.id,
+            }
+        }).then(function(events){
+            if(events){
+                res.statusCode=200;
+                res.send(events);
+            }
+            else{
+                res.statusCode=200;
+                res.json({});
+            }
+        });
     }
-    if(req.params.di == null || req.params.di > MAX_DAY || req.params.di < MIN_DAY){
+    else{
         res.statusCode=404;
-        return res.send('Error 404: No day found');
+        return res.json({});
     }
-    res.statusCode=200;
-    return res.send('{\"id\": 1,\"name\": "Polytechno"}');
-});
 
+});
 module.exports = router;
