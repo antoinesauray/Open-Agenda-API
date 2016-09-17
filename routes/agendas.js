@@ -4,6 +4,7 @@ var router = express.Router();
 var sequelize = require('../database/sequelize');
 var Agenda = require('../database/model/agenda').Agenda;
 var AgendaEvent = require('../database/model/agenda').AgendaEvent;
+var AgendaType = require('../database/model/agenda_type').AgendaType;
 var database = sequelize.database;
 
 const MIN_WEEK=0;
@@ -22,25 +23,28 @@ router.get('/', function(req, res, next) {
         if(req.query.entity){
             Agenda.findAll({
                 where: {
-                    type: req.query.type,
-                    entity: req.query.entity
+                    agenda_type_id: req.query.type,
+                    agenda_entity_id: req.query.entity
                 }
             }).then(function(agendas){
+                res.statusCode=200;
                 res.send(agendas);
             });
         }
         else{
             Agenda.findAll({
                 where: {
-                    type: req.query.type
+                    agenda_type_id: req.query.type
                 }
             }).then(function(agendas){
+                res.statusCode=200;
                 res.send(agendas);
             });
         }
     }
     else{
         Agenda.findAll().then(function(agendas){
+            res.statusCode=200;
             res.send(agendas);
         });
     }
@@ -53,7 +57,7 @@ router.get('/:id', function(req, res, next) {
     }
     Agenda.findOne({
         where: {
-            type: req.params.id
+            id: req.params.id
         }
     }).then(function(agenda){
         if(agenda){

@@ -1,5 +1,7 @@
 var Sequelize = require('sequelize');
 var sequelize = require('../sequelize').database;
+var Entity = require('./entity').Entity;
+var AgendaType = require('./agenda_type').AgendaType;
 var Agenda = sequelize.define('agenda', {
     id: {
         type: Sequelize.INTEGER,
@@ -14,14 +16,6 @@ var Agenda = sequelize.define('agenda', {
     image: {
         type: Sequelize.STRING,
         field: "image"
-    },
-    type: {
-        type: Sequelize.STRING(20),
-        field: "type"
-    },
-    entity: {
-        type: Sequelize.STRING,
-        field: "entity"
     }
 },
 {
@@ -46,6 +40,9 @@ var AgendaEvent = sequelize.define('agenda_event', {
 
 // create the association between Agenda and Agenda Events.
 Agenda.hasMany( AgendaEvent, { as: 'agenda_event' } );
+Agenda.belongsTo(Entity, {as: 'agenda_entity'});
+Agenda.belongsTo(AgendaType, {as: 'agenda_type'});
+
 // Synchronize the database.
 // export the variables
 exports.Agenda = Agenda;
