@@ -3,10 +3,9 @@ var sequelize = require('../sequelize').database;
 var AgendaType = require('./agenda_type').AgendaType;
 var Entity = sequelize.define('entity', {
     id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-        field: "id"
+        type: Sequelize.STRING(20),
+        field: "id",
+        primaryKey: true
     },
     name: {
         type: Sequelize.STRING,
