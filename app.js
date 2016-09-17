@@ -58,5 +58,11 @@ app.use(function(err, req, res, next) {
   });
 });
 
+/*
+var sequelize = require('./database/sequelize').database;
+ // sync() will create all table if they doesn't exist in database
+sequelize.sync().then(function () {
+});
+*/
 
 module.exports = app;

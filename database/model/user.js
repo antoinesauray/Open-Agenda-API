@@ -33,7 +33,5 @@ var User = sequelize.define('user', {
 }
 );
 
-// perform the database creation and synchronisation.
-sequelize.sync();
 // export the variable to make it available to other files.
 exports.User = User;
