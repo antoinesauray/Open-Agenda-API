@@ -10,6 +10,18 @@ var Agenda = sequelize.define('agenda', {
     name: {
         type: Sequelize.STRING,
         field: "name"
+    },
+    image: {
+        type: Sequelize.STRING,
+        field: "image"
+    },
+    type: {
+        type: Sequelize.STRING(20),
+        field: "type"
+    },
+    entity: {
+        type: Sequelize.STRING,
+        field: "entity"
     }
 },
 {
@@ -35,8 +47,6 @@ var AgendaEvent = sequelize.define('agenda_event', {
 // create the association between Agenda and Agenda Events.
 Agenda.hasMany( AgendaEvent, { as: 'agenda_event' } );
 // Synchronize the database.
-sequelize.sync();
-
 // export the variables
 exports.Agenda = Agenda;
 exports.AgendaEvent = AgendaEvent;

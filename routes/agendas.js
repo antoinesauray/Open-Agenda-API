@@ -13,29 +13,56 @@ const MIN_DAY=0;
 const MAX_DAY=31;
 
 /* GET users listing. */
+
+// type:
+// university
+// lifestyle
 router.get('/', function(req, res, next) {
-    Agenda.findAll().then(function(agendas){
-        res.send(agendas);
-    });
+    if(req.query.type){
+        if(req.query.entity){
+            Agenda.findAll({
+                where: {
+                    type: req.query.type,
+                    entity: req.query.entity
+                }
+            }).then(function(agendas){
+                res.send(agendas);
+            });
+        }
+        else{
+            Agenda.findAll({
+                where: {
+                    type: req.query.type
+                }
+            }).then(function(agendas){
+                res.send(agendas);
+            });
+        }
+    }
+    else{
+        Agenda.findAll().then(function(agendas){
+            res.send(agendas);
+        });
+    }
 });
 
 router.get('/:id', function(req, res, next) {
     if(req.params.id == null){
         res.statusCode=404;
-        return res.send('Error 404: No week found');
+        return res.send('Error 404: No agenda found');
     }
     Agenda.findOne({
         where: {
-            id: req.params.id
+            type: req.params.id
         }
     }).then(function(agenda){
-        if(agenda!=null){
+        if(agenda){
             res.statusCode=200;
-            return res.send(agenda);
+             res.send(agenda);
         }
         else{
             res.statusCode=200;
-            return res.json({});
+            res.json({});
         }
     });
 });

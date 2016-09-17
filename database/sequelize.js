@@ -18,4 +18,9 @@ database
     console.log('Unable to connect to the database:', err);
   });
 
+  database.sync({
+      force: false
+  });
+
+
 exports.database = database;

@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var agendas = require('./routes/agendas');
+var entities = require('./routes/entities');
 
 var app = express();
 
@@ -26,6 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 app.use('/users', users);
 app.use('/agendas', agendas);
+app.use('/entities', entities);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -58,11 +60,5 @@ app.use(function(err, req, res, next) {
   });
 });
 
-/*
-var sequelize = require('./database/sequelize').database;
- // sync() will create all table if they doesn't exist in database
-sequelize.sync().then(function () {
-});
-*/
 
 module.exports = app;
