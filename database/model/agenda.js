@@ -28,6 +28,14 @@ var AgendaEvent = sequelize.define('agenda_event', {
         type: Sequelize.DATEONLY,
         field: "date"
     },
+    start_time: {
+        type: Sequelize.TIME,
+        field: "start_time"
+    },
+    end_time: {
+        type: Sequelize.TIME,
+        field: "end_time"
+    },
     name: {
         type: Sequelize.STRING,
         field: "name"
