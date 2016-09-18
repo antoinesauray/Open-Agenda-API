@@ -19,12 +19,12 @@ const MAX_DAY=31;
 // university
 // lifestyle
 router.get('/', function(req, res, next) {
-    if(req.query.type){
-        if(req.query.entity){
+    if(req.params.type){
+        if(req.params.entity){
             Agenda.findAll({
                 where: {
-                    agenda_type_id: req.query.type,
-                    agenda_entity_id: req.query.entity
+                    agenda_type_id: req.params.type,
+                    agenda_entity_id: req.params.entity
                 }
             }).then(function(agendas){
                 res.statusCode=200;
@@ -34,7 +34,7 @@ router.get('/', function(req, res, next) {
         else{
             Agenda.findAll({
                 where: {
-                    agenda_type_id: req.query.type
+                    agenda_type_id: req.params.type
                 }
             }).then(function(agendas){
                 res.statusCode=200;
