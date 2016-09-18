@@ -19,38 +19,24 @@ const MAX_DAY=31;
 // university
 // lifestyle
 router.get('/', function(req, res, next) {
-    if(req.params.type){
-        if(req.params.entity){
-            Agenda.findAll({
-                where: {
-                    agenda_type_id: req.params.type,
-                    agenda_entity_id: req.params.entity
-                }
-            }).then(function(agendas){
-                res.statusCode=200;
-                res.send(agendas);
-            });
-        }
-        else{
-            Agenda.findAll({
-                where: {
-                    agenda_type_id: req.params.type
-                }
-            }).then(function(agendas){
-                res.statusCode=200;
-                res.send(agendas);
-            });
-        }
+    var associativeArray = {}
+    if(req.query.type){
+        associativeArray["agenda_type_id"]=req.query.type;
     }
-    else{
-        Agenda.findAll().then(function(agendas){
-            res.statusCode=200;
-            res.send(agendas);
-        });
+    if(req.query.entity){
+        associativeArray["agenda_entity_id"]=req.query.entity;
     }
+    console.log(associativeArray);
+    Agenda.findAll({
+        where: associativeArray
+    }).then(function(agendas){
+        res.statusCode=200;
+        res.send(agendas);
+    });
 });
 
 router.get('/:id', function(req, res, next) {
+    console.log(req.params);
     if(req.params.id == null){
         res.statusCode=404;
         return res.send('Error 404: No agenda found');
