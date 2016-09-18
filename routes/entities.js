@@ -23,10 +23,10 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/:type', function(req, res, next){
-    if(req.query.type){
+    if(req.params.type){
         Entity.findAll({
             where: {
-                agenda_type_id: req.query.type
+                agenda_type_id: req.params.type
             }
         }).then(function(agendas){
             res.statusCode=200;
