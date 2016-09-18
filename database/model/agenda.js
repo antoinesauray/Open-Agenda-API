@@ -2,6 +2,7 @@ var Sequelize = require('sequelize');
 var sequelize = require('../sequelize').database;
 var Entity = require('./entity').Entity;
 var AgendaType = require('./agenda_type').AgendaType;
+var EventType = require('./event_type').EventType;
 var Agenda = sequelize.define('agenda', {
     id: {
         type: Sequelize.INTEGER,
@@ -39,6 +40,10 @@ var AgendaEvent = sequelize.define('agenda_event', {
     name: {
         type: Sequelize.STRING,
         field: "name"
+    },
+    image: {
+        type: Sequelize.STRING,
+        field: "image"
     }
 },
 {
@@ -47,6 +52,7 @@ var AgendaEvent = sequelize.define('agenda_event', {
 );
 
 // create the association between Agenda and Agenda Events.
+AgendaEvent.belongsTo(EventType, {as: 'event_type'});
 Agenda.hasMany( AgendaEvent, { as: 'agenda_event' } );
 Agenda.belongsTo(Entity, {as: 'agenda_entity'});
 Agenda.belongsTo(AgendaType, {as: 'agenda_type'});
