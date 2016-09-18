@@ -45,9 +45,9 @@ var AgendaEvent = sequelize.define('agenda_event', {
         type: Sequelize.STRING,
         field: "image"
     },
-    json_info: {
+    more: {
         type: Sequelize.JSONB,
-        field: "json_info"
+        field: "more"
     }
 },
 {

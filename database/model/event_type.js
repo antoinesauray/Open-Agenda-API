@@ -1,6 +1,6 @@
 var Sequelize = require('sequelize');
 var sequelize = require('../sequelize').database;
-var EventType = sequelize.define('agenda_type', {
+var EventType = sequelize.define('event_type', {
     id: {
         type: Sequelize.STRING(20),
         field: "id",

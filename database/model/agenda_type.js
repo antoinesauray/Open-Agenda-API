@@ -5,10 +5,6 @@ var AgendaType = sequelize.define('agenda_type', {
         type: Sequelize.STRING(20),
         field: "id",
         primaryKey: true
-    },
-    name: {
-        type: Sequelize.STRING,
-        field: "name"
     }
 },
 {

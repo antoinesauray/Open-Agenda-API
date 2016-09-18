@@ -6,9 +6,16 @@ var AgendaEvent = require('../database/model/agenda').AgendaEvent;
 var database = sequelize.database;
 
 
-Agenda.create({name: 'BDE Polytech', agenda_type_id: "university", agenda_entity_id: "chantrery-gavy"}).then(function(agenda) {
-    console.log("inserted id: "+agenda.id);
-    AgendaEvent.create({name: "Yellow Party", agenda_id: agenda.id, date: new Date("2004-10-19")}).then(function(task) {
+/*
+    Agendas
+*/
+Agenda.create({name: 'SILR4 - G1', agenda_entity_id: 'chantrery-gavy', agenda_type_id: 'university'}).then(function(entity) {});
+Agenda.create({name: 'SILR4 - G2', agenda_entity_id: 'chantrery-gavy', agenda_type_id: 'university'}).then(function(entity) {});
+Agenda.create({name: 'ID4', agenda_entity_id: 'chantrery-gavy', agenda_type_id: 'university'}).then(function(entity) {});
+Agenda.create({name: 'INFO4 - Promotion', agenda_entity_id: 'chantrery-gavy', agenda_type_id: 'university'}).then(function(entity) {});
 
-    });
-});
+Agenda.create({name: 'License Droit', agenda_entity_id: 'univ-nantes', agenda_type_id: 'university'}).then(function(entity) {});
+Agenda.create({name: 'Master Droit', agenda_entity_id: 'univ-nantes', agenda_type_id: 'university'}).then(function(entity) {});
+
+Agenda.create({name: 'Soirées au Hangar', agenda_entity_id: 'soiree-nantes', agenda_type_id: 'lifestyle'}).then(function(entity) {});
+Agenda.create({name: 'Soirées étudiantes', agenda_entity_id: 'soiree-nantes', agenda_type_id: 'lifestyle'}).then(function(entity) {});

@@ -5,6 +5,10 @@ var AgendaType = require('../database/model/agenda_type').AgendaType;
 var database = sequelize.database;
 
 
-AgendaType.create({id: "university", name: 'University'}).then(function(agenda_type) {
-    console.log("inserted id: "+agenda_type.id);
-});
+/*
+    Types of Agenda available:
+    University
+    Lifestyle
+*/
+AgendaType.create({id: 'university'}).then(function(agenda_type) {});
+AgendaType.create({id: 'lifestyle'}).then(function(agenda_type) {});
