@@ -4,6 +4,7 @@ var router = express.Router();
 var sequelize = require('../database/sequelize');
 var Agenda = require('../database/model/agenda').Agenda;
 var AgendaEvent = require('../database/model/agenda').AgendaEvent;
+var EventType = require('../database/model/event_type').EventType;
 var AgendaType = require('../database/model/agenda_type').AgendaType;
 var database = sequelize.database;
 
@@ -86,6 +87,10 @@ router.get('/:id/:date', function(req, res, next) {
 router.get('/:id/:start_date/:end_date', function(req, res, next) {
     if(req.params.id && req.params.start_date && req.params.end_date){
         AgendaEvent.findAll({
+            attributes: ['id', 'date', 'start_time', 'end_time', 'name', 'image', 'more', 'created_at', 'updated_at'],
+            include: [
+                { model: EventType , attributes: ['id', 'color_light', 'color_dark'], as: 'event_type'}
+            ],
             where: {
                 date:{
                     $lte: req.params.end_date,

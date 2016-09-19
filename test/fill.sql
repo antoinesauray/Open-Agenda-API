@@ -19,8 +19,8 @@ INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id",
 INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id","agenda_type_id") VALUES (DEFAULT,'Soirées au Hangar','2016-09-18 17:10:43.374 +00:00','2016-09-18 17:10:43.374 +00:00','soiree-nantes','lifestyle') RETURNING *;
 INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id","agenda_type_id") VALUES (DEFAULT,'Soirées étudiantes','2016-09-18 17:10:43.374 +00:00','2016-09-18 17:10:43.374 +00:00','soiree-nantes','lifestyle') RETURNING *;
 
-INSERT INTO "event_types"("id", "color", "created_at","updated_at") VALUES('cm', '#FFFFFF', '2016-09-18 17:11:49.155 +00:00','2016-09-18 17:11:49.155 +00:00');
-INSERT INTO "event_types"("id", "color", "created_at","updated_at") VALUES('td', '#FFFFFF', '2016-09-18 17:11:49.155 +00:00','2016-09-18 17:11:49.155 +00:00');
+INSERT INTO "event_types"("id", "color_light", "color_dark", "created_at","updated_at") VALUES('cm', '#4caf50', '#2e7d32', '2016-09-18 17:11:49.155 +00:00','2016-09-18 17:11:49.155 +00:00');
+INSERT INTO "event_types"("id", "color_light", "color_dark", "created_at","updated_at") VALUES('td', '#673ab7', '#512da8', '2016-09-18 17:11:49.155 +00:00','2016-09-18 17:11:49.155 +00:00');
 
 INSERT INTO "agenda_events" ("id","agenda_id", "event_type_id", "date","start_time","end_time","name","image","more","created_at","updated_at") VALUES (DEFAULT,'1', 'cm', '2016-09-18','08:15','10:15','Base de donnée',NULL,' { "teachers": "José Martinez", "groups":"G1, G2, G3", "rooms":"C009"} ','2016-09-18 17:11:49.155 +00:00','2016-09-18 17:11:49.155 +00:00') RETURNING *;
 INSERT INTO "agenda_events" ("id","agenda_id", "event_type_id", "date","start_time","end_time","name","image","more","created_at","updated_at") VALUES (DEFAULT, '1', 'cm', '2016-09-19','10:15','15:15','Files d''attente',NULL,' {"teachers":"José Martinez","groups":"G1, G2, G3","rooms":"C009"}','2016-09-18 17:11:49.155 +00:00','2016-09-18 17:11:49.155 +00:00') RETURNING *;

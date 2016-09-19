@@ -6,10 +6,14 @@ var EventType = sequelize.define('event_type', {
         field: "id",
         primaryKey: true
     },
-    color: {
+    color_light: {
         type: Sequelize.STRING(7),
-        field: "color"
-    }
+        field: "color_light"
+    },
+    color_dark: {
+        type: Sequelize.STRING(7),
+        field: "color_dark"
+    },
 },
 {
     underscored: true
