@@ -65,6 +65,10 @@ router.get('/:id/:date', function(req, res, next) {
         return res.json({});
     }
     AgendaEvent.findAll({
+        attributes: ['id', 'date', 'start_time', 'end_time', 'name', 'image', 'more', 'created_at', 'updated_at'],
+        include: [
+            { model: EventType , attributes: ['id', 'color_light', 'color_dark'], as: 'event_type'}
+        ],
         where: {
             agenda_id: req.params.id,
             date: req.params.date
@@ -113,6 +117,5 @@ router.get('/:id/:start_date/:end_date', function(req, res, next) {
         res.statusCode=404;
         return res.json({});
     }
-
 });
 module.exports = router;
