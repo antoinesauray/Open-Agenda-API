@@ -41,6 +41,14 @@ var AgendaEvent = sequelize.define('agenda_event', {
         type: Sequelize.STRING,
         field: "name"
     },
+    color_light: {
+        type: Sequelize.STRING(7),
+        field: "color_light"
+    },
+    color_dark: {
+        type: Sequelize.STRING(7),
+        field: "color_dark"
+    },
     image: {
         type: Sequelize.STRING,
         field: "image"
