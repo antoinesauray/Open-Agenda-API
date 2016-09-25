@@ -10,6 +10,7 @@ var users = require('./routes/users');
 var agendas = require('./routes/agendas');
 var entities = require('./routes/entities');
 var types = require('./routes/agenda_types');
+var me = require('./routes/me');
 
 var app = express();
 
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/users', users);
+app.use('/me', me);
 app.use('/agendas', agendas);
 app.use('/entities', entities);
 app.use('/agenda_types', types);

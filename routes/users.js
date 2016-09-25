@@ -1,12 +1,19 @@
 var express = require('express');
 var router = express.Router();
 var request = require('request');
-
+var jwt    = require('jsonwebtoken');
+var fs = require('fs');
 var FB = require('fb');
 
 var sequelize = require('../database/sequelize');
 var User = require('../database/model/user').User;
 var database = sequelize.database;
+
+// sign with RSA SHA256
+var credentials = {
+    key: fs.readFileSync('newkey.pem')
+}
+
 /* GET users listing. */
 
 router.get('/', function(req, res, next) {
@@ -27,33 +34,27 @@ router.post('/', function(req, res, next) {
             console.log(response.id);
             console.log(response.name);
 
-            User.findOne().then(function (user) {
-                if(user==null){
-                    User.create({
-                            firstName: response.first_name,
-                            lastName: response.last_name,
-                            mail: response.email,
-                            facebookId: response.id,
-                            facebookToken: req.body.access_token
-                    });
-                    res.statusCode=201;
-                    res.json({first_name: response.first_name, last_name: response.last_name, mail: response.email})
-                }
-                else{
-                    res.statusCode=200;
-                    res.json({first_name: user.firstName, last_name: user.lastName, mail: user.mail})
-                }
+            User.findOrCreate({
+              where: {facebookId: response.id}
+            }).spread(function(user, created) {
+
+              var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+              if(created){
+                res.statusCode=201;
+              }
+              else{
+                res.statusCode=200;
+              }
+              res.json({token: token, first_name: user.firstName, last_name: user.lastName, mail: user.mail})
+              console.log(created);
             });
-
-
-        });
+          });
     }
     else{
         res.statusCode=400;
         res.send('You need to provide an access token');
     }
 });
-
 
 router.get('/self', function(req, res, next) {
   res.send('respond with a resource');

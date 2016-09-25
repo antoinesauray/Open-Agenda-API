@@ -1,5 +1,6 @@
 var Sequelize = require('sequelize');
 var sequelize = require('../sequelize').database;
+var Agenda = require('./agenda').Agenda;
 var User = sequelize.define('user', {
     id: {
         type: Sequelize.INTEGER,
@@ -33,5 +34,6 @@ var User = sequelize.define('user', {
 }
 );
 
+User.belongsToMany(Agenda, {through: 'user_agendas'});
 // export the variable to make it available to other files.
 exports.User = User;
