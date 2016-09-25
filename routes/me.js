@@ -62,7 +62,7 @@ router.post('/agendas', function(req, res, next) {
             // We don't need spread here, since only the results will be returned for select queries
             if(agendas){
                 res.statusCode=200;
-                res.send(agendas);
+                res.json({message: "This agenda has been post"});
             }
             else{
                 res.statusCode=401;
