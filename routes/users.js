@@ -34,19 +34,24 @@ router.post('/', function(req, res, next) {
             console.log(response.id);
             console.log(response.name);
 
-            User.findOrCreate({
-              where: {facebookId: response.id}
-            }).spread(function(user, created) {
-
-              var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
-              if(created){
-                res.statusCode=201;
-              }
-              else{
-                res.statusCode=200;
-              }
-              res.json({token: token, first_name: user.firstName, last_name: user.lastName, mail: user.mail})
-              console.log(created);
+            User.findOrCreate(
+                {
+                    where: {facebookId: response.id},
+                    defaults: {
+                        facebookId: response.id, firstName: response.first_name, lastName: response.last_name, mail: response.email
+                    }
+                }
+            ).spread(function(user, created) {
+                console.log("created: "+created);
+                var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+                if(created){
+                    res.statusCode=201;
+                }
+                else{
+                    res.statusCode=200;
+                }
+                res.json({token: token, first_name: user.firstName, last_name: user.lastName, mail: user.mail})
+                console.log(created);
             });
           });
     }
