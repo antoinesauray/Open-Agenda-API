@@ -55,6 +55,23 @@ router.get('/agendas', function(req, res, next) {
       })
 });
 
+router.get('/events/:date', function(req, res, next) {
+    database.query("SELECT agenda_events.id, start_time, end_time, name, event_type_id, color_light, color_dark FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where date = :date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {date: req.params.date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
+      .then(function(events) {
+        res.statusCode=200;
+        res.send(events);
+    });
+});
+
+router.get('/events/:start_date/:end_date', function(req, res, next) {
+    database.query("SELECT agenda_events.id, start_time, end_time, name, event_type_id, color_light, color_dark FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where date >= :start_date AND date <= :end_date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {start_date: req.params.start_date, end_date: req.params.end_date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
+      .then(function(events) {
+        res.statusCode=200;
+        res.send(events);
+    });
+});
+
+
 router.post('/agendas', function(req, res, next) {
     if(req.body.agenda_id){
         database.query("INSERT INTO user_agendas(created_at, updated_at, user_id, agenda_id) VALUES(NOW(), NOW(), "+req.decoded.id+", "+req.body.agenda_id+")")
