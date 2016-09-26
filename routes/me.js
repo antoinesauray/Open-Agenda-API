@@ -36,7 +36,7 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-    database.query("SELECT id, first_name, last_name, mail, created_at, updated_at FROM users where users.id =:id", { replacements: { id: req.decoded.id }, type: database.QueryTypes.SELECT})
+    database.query("SELECT edt_id, first_name, last_name, mail, created_at, updated_at FROM users where users.id =:id", { replacements: { id: req.decoded.id }, type: database.QueryTypes.SELECT})
       .then(function(agendas) {
         // We don't need spread here, since only the results will be returned for select queries
         res.statusCode=200;
