@@ -17,6 +17,11 @@ var Agenda = sequelize.define('agenda', {
     image: {
         type: Sequelize.STRING,
         field: "image"
+    },
+    editable: {
+        type: Sequelize.BOOLEAN,
+        field: "editable",
+        defaultValue: false
     }
 },
 {

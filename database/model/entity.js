@@ -10,6 +10,11 @@ var Entity = sequelize.define('entity', {
     name: {
         type: Sequelize.STRING,
         field: "name"
+    },
+    public: {
+        type: Sequelize.BOOLEAN,
+        field: "public",
+        defaultValue: false
     }
 },
 {

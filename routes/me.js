@@ -75,7 +75,45 @@ router.post('/agendas', function(req, res, next) {
         res.statusCode=403;
         res.send("Please provide an Agenda id");
     }
+});
 
+router.post('/events', function(req, res, next) {
+    if(req.body.agenda_id && req.body.date && req.body.start_time && req.body.end_time && req.body.name && req.body.event_type){
+        var sqlQuery=null;
+        var image = req.body.image;
+        var more = req.body.more;
+        if(image&&more){
+            sqlQuery="INSERT INTO agenda_events(date, start_time, end_time, name, image, more, created_at, updated_at, event_type_id, agenda_id) VALUES(\'"+req.body.date+"\', \'"+req.body.start_time+"\', \'"+req.body.end_time+"\', \'"+req.body.name+"\', \'"+ image+"\', \'"+more+"\', NOW(), NOW(), \'"+req.body.event_type+"\', "+req.body.agenda_id+")"
+        }
+        else{
+            if(image){
+                sqlQuery="INSERT INTO agenda_events(date, start_time, end_time, name, image, created_at, updated_at, event_type_id, agenda_id) VALUES(\'"+req.body.date+"\', \'"+req.body.start_time+"\', \'"+req.body.end_time+"\', \'"+req.body.name+"\', \'"+ image+"\', NOW(), NOW(), \'"+req.body.event_type+"\', "+req.body.agenda_id+")"
+            }
+            else if(more){
+                sqlQuery="INSERT INTO agenda_events(date, start_time, end_time, name, more, created_at, updated_at, event_type_id, agenda_id) VALUES(\'"+req.body.date+"\', \'"+req.body.start_time+"\', \'"+req.body.end_time+"\', \'"+req.body.name+"\', \'"+more+"\', NOW(), NOW(), \'"+req.body.event_type+"\', "+req.body.agenda_id+")"
+            }
+            else{
+                sqlQuery="INSERT INTO agenda_events(date, start_time, end_time, name, created_at, updated_at, event_type_id, agenda_id) VALUES(\'"+req.body.date+"\', \'"+req.body.start_time+"\', \'"+req.body.end_time+"\', \'"+req.body.name+"\', NOW(), NOW(), \'"+req.body.event_type+"\', "+req.body.agenda_id+")"
+            }
+        }
+        database.query(sqlQuery)
+          .then(function(events) {
+            // We don't need spread here, since only the results will be returned for select queries
+            if(events){
+                res.statusCode=200;
+                res.json({message: "This event has been post"});
+            }
+            else{
+                res.statusCode=401;
+                res.send("Failed to insert this event");
+            }
+
+        });
+    }
+    else{
+        res.statusCode=403;
+        res.send("Missing parameters");
+    }
 });
 
 
