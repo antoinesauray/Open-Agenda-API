@@ -36,13 +36,11 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-    User.findOne({
-        where: {
-            id: req.decoded.id,
-        }
-    }).then(function(user){
+    database.query("SELECT id, first_name, last_name, mail, created_at, updated_at FROM users where users.id =:id", { replacements: { id: req.decoded.id }, type: database.QueryTypes.SELECT})
+      .then(function(agendas) {
+        // We don't need spread here, since only the results will be returned for select queries
         res.statusCode=200;
-        res.send(user);
+        res.send(agendas);
     });
 });
 
@@ -52,7 +50,7 @@ router.get('/agendas', function(req, res, next) {
         // We don't need spread here, since only the results will be returned for select queries
         res.statusCode=200;
         res.send(agendas);
-      })
+    });
 });
 
 router.get('/events/:date', function(req, res, next) {

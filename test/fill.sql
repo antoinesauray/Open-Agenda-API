@@ -1,5 +1,5 @@
 
-INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('personnal','NOW()','NOW()') RETURNING *;
+INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('personal','NOW()','NOW()') RETURNING *;
 INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('university','NOW()','NOW()') RETURNING *;
 
 INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('lifestyle','2016-09-18 17:08:04.960 +00:00','2016-09-18 17:08:04.960 +00:00') RETURNING *;
