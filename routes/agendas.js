@@ -104,8 +104,16 @@ router.get('/:id/:start_date/:end_date', function(req, res, next) {
             }
         }).then(function(events){
             if(events){
+                var retour = {};
+                events.forEach(function(event){
+                	if(!retour[event.date]){
+                		retour[event.date] = [];
+                	}
+                	retour[event.date].push(event);
+                });
+                console.log(retour);
                 res.statusCode=200;
-                res.send(events);
+                res.send(retour);
             }
             else{
                 res.statusCode=200;
