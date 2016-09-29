@@ -66,16 +66,12 @@ router.get('/events/:date', function(req, res, next) {
 router.get('/events/:start_date/:end_date', function(req, res, next) {
     database.query("SELECT agenda_events.id, to_char(date, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, more FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where date >= :start_date AND date <= :end_date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {start_date: req.params.start_date, end_date: req.params.end_date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
       .then(function(events) {
-         var retour = []
-         var lastDate=null;
-         var lastArray =null;
+         var retour = {};
          events.forEach(function(event){
-             if(lastDate!=event.date){
-                 lastDate = event.date;
-                 lastArray = []
-                 retour.push(lastArray);
+             if(!retour[event.date]){
+                 retour[event.date] = [];
              }
-             lastArray.push(event);
+             retour[event.date].push(event);
          });
          console.log(retour);
          res.statusCode=200;
