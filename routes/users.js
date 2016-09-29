@@ -43,7 +43,7 @@ router.post('/', function(req, res, next) {
                 }
             ).spread(function(user, created) {
                 console.log("created: "+created);
-                var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+                var token = jwt.sign({id: user.id }, credentials.key, { expiresIn: 15, algorithm: 'RS256'});
                 if(created){
                     res.statusCode=201;
                 }
