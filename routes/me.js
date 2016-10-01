@@ -79,7 +79,7 @@ router.get('/events/:start_date/:end_date', function(req, res, next) {
     });
 });
 
-router.post('/events', function(req, res, next) {
+router.post('/events/:date', function(req, res, next) {
     if(req.body.agenda_id && req.body.name && req.body.start_time && req.body.end_time){
         database.query("INSERT INTO agenda_events(created_at, updated_at, name, date, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), "+req.body.name+", "+req.params.date+", "+req.body.agenda_id+", "+req.body.start_time+", "+req.body.end_time+", 'me')")
           .then(function(agendas) {
