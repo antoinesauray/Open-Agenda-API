@@ -17,7 +17,11 @@ const MAX_DAY=31;
 // university
 // lifestyle
 router.get('/', function(req, res, next) {
-    Entity.findAll().then(function(agendas){
+    Entity.findAll({
+        where: {
+            public: true
+        }
+    }).then(function(agendas){
         res.send(agendas);
     });
 });
@@ -26,7 +30,8 @@ router.get('/:type', function(req, res, next){
     if(req.params.type){
         Entity.findAll({
             where: {
-                agenda_type_id: req.params.type
+                agenda_type_id: req.params.type,
+                public: true
             }
         }).then(function(agendas){
             res.statusCode=200;
