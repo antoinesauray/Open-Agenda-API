@@ -79,6 +79,27 @@ router.get('/events/:start_date/:end_date', function(req, res, next) {
     });
 });
 
+router.post('/events', function(req, res, next) {
+    if(req.body.agenda_id && req.body.name && req.body.start_time && req.body.end_time){
+        database.query("INSERT INTO agenda_events(created_at, updated_at, name, date, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), "+req.body.name+", "+req.params.date+", "+req.body.agenda_id+", "+req.body.start_time+", "+req.body.end_time+", 'me')")
+          .then(function(agendas) {
+            // We don't need spread here, since only the results will be returned for select queries
+            if(agendas){
+                res.statusCode=200;
+                res.json({message: "This agenda has been post"});
+            }
+            else{
+                res.statusCode=401;
+                res.send("This Agenda does not exist");
+            }
+
+        });
+    }
+    else{
+        res.statusCode=403;
+        res.send("Missing parameters");
+    }
+});
 
 router.post('/agendas', function(req, res, next) {
     if(req.body.agenda_id){
