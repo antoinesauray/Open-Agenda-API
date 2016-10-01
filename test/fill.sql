@@ -7,7 +7,7 @@ INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('lifestyle',
 INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('university','2016-09-18 17:10:23.105 +00:00','2016-09-18 17:10:23.105 +00:00') RETURNING *;
 INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('lifestyle','2016-09-18 17:10:23.105 +00:00','2016-09-18 17:10:23.105 +00:00') RETURNING *;
 
-INSERT INTO "entities" ("id","name","created_at","updated_at","agenda_type_id") VALUES ('chantrery-gavy','Chantrery-Gavy','2016-09-18 17:09:47.192 +00:00','2016-09-18 17:09:47.192 +00:00','university') RETURNING *;
+INSERT INTO "entities" ("id","name","created_at","updated_at","agenda_type_id") VALUES ('chantrery-gavy','Chantrery-Gavy','NOW()','NOW()','university') RETURNING *;
 INSERT INTO "entities" ("id","name","created_at","updated_at","agenda_type_id") VALUES ('univ-nantes','Université de Nantes','2016-09-18 17:09:47.192 +00:00','2016-09-18 17:09:47.192 +00:00','university') RETURNING *;
 INSERT INTO "entities" ("id","name","created_at","updated_at","agenda_type_id") VALUES ('soiree-nantes','Soirée à Nantes','2016-09-18 17:09:47.192 +00:00','2016-09-18 17:09:47.192 +00:00','lifestyle') RETURNING *;
 
@@ -16,7 +16,7 @@ INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id",
 
 
 INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id","agenda_type_id") VALUES (DEFAULT,'SILR4 - G1','2016-09-18 17:10:43.373 +00:00','2016-09-18 17:10:43.373 +00:00','chantrery-gavy','university') RETURNING *;
-INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id","agenda_type_id") VALUES (DEFAULT,'SILR4 - G2','2016-09-18 17:10:43.374 +00:00','2016-09-18 17:10:43.374 +00:00','chantrery-gavy','university') RETURNING *;
+INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id","agenda_type_id") VALUES (DEFAULT,'SILR4 - G2','NOW()','NOW()','chantrery-gavy','university') RETURNING *;
 INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id","agenda_type_id") VALUES (DEFAULT,'ID4','2016-09-18 17:10:43.374 +00:00','2016-09-18 17:10:43.374 +00:00','chantrery-gavy','university') RETURNING *;
 INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id","agenda_type_id") VALUES (DEFAULT,'INFO4 - Promotion','2016-09-18 17:10:43.374 +00:00','2016-09-18 17:10:43.374 +00:00','chantrery-gavy','university') RETURNING *;
 INSERT INTO "agendas" ("id","name","created_at","updated_at","agenda_entity_id","agenda_type_id") VALUES (DEFAULT,'License Droit','2016-09-18 17:10:43.374 +00:00','2016-09-18 17:10:43.374 +00:00','univ-nantes','university') RETURNING *;
