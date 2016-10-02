@@ -102,7 +102,7 @@ router.post('/events/:date', function(req, res, next) {
 });
 
 router.delete('/events/:id', function(req, res, next) {
-    if(req.body.agenda_id){
+    if(req.query.agenda_id){
         database.query("DELETE FROM agenda_events WHERE id=:event_id AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=:user_id)", {replacements: { event_id: req.params.id, user_id: req.decoded.id }})
           .then(function(agendas) {
             // We don't need spread here, since only the results will be returned for select queries
