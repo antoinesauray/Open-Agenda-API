@@ -114,7 +114,6 @@ router.delete('/events/:id', function(req, res, next) {
                 res.statusCode=401;
                 res.send("This Agenda does not exist");
             }
-
         });
     }
     else{
