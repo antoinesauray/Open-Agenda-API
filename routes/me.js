@@ -102,24 +102,18 @@ router.post('/events/:date', function(req, res, next) {
 });
 
 router.delete('/events/:id', function(req, res, next) {
-    if(req.params.agenda_id){
-        database.query("DELETE FROM agenda_events WHERE id=:event_id AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=:user_id)", {replacements: { event_id: req.params.id, user_id: req.decoded.id }})
-          .then(function(agendas) {
-            // We don't need spread here, since only the results will be returned for select queries
-            if(agendas){
-                res.statusCode=200;
-                res.json({message: "This agenda has been deleted"});
-            }
-            else{
-                res.statusCode=401;
-                res.send("This Agenda does not exist");
-            }
-        });
-    }
-    else{
-        res.statusCode=403;
-        res.send("Missing parameters");
-    }
+    database.query("DELETE FROM agenda_events WHERE id=:event_id AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=:user_id)", {replacements: { event_id: req.params.id, user_id: req.decoded.id }})
+      .then(function(agendas) {
+        // We don't need spread here, since only the results will be returned for select queries
+        if(agendas){
+            res.statusCode=200;
+            res.json({message: "This agenda has been deleted"});
+        }
+        else{
+            res.statusCode=401;
+            res.send("This Agenda does not exist");
+        }
+    });
 });
 
 router.post('/agendas', function(req, res, next) {
