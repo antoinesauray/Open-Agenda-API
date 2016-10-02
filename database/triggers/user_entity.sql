@@ -20,11 +20,14 @@ DECLARE editable BOOLEAN;
     BEGIN
         SELECT agendas.editable FROM agendas WHERE id=NEW.agenda_id INTO editable;
         IF editable=false THEN
-            RAISE EXCEPTION 'Not allowed to create events on non editable agendas';
+            RAISE EXCEPTION 'Not allowed to edit events on non editable agendas';
         END IF;
         RETURN NEW;
     END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER user_event BEFORE INSERT ON agenda_events
+FOR EACH ROW EXECUTE PROCEDURE checkAgendaIsEditable();
+
+CREATE TRIGGER user_event_delete BEFORE DELETE ON agenda_events
 FOR EACH ROW EXECUTE PROCEDURE checkAgendaIsEditable();
