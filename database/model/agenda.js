@@ -30,16 +30,12 @@ var Agenda = sequelize.define('agenda', {
 );
 
 var AgendaEvent = sequelize.define('agenda_event', {
-    date: {
-        type: Sequelize.DATEONLY,
-        field: "date"
-    },
     start_time: {
-        type: Sequelize.TIME,
+        type: Sequelize.DATE,
         field: "start_time"
     },
     end_time: {
-        type: Sequelize.TIME,
+        type: Sequelize.DATE,
         field: "end_time"
     },
     name: {
