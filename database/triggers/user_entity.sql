@@ -28,6 +28,3 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER user_event BEFORE INSERT ON agenda_events
 FOR EACH ROW EXECUTE PROCEDURE checkAgendaIsEditable();
-
-CREATE TRIGGER user_event_delete BEFORE DELETE ON agenda_events
-FOR EACH ROW EXECUTE PROCEDURE checkAgendaIsEditable();

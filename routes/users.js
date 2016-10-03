@@ -44,8 +44,14 @@ router.post('/', function(req, res, next) {
             ).spread(function(user, created) {
                 console.log("created: "+created);
 
-                database.query("UPDATE users set facebook_token=:fb_token where facebook_id=:fb_id", { replacements: { fb_token: req.body.access_token, fb_id: response.id }, type: database.QueryTypes.SELECT})
-                  .then(function() {
+                database.query("UPDATE users set facebook_token=:fb_token where facebook_id=:fb_id RETURNING edt_id", { replacements: { fb_token: req.body.access_token, fb_id: response.id }, type: database.QueryTypes.SELECT})
+                  .then(function(id) {
+                      if(id){
+                          console.log("success");
+                      }
+                      else{
+                          console.log("failure");
+                      }
                       var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
                       if(created){
                           res.statusCode=201;
