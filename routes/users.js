@@ -32,7 +32,9 @@ router.post('/', function(req, res, next) {
                 return;
             }
             console.log(response.id);
-            console.log(response.name);
+            console.log(response.first_name);
+            console.log(response.last_name);
+            console.log(response.email);
 
             User.findOrCreate(
                 {
