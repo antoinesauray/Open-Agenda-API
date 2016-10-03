@@ -55,10 +55,8 @@ router.get('/agendas', function(req, res, next) {
           }
           else{
               res.statusCode=403;
-              res.json({message: "user does not exist."});
+              res.json([]);
           }
-        // We don't need spread here, since only the results will be returned for select queries
-
     });
 });
 
