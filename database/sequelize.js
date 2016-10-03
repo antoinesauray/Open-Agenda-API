@@ -19,7 +19,7 @@ database
   });
 
   database.sync({
-      force: true
+      force: false
   });
 
 
