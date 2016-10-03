@@ -49,7 +49,7 @@ router.get('/', function(req, res, next) {
 router.get('/agendas', function(req, res, next) {
     database.query("SELECT * FROM agendas where agendas.id IN (SELECT agenda_id FROM user_agendas where user_id=:id) ", { replacements: { id: req.decoded.id }, type: database.QueryTypes.SELECT})
       .then(function(agendas) {
-          if(agendas){
+          if(agendas && agendas.length!=0){
               res.statusCode=200;
               res.send(agendas);
           }
