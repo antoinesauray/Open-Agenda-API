@@ -49,9 +49,16 @@ router.get('/', function(req, res, next) {
 router.get('/agendas', function(req, res, next) {
     database.query("SELECT * FROM agendas where agendas.id IN (SELECT agenda_id FROM user_agendas where user_id=:id) ", { replacements: { id: req.decoded.id }, type: database.QueryTypes.SELECT})
       .then(function(agendas) {
+          if(agendas){
+              res.statusCode=200;
+              res.send(agendas);
+          }
+          else{
+              res.statusCode=403;
+              res.json({message: "user does not exist."});
+          }
         // We don't need spread here, since only the results will be returned for select queries
-        res.statusCode=200;
-        res.send(agendas);
+
     });
 });
 
