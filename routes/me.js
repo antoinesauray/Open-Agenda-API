@@ -62,7 +62,7 @@ router.get('/agendas', function(req, res, next) {
 
 router.get('/events/:date', function(req, res, next) {
     if(req.query.event_id){
-        database.query("SELECT agenda_events.id, agenda_id, start_time, end_time, name, event_type_id, color_light, color_dark FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where id=:event_id start_time::date = :date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {event_id: req.query.event_id, date: req.params.date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
+        database.query("SELECT agenda_events.id, agenda_id, start_time, end_time, name, event_type_id, color_light, color_dark more, FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where id=:event_id start_time::date = :date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {event_id: req.query.event_id, date: req.params.date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
           .then(function(events) {
             res.statusCode=200;
             res.send(events);
@@ -70,7 +70,7 @@ router.get('/events/:date', function(req, res, next) {
     }
     else{
         if(req.query.mignify){
-            database.query("SELECT agenda_events.id, agenda_id, start_time, end_time, name, event_type_id, color_light, color_dark FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where start_time::date = :date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {date: req.params.date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
+            database.query("SELECT agenda_events.id, agenda_id, start_time, end_time, name, event_type_id, color_light, color_dark, more->>'image' FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where start_time::date = :date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {date: req.params.date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
               .then(function(events) {
                 res.statusCode=200;
                 res.send(events);
@@ -88,7 +88,7 @@ router.get('/events/:date', function(req, res, next) {
 
 router.get('/events/:start_date/:end_date', function(req, res, next) {
     if(req.query.mignify){
-        database.query("SELECT agenda_events.id, agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where start_time::date >= :start_date AND start_time::date <= :end_date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {start_date: req.params.start_date, end_date: req.params.end_date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
+        database.query("SELECT agenda_events.id, agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, more->>'image', event_type_id, color_light, color_dark FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where start_time::date >= :start_date AND start_time::date <= :end_date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {start_date: req.params.start_date, end_date: req.params.end_date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
           .then(function(events) {
              var retour = {};
              events.forEach(function(event){
