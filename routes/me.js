@@ -61,7 +61,7 @@ router.get('/agendas', function(req, res, next) {
 });
 
 router.get('/events/:date', function(req, res, next) {
-    database.query("SELECT agenda_events.id, agenda_id, start_time, end_time, name, image, event_type_id, color_light, color_dark, more FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where start_time::date = :date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {date: req.params.date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
+    database.query("SELECT agenda_events.id, agenda_id, start_time, end_time, name, event_type_id, color_light, color_dark, more FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where start_time::date = :date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {date: req.params.date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
       .then(function(events) {
         res.statusCode=200;
         res.send(events);
@@ -69,7 +69,7 @@ router.get('/events/:date', function(req, res, next) {
 });
 
 router.get('/events/:start_date/:end_date', function(req, res, next) {
-    database.query("SELECT agenda_events.id, agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, image, event_type_id, color_light, color_dark, more FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where start_time::date >= :start_date AND start_time::date <= :end_date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {start_date: req.params.start_date, end_date: req.params.end_date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
+    database.query("SELECT agenda_events.id, agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, more FROM agenda_events INNER JOIN event_types ON event_types.id=agenda_events.event_type_id where start_time::date >= :start_date AND start_time::date <= :end_date AND agenda_id IN (SELECT agenda_id FROM user_agendas where user_id=:id)", { replacements: {start_date: req.params.start_date, end_date: req.params.end_date, id: req.decoded.id}, type: database.QueryTypes.SELECT})
       .then(function(events) {
          var retour = {};
          events.forEach(function(event){
@@ -87,7 +87,7 @@ router.get('/events/:start_date/:end_date', function(req, res, next) {
 
 router.post('/events', function(req, res, next) {
     if(req.body.agenda_id && req.body.name && req.body.start_time && req.body.end_time){
-        database.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), '"+req.body.name+"', "+req.body.agenda_id+", '"+req.body.start_time+"', '"+req.body.end_time+"', 'me')")
+        database.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), :name, :agenda_id, :start_time, :end_time, 'me')", {replacements: { name: req.body.name, agenda_id: req.body.agenda_id, start_time: req.body.start_time, end_time: req.body.end_time}, type: database.QueryTypes.INSERT})
           .then(function(agendas) {
             // We don't need spread here, since only the results will be returned for select queries
             if(agendas){
@@ -124,7 +124,7 @@ router.delete('/events/:id', function(req, res, next) {
 
 router.post('/agendas', function(req, res, next) {
     if(req.body.agenda_id){
-        database.query("INSERT INTO user_agendas(created_at, updated_at, user_id, agenda_id) VALUES(NOW(), NOW(), "+req.decoded.id+", "+req.body.agenda_id+")")
+        database.query("INSERT INTO user_agendas(created_at, updated_at, user_id, agenda_id) VALUES(NOW(), NOW(), :id, :agenda_id)", { replacements: {id: req.decoded.id, agenda_id: req.body.agenda_id}, type: database.QueryTypes.INSERT})
           .then(function(agendas) {
             // We don't need spread here, since only the results will be returned for select queries
             if(agendas){
@@ -145,37 +145,37 @@ router.post('/agendas', function(req, res, next) {
 });
 
 router.post('/events', function(req, res, next) {
-    if(req.body.agenda_id && req.body.date && req.body.start_time && req.body.end_time && req.body.name && req.body.event_type){
+    if(req.body.agenda_id && req.body.start_time && req.body.end_time && req.body.name && req.body.event_type){
         var sqlQuery=null;
-        var image = req.body.image;
         var more = req.body.more;
-        if(image&&more){
-            sqlQuery="INSERT INTO agenda_events(start_time, end_time, name, image, more, created_at, updated_at, event_type_id, agenda_id) VALUES(\'"+req.body.date+"\', \'"+req.body.start_time+"\', \'"+req.body.end_time+"\', \'"+req.body.name+"\', \'"+ image+"\', \'"+more+"\', NOW(), NOW(), \'"+req.body.event_type+"\', "+req.body.agenda_id+")"
+        if(more){
+            database.query("INSERT INTO agenda_events(start_time, end_time, name, more, created_at, updated_at, event_type_id, agenda_id) VALUES(:start_time, :end_time, :name, :json, NOW(), NOW(), :event_type, :agenda_id)", { replacements: {start_time: req.body.start_time, end_time: req.body.end_time, name: req.body.name, json: req.body.more, event_type: req.body.event_type, agenda_id: req.body.agenda_id}, type: database.QueryTypes.INSERT})
+              .then(function(events) {
+                // We don't need spread here, since only the results will be returned for select queries
+                    if(events){
+                        res.statusCode=200;
+                        res.json({message: "This event has been post"});
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send("Failed to insert this event");
+                    }
+                });
         }
         else{
-            if(image){
-                sqlQuery="INSERT INTO agenda_events(start_time, end_time, name, image, created_at, updated_at, event_type_id, agenda_id) VALUES(\'"+req.body.date+"\', \'"+req.body.start_time+"\', \'"+req.body.end_time+"\', \'"+req.body.name+"\', \'"+ image+"\', NOW(), NOW(), \'"+req.body.event_type+"\', "+req.body.agenda_id+")"
-            }
-            else if(more){
-                sqlQuery="INSERT INTO agenda_events(start_time, end_time, name, more, created_at, updated_at, event_type_id, agenda_id) VALUES(\'"+req.body.date+"\', \'"+req.body.start_time+"\', \'"+req.body.end_time+"\', \'"+req.body.name+"\', \'"+more+"\', NOW(), NOW(), \'"+req.body.event_type+"\', "+req.body.agenda_id+")"
-            }
-            else{
-                sqlQuery="INSERT INTO agenda_events(start_time, end_time, name, created_at, updated_at, event_type_id, agenda_id) VALUES(\'"+req.body.date+"\', \'"+req.body.start_time+"\', \'"+req.body.end_time+"\', \'"+req.body.name+"\', NOW(), NOW(), \'"+req.body.event_type+"\', "+req.body.agenda_id+")"
-            }
+            database.query("INSERT INTO agenda_events(start_time, end_time, name, more, created_at, updated_at, event_type_id, agenda_id) VALUES(:start_time, :end_time, :name, :json, NOW(), NOW(), :event_type, :agenda_id)", { replacements: {start_time: req.body.start_time, end_time: req.body.end_time, name: req.body.name, json: JSON.stringify({}), event_type: req.body.event_type, agenda_id: req.body.agenda_id}, type: database.QueryTypes.INSERT})
+              .then(function(events) {
+                // We don't need spread here, since only the results will be returned for select queries
+                    if(events){
+                        res.statusCode=200;
+                        res.json({message: "This event has been post"});
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send("Failed to insert this event");
+                    }
+                });
         }
-        database.query(sqlQuery)
-          .then(function(events) {
-            // We don't need spread here, since only the results will be returned for select queries
-            if(events){
-                res.statusCode=200;
-                res.json({message: "This event has been post"});
-            }
-            else{
-                res.statusCode=401;
-                res.send("Failed to insert this event");
-            }
-
-        });
     }
     else{
         res.statusCode=403;
