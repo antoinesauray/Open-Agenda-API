@@ -11,7 +11,6 @@ var agendas = require('./routes/agendas');
 var entities = require('./routes/entities');
 var types = require('./routes/agenda_types');
 var me = require('./routes/me');
-var me_mongo = require('./routes/me_mongo');
 
 var app = express();
 
@@ -33,9 +32,6 @@ app.use('/me', me);
 app.use('/agendas', agendas);
 app.use('/entities', entities);
 app.use('/agenda_types', types);
-
-app.use('/me_mongo', me_mongo);
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
