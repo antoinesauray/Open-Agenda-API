@@ -28,3 +28,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER user_event BEFORE INSERT ON agenda_events
 FOR EACH ROW EXECUTE PROCEDURE checkAgendaIsEditable();
+
+
+CREATE UNIQUE INDEX facebook_id ON agenda_events ((more->>'facebook_id'));
+ALTER TABLE agenda_events ALTER COLUMN more SET DEFAULT '{}';

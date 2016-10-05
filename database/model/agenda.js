@@ -44,7 +44,8 @@ var AgendaEvent = sequelize.define('agenda_event', {
     },
     more: {
         type: Sequelize.JSONB,
-        field: "more"
+        field: "more",
+        defaultValue: '{}'
     }
 },
 {
