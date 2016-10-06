@@ -97,10 +97,13 @@ router.post('/', function(req, res, next) {
                   if(req.body.first_name&&req.body.last_name){
                       hash(req.body.password, function(password, salt){
                           database.query("INSERT INTO users (mail, password, salt, first_name, last_name, created_at, updated_at) VALUES(:email, :password, :salt, :first_name, :last_name, NOW(), NOW()) RETURNING *", { replacements: { email: req.body.email, password: password, salt: salt, first_name: req.body.first_name, last_name: req.body.last_name}, type: database.QueryTypes.INSERT})
-                          .then(function(user) {
-                              var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+                          .then(function(users) {
+                              var user = users[0];
+                              console.log(JSON.stringify(user));
+                              console.log(user.edt_id);
+                              var token = jwt.sign({id: user.edt_id }, credentials.key, { algorithm: 'RS256'});
                               res.statusCode=201;
-                              res.json({token: token, first_name: user.firstName, last_name: user.lastName, mail: user.mail});
+                              res.json({token: token, first_name: user.first_name, last_name: user.last_name, mail: user.mail});
                           });
 
                       });
