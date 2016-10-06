@@ -80,10 +80,8 @@ router.post('/', function(req, res, next) {
               if(users&&users.length!=0){
                   var user = users[0];
                   hashWithSalt(req.body.password, user.salt, function(hash){
-                      console.log("user hashed password in db: "+user.password);
-                      console.log("user entered password(hashed): "+hash);
                       if(hash==user.password){
-                          var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+                          var token = jwt.sign({id: user.edt_id }, credentials.key, { algorithm: 'RS256'});
                           res.statusCode=200;
                           res.json({token: token, first_name: user.first_name, last_name: user.last_name, mail: user.mail})
                       }
