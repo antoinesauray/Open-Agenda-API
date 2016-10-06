@@ -96,7 +96,7 @@ router.post('/', function(req, res, next) {
               else{
                   if(req.body.first_name&&req.body.last_name){
                       hash(req.body.password, function(password, salt){
-                          database.query("INSERT INTO users (mail, password, salt, first_name, last_name, created_at, updated_at) VALUES(:email, :password, :salt, :first_name, :last_name, NOW(), NOW())", { replacements: { email: req.body.email, password: password, salt: salt, first_name: req.body.first_name, last_name: req.body.last_name}, type: database.QueryTypes.INSERT})
+                          database.query("INSERT INTO users (mail, password, salt, first_name, last_name, created_at, updated_at) VALUES(:email, :password, :salt, :first_name, :last_name, NOW(), NOW()) RETURNING *", { replacements: { email: req.body.email, password: password, salt: salt, first_name: req.body.first_name, last_name: req.body.last_name}, type: database.QueryTypes.INSERT})
                           .then(function(user) {
                               var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
                               res.statusCode=201;
