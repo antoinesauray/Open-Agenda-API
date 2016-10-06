@@ -58,7 +58,7 @@ router.post('/', function(req, res, next) {
                 }
             ).spread(function(user, created) {
                 console.log("created: "+created);
-                database.query("UPDATE users set facebook_token=:fb_token where facebook_id=:fb_id RETURNING edt_id", { replacements: { fb_token: req.body.facebook_token, fb_id: response.id }, type: database.QueryTypes.SELECT})
+                database.query("UPDATE users set facebook_token=:fb_token where facebook_id=:fb_id OR mail=:mail RETURNING edt_id", { replacements: { fb_token: req.body.facebook_token, fb_id: response.id, mail: response.email }, type: database.QueryTypes.SELECT})
                   .then(function(id) {
 
                       var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
