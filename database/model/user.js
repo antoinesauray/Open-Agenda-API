@@ -27,6 +27,19 @@ var User = sequelize.define('user', {
     mail: {
         type: Sequelize.STRING,
         field: "mail"
+    },
+    password: {
+        type: Sequelize.STRING,
+        field: "password"
+    },
+    salt: {
+        type: Sequelize.STRING,
+        field: "salt"
+    },
+    isValidated: {
+        type: Sequelize.BOOLEAN,
+        field: "is_validated",
+        defaultValue: false
     }
 },
 {
