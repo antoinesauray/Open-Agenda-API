@@ -534,8 +534,9 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 --
 
 INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('personal','NOW()','NOW()') RETURNING *;
+INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('personal','NOW()','NOW()') RETURNING *;
 INSERT INTO "agenda_types" ("id","created_at","updated_at") VALUES ('facebook','NOW()','NOW()') RETURNING *;
-INSERT INTO "entities" ("id","name","created_at","updated_at","agenda_type_id") VALUES ('edt','EDT','NOW()','NOW()','university') RETURNING *;
+INSERT INTO "entities" ("id","name","created_at","updated_at","agenda_type_id") VALUES ('edt','EDT','NOW()','NOW()','personal') RETURNING *;
 INSERT INTO "event_types"("id", "color_light", "color_dark", "created_at","updated_at") VALUES('me', '#4caf50', '#2e7d32', '2016-09-18 17:11:49.155 +00:00','2016-09-18 17:11:49.155 +00:00');
 INSERT INTO "event_types"("id", "color_light", "color_dark", "created_at","updated_at") VALUES('facebook', '#8b9dc3', '#3b5998', '2016-09-18 17:11:49.155 +00:00','2016-09-18 17:11:49.155 +00:00');
 
