@@ -5,6 +5,11 @@ var AgendaType = sequelize.define('agenda_type', {
         type: Sequelize.STRING(20),
         field: "id",
         primaryKey: true
+    },
+    public: {
+        type: Sequelize.BOOLEAN,
+        field: "public",
+        defaultValue: false
     }
 },
 {

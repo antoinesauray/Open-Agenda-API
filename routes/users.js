@@ -60,7 +60,6 @@ router.post('/', function(req, res, next) {
                 console.log("created: "+created);
                 database.query("UPDATE users set facebook_token=:fb_token where facebook_id=:fb_id OR mail=:mail RETURNING edt_id", { replacements: { fb_token: req.body.facebook_token, fb_id: response.id, mail: response.email }, type: database.QueryTypes.SELECT})
                   .then(function(id) {
-
                       var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
                       if(created){
                           res.statusCode=201;
