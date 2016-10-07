@@ -14,14 +14,14 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner:
 --
 
 CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner:
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
@@ -530,46 +530,6 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
--- Triggers 
---
-
-CREATE OR REPLACE FUNCTION insertUserAgenda() RETURNS TRIGGER AS $$
-DECLARE agenda_id INTEGER;
-    BEGIN
-        INSERT INTO entities(id, name, public, updated_at, created_at, agenda_type_id) VALUES (NEW.edt_id, CONCAT(NEW.first_name,' ',NEW.last_name), false, current_timestamp, current_timestamp, 'personal');
-
-        INSERT INTO agendas(name, editable, updated_at, created_at, agenda_entity_id, agenda_type_id) VALUES ('Facebook', true, 'NOW()', 'NOW()', NEW.edt_id, 'facebook') RETURNING id INTO agenda_id;
-        INSERT INTO user_agendas(user_id, agenda_id, updated_at, created_at) VALUES (NEW.edt_id, agenda_id, current_timestamp, current_timestamp);
-
-        INSERT INTO agendas(name, editable, updated_at, created_at, agenda_entity_id, agenda_type_id) VALUES ('Personnel', true, 'NOW()', 'NOW()', NEW.edt_id, 'personal') RETURNING id INTO agenda_id;
-        INSERT INTO user_agendas(user_id, agenda_id, updated_at, created_at) VALUES (NEW.edt_id, agenda_id, current_timestamp, current_timestamp);
-        RETURN NEW;
-    END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE TRIGGER user_agenda AFTER INSERT ON users
-FOR EACH ROW EXECUTE PROCEDURE insertUserAgenda();
-
-
-CREATE OR REPLACE FUNCTION checkAgendaIsEditable() RETURNS trigger AS $$
-DECLARE editable BOOLEAN;
-    BEGIN
-        SELECT agendas.editable FROM agendas WHERE id=NEW.agenda_id INTO editable;
-        IF editable=false THEN
-            RAISE EXCEPTION 'Not allowed to edit events on non editable agendas';
-        END IF;
-        RETURN NEW;
-    END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER user_event BEFORE INSERT ON agenda_events
-FOR EACH ROW EXECUTE PROCEDURE checkAgendaIsEditable();
-
-
-CREATE UNIQUE INDEX facebook_id ON agenda_events ((more->>'facebook_id'));
-
---
 -- Essential data
 --
 
@@ -583,4 +543,3 @@ INSERT INTO "event_types"("id", "color_light", "color_dark", "created_at","updat
 --
 -- PostgreSQL database dump complete
 --
-
