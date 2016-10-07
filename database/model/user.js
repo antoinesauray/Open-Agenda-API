@@ -24,9 +24,13 @@ var User = sequelize.define('user', {
         type: Sequelize.STRING,
         field: "last_name"
     },
-    mail: {
+    facebookEmail: {
         type: Sequelize.STRING,
-        field: "mail"
+        field: "facebook_email"
+    },
+    edtEmail: {
+        type: Sequelize.STRING,
+        field: "edt_email"
     },
     password: {
         type: Sequelize.STRING,
