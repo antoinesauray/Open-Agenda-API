@@ -7,6 +7,8 @@ var FB = require('fb');
 
 var crypto = require('crypto');
 
+var fbImport = require('../fb_import');
+
 var sequelize = require('../database/sequelize');
 var User = require('../database/model/user').User;
 var database = sequelize.database;
@@ -62,13 +64,15 @@ router.post('/', function(req, res, next) {
                   .then(function(id) {
                       var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
                       if(created){
-                          res.statusCode=201;
+                          fbImport.queryFacebook(database, user.id, response.id, req.body.facebook_token, function(){
+                              res.statusCode=201;
+                              res.json({token: token, first_name: user.firstName, last_name: user.lastName, mail: user.mail})
+                          });
                       }
                       else{
                           res.statusCode=200;
+                          res.json({token: token, first_name: user.firstName, last_name: user.lastName, mail: user.mail})
                       }
-                      res.json({token: token, first_name: user.firstName, last_name: user.lastName, mail: user.mail})
-                      console.log(created);
                 });
             });
           });
