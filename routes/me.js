@@ -36,7 +36,7 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-    database.query("SELECT edt_id, first_name, last_name, edt_email, created_at, updated_at FROM users where users.edt_id =:id LIMIT 1", { replacements: { id: req.decoded.id }, type: database.QueryTypes.SELECT})
+    database.query("SELECT edt_id, first_name, last_name, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id =:id LIMIT 1", { replacements: { id: req.decoded.id }, type: database.QueryTypes.SELECT})
       .then(function(agendas) {
         // We don't need spread here, since only the results will be returned for select queries
         if(agendas){
