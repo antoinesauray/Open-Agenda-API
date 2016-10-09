@@ -68,10 +68,9 @@ router.post('/', function(req, res, next) {
                         database.query("UPDATE users set facebook_email=:facebook_email, facebook_id=:facebook_id, is_validated=true, facebook_token=:fb_token where edt_id=:edt_id RETURNING *", { replacements: { edt_id: req.decoded.id, fb_token: req.body.facebook_token, facebook_id: response.id, facebook_email: response.email }, type: database.QueryTypes.UPDATE})
                           .then(function(users) {
                               var user = users[0];
-                              console.log(JSON.stringify(user));
                               // we retrieve user events from Facebook
                               fbImport.queryFacebook(database, user.edt_id, response.id, req.body.facebook_token, function(){
-                                  var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+                                  var token = jwt.sign({id: user.edt_id }, credentials.key, { algorithm: 'RS256'});
                                   res.statusCode=200;
                                   res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
                               });
