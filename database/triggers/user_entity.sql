@@ -23,7 +23,7 @@ CREATE OR REPLACE FUNCTION checkAgendaIsEditable() RETURNS trigger AS $$
 DECLARE editable BOOLEAN;
     BEGIN
         SELECT agendas.editable FROM agendas WHERE id=NEW.agenda_id INTO editable;
-        IF editable=false THEN
+        IF editable=false AND current_user != 'edt_facebook' THEN
             RAISE EXCEPTION 'Not allowed to edit events on non editable agendas';
         END IF;
         RETURN NEW;

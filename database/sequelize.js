@@ -12,10 +12,10 @@ var database = new Sequelize('edt', 'edt_admin', 'pass', {
 database
   .authenticate()
   .then(function(err) {
-    console.log('Connected to database...');
+    console.log('Connected to database as edt_admin...');
   })
   .catch(function (err) {
-    console.log('Unable to connect to the database:', err);
+    console.log('Unable to connect to the database as edt_admin:', err);
   });
 
   database.sync({
