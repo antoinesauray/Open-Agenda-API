@@ -69,7 +69,7 @@ router.post('/', function(req, res, next) {
                           .then(function(users) {
                               var user = users[0];
                               // we retrieve user events from Facebook
-                              fbImport.queryFacebook(database, user.edt_id, response.id, req.body.facebook_token);
+                              fbImport.queryFacebook(user.edt_id, response.id, req.body.facebook_token);
                               var token = jwt.sign({id: user.edt_id }, credentials.key, { algorithm: 'RS256'});
                               res.statusCode=200;
                               res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
@@ -92,7 +92,7 @@ router.post('/', function(req, res, next) {
                       .then(function(id) {
                           var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
                           if(created){
-                              fbImport.queryFacebook(database, user.id, response.id, req.body.facebook_token);
+                              fbImport.queryFacebook(user.id, response.id, req.body.facebook_token);
                               res.statusCode=201;
                               res.json({token: token, first_name: user.firstName, last_name: user.lastName, facebook_email: user.facebookEmail});
                           }
