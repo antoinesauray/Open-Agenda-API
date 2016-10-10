@@ -99,7 +99,7 @@ router.get('/events/:start_date/:end_date', function(req, res, next) {
                  }
                  retour[event.date].push(event);
              });
-             console.log(retour);
+             console.log(JSON.stringify(retour));
              res.statusCode=200;
              res.send(retour);
         });
@@ -115,7 +115,7 @@ router.get('/events/:start_date/:end_date', function(req, res, next) {
                  }
                  retour[event.date].push(event);
              });
-             console.log(retour);
+             console.log(JSON.stringify(retour));
              res.statusCode=200;
              res.send(retour);
         });
