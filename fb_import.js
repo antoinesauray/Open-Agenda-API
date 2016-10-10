@@ -34,7 +34,7 @@ exports.queryFacebook = function(userId, facebookId, facebookToken){
                         database.query("select * from agendas where agenda_type_id='facebook' and id IN(select agenda_id from user_agendas where user_id=:edt_id)", { replacements: {edt_id: userId}, type: database.QueryTypes.SELECT})
                         .then(function(agenda){
                             console.log("insert events");
-                            insertEvents(database, agenda[0].id, response.data);
+                            insertEvents(agenda[0].id, response.data);
                         });
                     }
                     else{
