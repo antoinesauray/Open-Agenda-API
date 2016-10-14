@@ -1,0 +1,17 @@
+{
+    "database": "edt",
+    "address": "127.0.0.1",
+    "port": 5432,
+    "max_pool": 10,
+    "idle_timeout": 30000,
+    "user": {
+        "limited": {
+            "name": "edt_limited",
+            "password": "limited"
+        },
+        "facebook": {
+            "name": "edt_facebook",
+            "password": "facebook"
+        }
+    }
+}

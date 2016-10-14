@@ -1,6 +1,14 @@
+'use scrict';
 var Sequelize = require('sequelize');
-var database = new Sequelize('edt', 'edt_admin', 'pass', {
-  host: 'localhost',
+var cfg = require('./config');
+
+var edt_database = cfg.database;
+var user   = cfg.user.limited.name;
+var password   = cfg.user.limited.password;
+var address   = cfg.address;
+
+var database = new Sequelize(edt_database, user, password, {
+  host: address,
   dialect: 'postgres',
   pool: {
     max: 5,
@@ -12,10 +20,10 @@ var database = new Sequelize('edt', 'edt_admin', 'pass', {
 database
   .authenticate()
   .then(function(err) {
-    console.log('Connected to database as edt_admin...');
+    console.log('Connected to database as '+user+'...');
   })
   .catch(function (err) {
-    console.log('Unable to connect to the database as edt_admin:', err);
+    console.log('Unable to connect to the database as '+user+':', err);
   });
 
   database.sync({
