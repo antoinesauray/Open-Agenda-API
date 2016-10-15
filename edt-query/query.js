@@ -324,7 +324,7 @@ module.exports = {
         facebook_user: function(facebook_token, res){
             FB.setAccessToken(facebook_token);
             FB.api('/me', { fields: ['id', 'email', 'first_name', 'last_name'] }, function (response) {
-                console.log("response: "+response);
+                console.log("response: "+JSON.stringify(response));
                 if(!response || response.error) {
                     res.statusCode=400;
                     res.send('Could not verify access token');

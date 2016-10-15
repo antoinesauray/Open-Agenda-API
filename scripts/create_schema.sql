@@ -16,7 +16,7 @@ CREATE TABLE providers (
 ALTER TABLE providers OWNER TO edt_owner;
 GRANT SELECT ON providers to edt_limited;
 
-INSERT INTO providers VALUES ('edt', 'EDT', '127.0.0.1', 'edt', NOW(), NOW());
+INSERT INTO providers VALUES ('edt', 'EDT', NULL, '#FFFFFF', '#FFFFFF', '127.0.0.1', 'edt', NOW(), NOW());
 
 --
 --  Users
