@@ -358,7 +358,7 @@ module.exports = {
                     return;
                 }
                 console.log("verifying token");
-                central.provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
+                var q = central.provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
                     central.done();
                     if(err) {
                         console.log("token error");
@@ -384,6 +384,10 @@ module.exports = {
                         });
                     }
                 });
+                q.on('end', function() {
+                    //This event callback always fires
+                    console.log('Finished with query');
+                  });
             });
         },
 
