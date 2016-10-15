@@ -229,6 +229,7 @@ module.exports = {
                 // when we have all replies
                 when.all(promises).spread(function(results) {
                     var ret = {};
+                    console.log("results="+JSON.stringify(results));
                     results.forEach(function(result){
                         result.rows.forEach(function(event){
                             console.log("date: "+event.date);
