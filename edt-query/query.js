@@ -265,7 +265,11 @@ module.exports = {
                 // when we have all replies
                 when.all(promises).spread(function(results) {
                     res.statusCode=200;
-                    res.send(results.rows);
+                    var agendas=[];
+                    results.forEach(function(result){
+                        agendas.push(result.rows);
+                    });
+                    res.send(agendas);
                 });
             });
         }
