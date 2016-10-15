@@ -231,6 +231,7 @@ module.exports = {
                 // when we have all replies
                 when.all(promises).spread(function(results) {
                     var ret = {};
+                    console.log("finished promises: "+JSON.stringify(results));
                     if(results.rows){
                         results.rows.forEach(function(result){
                             result.rows.forEach(function(event){
