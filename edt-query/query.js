@@ -231,7 +231,7 @@ module.exports = {
                 when.all(promises).spread(function(results) {
                     var ret = {};
                     console.log("finished promises: "+JSON.stringify(results));
-                    results.forEach(function(result){
+                    results.rows.forEach(function(result){
                         result.rows.forEach(function(event){
                             console.log("date: "+event.date);
                             if(!ret[event.date]){
