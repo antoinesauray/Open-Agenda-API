@@ -223,7 +223,7 @@ module.exports = {
                 result.rows.forEach(function(agenda){
                     console.log("agenda="+JSON.stringify(agenda));
                     var query=providers[agenda.provider].client.query("SELECT agenda_events.id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_id=$1 AND start_time::date > $2 AND end_time::date <= $3", [agenda.id, start_date, end_date]);
-                    console.log("query="+query);
+                    console.log("query="+JSON.stringify(query));
                     query.then(function(){
                         providers[agenda.provider].done();
                     });
