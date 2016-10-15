@@ -15,7 +15,8 @@ var user   = cfg.user.limited.name;
 var password   = cfg.user.limited.password;
 var address   = cfg.address;
 var port = cfg.port;
-var pool = cfg.max_pool;
+var max_pool = cfg.max_pool;
+var min_pool = cfg.min_pool;
 var timeout = cfg.timeout;
 
 // sign with RSA SHA256
@@ -45,7 +46,8 @@ var config = {
   password: password, //env var: PGPASSWORD
   host: address, // Server hosting the postgres database
   port: port, //env var: PGPORT
-  max: pool, // max number of clients in the pool
+  max: max_pool, // max number of clients in the pool
+  min: min_pool,
   idleTimeoutMillis: timeout, // how long a client is allowed to remain idle before being closed
 };
 
@@ -72,7 +74,8 @@ pool.connect(function(err, client, done) {
             password: password, //env var: PGPASSWORD
             host: address, // Server hosting the postgres database
             port: port, //env var: PGPORT
-            max: pool, // max number of clients in the pool
+            max: max_pool, // max number of clients in the pool
+            min: min_pool,
             idleTimeoutMillis: timeout, // how long a client is allowed to remain idle before being closed
         });
         providerPool.connect(function(err, client, done) {

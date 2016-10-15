@@ -2,7 +2,8 @@
     "database": "edt",
     "address": "127.0.0.1",
     "port": 5432,
-    "max_pool": 10,
+    "max_pool": 100,
+    "min_pool": 2,
     "timeout": 1000000,
     "user": {
         "limited": {
