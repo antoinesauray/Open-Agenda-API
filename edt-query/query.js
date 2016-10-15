@@ -357,14 +357,14 @@ module.exports = {
                     console.log(!response ? 'error occurred' : response.error);
                     return;
                 }
-
+                console.log("verifying token");
                 central.provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
                     central.done();
                     if(err) {
+                        console.log("token error");
                         return console.error('error running query', err);
                     }
-
-                    console.log("user from facebook: "+JSON.stringify(result.rows[0]));
+                    console.log("token ok");
                     if(result.rows.length!=0){
                         next_facebook(facebook_token, response.id, response.email, result.rows[0], false, res);
                     }
@@ -397,16 +397,20 @@ module.exports = {
                     console.log(!response ? 'error occurred' : response.error);
                     return;
                 }
+                console.log("verifying token");
                 jwt.verify(token, cert.pub, {algorithm: 'RS256'}, function(err, decoded) {
                     if (err) {
+                        console.log("token error");
                         res.statusCode=401;
                         return res.json({ success: false, message: 'Failed to authenticate token.' });
                     }
                     else {
+                        console.log("token ok");
                         req.decoded = decoded;
                         // let's update our user with Facebook data
                         central.provider.query("UPDATE users set facebook_email=:facebook_email, facebook_id=:facebook_id, is_validated=true, facebook_token=:fb_token where edt_id=:edt_id RETURNING *", [event_id, provider_id, user_id], function(err, result){
                             central.done();
+                            console.log("freeing pool in central server");
                             if(err) {
                                 return console.error('error running query', err);
                             }
