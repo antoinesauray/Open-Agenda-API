@@ -148,37 +148,50 @@ module.exports = {
         },
 
         agendas: function(provider, res){
-            providers[provider].client.query("SELECT * from agendas where agenda_entity_id in (select id from entities where public=true)", function(err, result){
-                providers[provider].done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                if(result.rows.length!=0){
-                    res.statusCode=200;
-                    res.send(result.rows);
-                }
-                else{
-                    res.statusCode=401;
-                    res.send(result.rows);
-                }
-            });
+            if(providers[provider]){
+                providers[provider].client.query("SELECT * from agendas where agenda_entity_id in (select id from entities where public=true)", function(err, result){
+                    providers[provider].done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    if(result.rows.length!=0){
+                        res.statusCode=200;
+                        res.send(result.rows);
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send(result.rows);
+                    }
+                });
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+            }
+
         },
 
         entities: function(provider, res){
-            providers[provider].client.query("SELECT * from entities where public=true", function(err, result){
-                providers[provider].done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                if(result.rows.length!=0){
-                    res.statusCode=200;
-                    res.send(result.rows);
-                }
-                else{
-                    res.statusCode=401;
-                    res.send(result.rows);
-                }
-            });
+            if(providers[provider]){
+                providers[provider].client.query("SELECT * from entities where public=true", function(err, result){
+                    providers[provider].done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    if(result.rows.length!=0){
+                        res.statusCode=200;
+                        res.send(result.rows);
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send(result.rows);
+                    }
+                });
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+            }
         },
 
         user: function(user_id, res){
@@ -257,54 +270,72 @@ module.exports = {
     POST: {
         event: function(user_id, provider_id, agenda_id, name, start_time, end_time, res){
             console.log("provider="+provider_id);
-            providers[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
-                providers[provider_id].done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                if(result.rows.length!=0){
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
-                }
-                else{
-                    res.statusCode=401;
-                    res.send("This Agenda does not exist");
-                }
-            });
+            if(providers[provider]){
+                providers[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
+                    providers[provider_id].done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    if(result.rows.length!=0){
+                        res.statusCode=200;
+                        res.json({message: "This agenda has been post"});
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send("This Agenda does not exist");
+                    }
+                });
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+            }
+
         },
         detailed_event: function(user_id, provider_id, agenda_id, name, start_time, end_time, more, res){
             console.log("provider="+provider_id);
-            providers[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
-                providers[provider_id].done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                if(result.rows.length!=0){
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
-                }
-                else{
-                    res.statusCode=401;
-                    res.send("This Agenda does not exist");
-                }
-            });
+            if(providers[provider]){
+                providers[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
+                    providers[provider_id].done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    if(result.rows.length!=0){
+                        res.statusCode=200;
+                        res.json({message: "This agenda has been post"});
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send("This Agenda does not exist");
+                    }
+                });
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+            }
         },
         agenda: function(provider_id, agenda_id, user_id, res){
-
-            providers[provider_id].client.query("INSERT INTO user_agendas(created_at, updated_at, provider_id, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3) RETURNING *", [provider_id, agenda_id, user_id], function(err, result){
-                providers[provider].done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                if(result.rows){
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
-                }
-                else{
-                    res.statusCode=401;
-                    res.send("This Agenda could be post");
-                }
-            });
+            if(providers[provider]){
+                providers[provider_id].client.query("INSERT INTO user_agendas(created_at, updated_at, provider_id, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3) RETURNING *", [provider_id, agenda_id, user_id], function(err, result){
+                    providers[provider].done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    if(result.rows){
+                        res.statusCode=200;
+                        res.json({message: "This agenda has been post"});
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send("This Agenda could be post");
+                    }
+                });
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+            }
         },
 
         sign_in_email_user: function(email, password, res){
@@ -444,20 +475,29 @@ module.exports = {
 
     DELETE: {
         event: function (provider_id, event_id, user_id, res) {
-            providers[provider_id].client.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
-                providers[provider_id].done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                if(result.rows.length!=0){
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
-                }
-                else{
-                    res.statusCode=401;
-                    res.send("This Agenda does not exist");
-                }
-            });
+
+            if(providers[provider]){
+                providers[provider_id].client.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
+                    providers[provider_id].done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    if(result.rows.length!=0){
+                        res.statusCode=200;
+                        res.json({message: "This agenda has been post"});
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send("This Agenda does not exist");
+                    }
+                });
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+            }
+
+
         }
     }
 }
