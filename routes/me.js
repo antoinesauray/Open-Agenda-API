@@ -40,9 +40,7 @@ router.get('/agendas', function(req, res, next) {
 });
 
 router.get('/events/:start_date/:end_date', function(req, res, next) {
-
     query.GET.events(req.decoded.id, req.params.start_date, req.params.end_date, res);
-
 });
 
 router.post('/events', function(req, res, next) {

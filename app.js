@@ -10,15 +10,13 @@ var users = require('./routes/users');
 var providers = require('./routes/providers');
 var agendas = require('./routes/agendas');
 var entities = require('./routes/entities');
-//var agendas = require('./routes/agendas');
-//var entities = require('./routes/entities');
-//var types = require('./routes/agenda_types');
 var me = require('./routes/me');
 
 var app = express();
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -31,11 +29,7 @@ app.use('/entities', entities);
 app.use('/users', users);
 app.use('/me', me);
 
-//app.use('/agendas', agendas);
-//app.use('/entities', entities);
-//app.use('/agenda_types', types);
-// catch 404 and forward to error handler
-/*
+// catch 404
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
@@ -67,5 +61,4 @@ app.use(function(err, req, res, next) {
   });
 });
 
-*/
 module.exports = app;
