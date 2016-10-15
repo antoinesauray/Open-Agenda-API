@@ -96,8 +96,8 @@ pool.on('error', function (err, client) {
   console.error('idle client error', err.message, err.stack)
 });
 
-var next = function(user, created){
-    central.provider.query("UPDATE users set facebook_token=$1 where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  response.id, response.email], function(err, result){
+var next_facebook = function(facebook_token, facebook_id, facebook_email, user, created, res){
+    central.provider.query("UPDATE users set facebook_token=$1 where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email], function(err, result){
         central.done();
         if(err) {
             return console.error('error running query', err);
@@ -365,7 +365,7 @@ module.exports = {
 
                     console.log("user from facebook: "+JSON.stringify(result.rows[0]));
                     if(result.rows.length!=0){
-                        next(result.rows[0], false);
+                        next_facebook(facebook_token, response.id, response.email, result.rows[0], false, res);
                     }
                     else{
                         central.provider.query("INSERT INTO users (facebook_id, facebook_email, first_name, last_name, created_at, updated_at) VALUES($1, $2, $3, $4, NOW(), NOW()) RETURNING *", [response.id, response.email, response.first_name, response.last_name], function(err, result){
@@ -374,7 +374,7 @@ module.exports = {
                                 return console.error('error running query', err);
                             }
                             if(result.rows.length!=0){
-                                next(result.rows[0], true);
+                                next_facebook(facebook_token, response.id, response.email, result.rows[0], true, res);
                             }
                             else{
                                 res.statusCode=401;
