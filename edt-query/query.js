@@ -232,13 +232,11 @@ module.exports = {
                     var ret = {};
                     console.log("finished promises: "+JSON.stringify(results));
                     results.rows.forEach(function(result){
-                        result.rows.forEach(function(event){
-                            console.log("date: "+event.date);
-                            if(!ret[event.date]){
-                                ret[event.date] = [];
-                            }
-                            ret[event.date].push(event);
-                        });
+                        console.log("date: "+event.date);
+                        if(!ret[event.date]){
+                            ret[event.date] = [];
+                        }
+                        ret[event.date].push(event);
                     });
                     console.log(JSON.stringify(ret));
                     res.statusCode=200;
