@@ -30,7 +30,7 @@ app.use('/users', users);
 app.use('/me', me);
 
 // ressources
-app.use(express.static('public'));
+app.use('/static', express.static('public'));
 
 // catch 404
 app.use(function(req, res, next) {
