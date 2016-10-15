@@ -219,24 +219,24 @@ module.exports = {
                 }
                 // get promises from all providers
                 var promises=[];
-                var promiseProviders=[];
                 result.rows.forEach(function(agenda){
                     var query=providers[agenda.provider].client.query("SELECT agenda_events.id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_id=$1 AND start_time::date > $2 AND end_time::date <= $3", [agenda.id, start_date, end_date]);
+                    query.then(function(){
+                        providers[agenda.provider].done();
+                    });
                     promises.push(query);
-                    promiseProviders.push(providers[agenda.provider]);
                 });
                 // when we have all replies
                 when.all(promises).spread(function(results) {
                     var ret = {};
-                    promiseProviders.forEach(function(providerPromise){
-                        providerPromise.done();
-                    });
-                    results.rows.forEach(function(event){
-                        console.log("date: "+event.date);
-                        if(!ret[event.date]){
-                            ret[event.date] = [];
-                        }
-                        ret[event.date].push(event);
+                    results.forEach(function(result){
+                        result.rows.forEach(function(event){
+                            console.log("date: "+event.date);
+                            if(!ret[event.date]){
+                                ret[event.date] = [];
+                            }
+                            ret[event.date].push(event);
+                        });
                     });
                     console.log(JSON.stringify(ret));
                     res.statusCode=200;
@@ -254,18 +254,16 @@ module.exports = {
                 }
                 // get promises from all providers
                 var promises=[];
-                var promiseProviders=[];
                 result.rows.forEach(function(agenda){
                     console.log("agenda: "+JSON.stringify(agenda));
-                    var provider = providers[agenda.provider];
-                    promises.push(provider.client.query("select * from agendas where id=$1", [agenda.agenda_id]));
-                    promiseProviders.push(provider);
+                    var query = providers[agenda.provider].client.query("select * from agendas where id=$1", [agenda.agenda_id]);
+                    query.then(function(){
+                        providers[agenda.provider].done();
+                    });
+                    promises.push(query);
                 });
                 // when we have all replies
                 when.all(promises).spread(function(results) {
-                    promiseProviders.forEach(function(providerPromise){
-                        providerPromise.done();
-                    });
                     res.statusCode=200;
                     res.send(results.rows);
                 });
