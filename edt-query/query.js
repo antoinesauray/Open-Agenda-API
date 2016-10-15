@@ -212,6 +212,7 @@ module.exports = {
             });
         },
         events: function(user_id, start_date, end_date, res){
+            console.log("user_id="+JSON.stringify(user_id));
             central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
                 central.done();
                 if(err) {
