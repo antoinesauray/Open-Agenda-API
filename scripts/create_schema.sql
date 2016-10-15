@@ -1,3 +1,61 @@
+
+--
+--  Providers
+--
+CREATE TABLE providers (
+    provider varchar primary key,
+    name varchar,
+    host varchar,
+    database varchar unique,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+ALTER TABLE providers OWNER TO edt_owner;
+GRANT SELECT ON providers to edt_limited;
+
+INSERT INTO providers VALUES ('edt', 'EDT', '127.0.0.1', 'edt', NOW(), NOW());
+
+--
+--  Users
+--
+CREATE TABLE users (
+    edt_id bigint primary key,
+    facebook_id character varying(255),
+    facebook_token character varying(255),
+    first_name character varying(255),
+    last_name character varying(255),
+    facebook_email character varying(255),
+    edt_email character varying(255),
+    password character varying(255),
+    salt character varying(255),
+    is_validated boolean DEFAULT false,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+ALTER TABLE users OWNER TO edt_owner;
+CREATE SEQUENCE users_edt_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE users_edt_id_seq OWNER TO edt_owner;
+ALTER SEQUENCE users_edt_id_seq OWNED BY users.edt_id;
+ALTER TABLE users ALTER COLUMN edt_id SET DEFAULT nextval('users_edt_id_seq');
+--
+--  User Agendas
+--
+CREATE TABLE user_agendas (
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    user_id integer NOT NULL,
+    agenda_id integer NOT NULL,
+    provider varchar references providers(provider)
+);
+
+ALTER TABLE user_agendas OWNER TO edt_owner;
+ALTER TABLE ONLY user_agendas ADD CONSTRAINT user_agendas_pkey PRIMARY KEY (agenda_id, provider);
+
 --
 --  Entities
 --
@@ -10,13 +68,8 @@ CREATE TABLE entities (
     agenda_type_id character varying(20),
     more jsonb
 );
-
 ALTER TABLE entities OWNER TO edt_owner;
-
-ALTER TABLE ONLY entities
-    ADD CONSTRAINT entities_pkey PRIMARY KEY (id);
-
-INSERT INTO entities VALUES ('1', 'UFR Médecine/Pharmacie', true, NOW(), NOW(), '0', '{"url": "https://edt.univ-nantes.fr/medecine/"}');
+ALTER TABLE ONLY entities ADD CONSTRAINT entities_pkey PRIMARY KEY (id);
 
 --
 --  Event Types
@@ -51,7 +104,8 @@ CREATE TABLE agenda_types (
 ALTER TABLE agenda_types OWNER TO edt_owner;
 ALTER TABLE ONLY agenda_types ADD CONSTRAINT agenda_types_pkey PRIMARY KEY (id);
 
-INSERT INTO agenda_types VALUES('0', true, NOW(), NOW());
+INSERT INTO agenda_types VALUES('personal', true, NOW(), NOW());
+INSERT INTO agenda_types VALUES('facebook', true, NOW(), NOW());
 
 --
 --  Agendas
@@ -103,5 +157,7 @@ CREATE SEQUENCE agenda_events_id_seq
     CACHE 1;
 ALTER TABLE agenda_events_id_seq OWNER TO edt_owner;
 ALTER SEQUENCE agenda_events_id_seq OWNED BY agenda_events.id;
+CREATE UNIQUE INDEX facebook_id ON agenda_events USING btree (((more ->> 'facebook_id'::text)));
+
 ALTER TABLE ONLY agenda_events ALTER COLUMN id SET DEFAULT nextval('agenda_events_id_seq'::regclass);
 ALTER TABLE ONLY agenda_events ADD CONSTRAINT agenda_events_pkey PRIMARY KEY (id);

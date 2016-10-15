@@ -1,0 +1,15 @@
+{
+    "valid": {
+        "facebook_token": "EAAOhBOjOZBfQBAFucGFTm5MSEmVdHfv421ZAT9K8B3j0pdZCdIJN2sZB8qerQifMeg2D2Kr7r8kPiapZA6ZCkPQI5fhAPvhFBIGlJ7Jy0kJUcwjlZAT3CkWg0ZBxVdH9jdKXZBP3xmwyZA8xmZCpqY68LJCBheLvlyZCzX4ijWayvTm5uQZDZD",
+        "email" : "sauray.antoine@gmail.com",
+        "password": "test",
+        "first_name": "Antoine",
+        "last_name": "Sauray"
+    },
+    "invalid": {
+        "facebook_token": "EAAOhBOjOZBfQBAEMWMzaSBHgs9CUAsY1TKQZAGbQTioSPg9fhoJrVy9X13I8edmlZAxYifcfJooLx2TD0X4a1iCuueg6ZAKkIKnV4nl6803Bk5AQZAeXFZAUng3CRoZB0MhaKbshvygZDZD",
+        "email" : "sauray.@gmail.com",
+        "password": "testzer"
+    }
+
+}
