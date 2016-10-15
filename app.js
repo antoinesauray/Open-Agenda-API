@@ -7,6 +7,9 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var providers = require('./routes/providers');
+var agendas = require('./routes/agendas');
+var entities = require('./routes/entities');
 //var agendas = require('./routes/agendas');
 //var entities = require('./routes/entities');
 //var types = require('./routes/agenda_types');
@@ -22,6 +25,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use('/', routes);
+app.use('/providers', providers);
+app.use('/agendas', agendas);
+app.use('/entities', entities);
 app.use('/users', users);
 app.use('/me', me);
 

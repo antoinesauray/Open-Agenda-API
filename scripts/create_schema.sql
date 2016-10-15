@@ -5,6 +5,9 @@
 CREATE TABLE providers (
     provider varchar primary key,
     name varchar,
+    image varchar,
+    primary_color character varying(7) default '#FFFFFF',
+    accent_color character varying(7) default '#FFFFFF',
     host varchar,
     database varchar unique,
     created_at timestamp with time zone NOT NULL,

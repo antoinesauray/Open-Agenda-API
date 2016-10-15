@@ -99,6 +99,57 @@ pool.on('error', function (err, client) {
 module.exports = {
     GET: {
 
+        providers: function(res){
+            central.provider.query("SELECT provider, name, image, primary_color, accent_color from providers", function(err, result){
+                central.done();
+                if(err) {
+                    return console.error('error running query', err);
+                }
+                if(result.rows.length!=0){
+                    res.statusCode=200;
+                    res.send(result.rows);
+                }
+                else{
+                    res.statusCode=401;
+                    res.send(result.rows);
+                }
+            });
+        },
+
+        agendas: function(provider, res){
+            providers[provider].client.query("SELECT * from agendas where agenda_entity_id in (select id from entities where public=true)", function(err, result){
+                providers[provider].done();
+                if(err) {
+                    return console.error('error running query', err);
+                }
+                if(result.rows.length!=0){
+                    res.statusCode=200;
+                    res.send(result.rows);
+                }
+                else{
+                    res.statusCode=401;
+                    res.send(result.rows);
+                }
+            });
+        },
+
+        entities: function(provider, res){
+            providers[provider].client.query("SELECT * from entities where public=true", function(err, result){
+                providers[provider].done();
+                if(err) {
+                    return console.error('error running query', err);
+                }
+                if(result.rows.length!=0){
+                    res.statusCode=200;
+                    res.send(result.rows);
+                }
+                else{
+                    res.statusCode=401;
+                    res.send(result.rows);
+                }
+            });
+        },
+
         user: function(user_id, res){
 
             central.provider.query("SELECT edt_id, first_name, last_name, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
@@ -106,7 +157,7 @@ module.exports = {
                 if(err) {
                     return console.error('error running query', err);
                 }
-                if(result.rows){
+                if(result.rows.length!=0){
                     res.statusCode=200;
                     res.send(result.rows);
                 }
@@ -148,7 +199,7 @@ module.exports = {
             });
         },
 
-        agendas: function(user_id, res){
+        user_agendas: function(user_id, res){
             // ask the central server for agenda providers
             central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
                 central.done();

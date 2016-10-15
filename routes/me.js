@@ -36,7 +36,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/agendas', function(req, res, next) {
-    query.GET.agendas(req.decoded.id, res);
+    query.GET.user_agendas(req.decoded.id, res);
 });
 
 router.get('/events/:start_date/:end_date', function(req, res, next) {
