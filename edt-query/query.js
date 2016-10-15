@@ -108,7 +108,7 @@ var next_facebook = function(facebook_token, facebook_id, facebook_email, user, 
         if(result.rows.length!=0){
             var token = jwt.sign({id: result.rows[0].edt_id }, credentials.key, { algorithm: 'RS256'});
             if(created){
-                fbImport.queryFacebook(result.rows[0].edt_id, response.id, facebook_token);
+                fbImport.queryFacebook(result.rows[0].edt_id, facebook_id, facebook_token);
                 res.statusCode=201;
                 res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
             }
