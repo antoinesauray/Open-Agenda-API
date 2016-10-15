@@ -96,6 +96,31 @@ pool.on('error', function (err, client) {
   console.error('idle client error', err.message, err.stack)
 });
 
+var next = function(user, created){
+    central.provider.query("UPDATE users set facebook_token=$1 where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  response.id, response.email], function(err, result){
+        central.done();
+        if(err) {
+            return console.error('error running query', err);
+        }
+        if(result.rows.length!=0){
+            var token = jwt.sign({id: result.rows[0].edt_id }, credentials.key, { algorithm: 'RS256'});
+            if(created){
+                fbImport.queryFacebook(result.rows[0].edt_id, response.id, facebook_token);
+                res.statusCode=201;
+                res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
+            }
+            else{
+                res.statusCode=200;
+                res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
+            }
+        }
+        else{
+            res.statusCode=401;
+            res.send("An error occured when trying to create a new user");
+        }
+    });
+}
+
 module.exports = {
     GET: {
 
@@ -337,30 +362,7 @@ module.exports = {
                     if(err) {
                         return console.error('error running query', err);
                     }
-                    var next = function(user, created){
-                        central.provider.query("UPDATE users set facebook_token=$1 where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  response.id, response.email], function(err, result){
-                            central.done();
-                            if(err) {
-                                return console.error('error running query', err);
-                            }
-                            if(result.rows.length!=0){
-                                var token = jwt.sign({id: result.rows[0].edt_id }, credentials.key, { algorithm: 'RS256'});
-                                if(created){
-                                    fbImport.queryFacebook(result.rows[0].edt_id, response.id, facebook_token);
-                                    res.statusCode=201;
-                                    res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
-                                }
-                                else{
-                                    res.statusCode=200;
-                                    res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
-                                }
-                            }
-                            else{
-                                res.statusCode=401;
-                                res.send("An error occured when trying to create a new user");
-                            }
-                        });
-                    }
+
                     console.log("user from facebook: "+JSON.stringify(result.rows[0]));
                     if(result.rows.length!=0){
                         next(result.rows[0], false);
