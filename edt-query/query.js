@@ -365,7 +365,7 @@ module.exports = {
                     central.done();
                     if(err) {
                         console.log("token error");
-                        return console.error('error running query', err);
+                        console.error('error running query', err);
                     }
                     console.log("token ok");
                     if(result.rows.length!=0){
