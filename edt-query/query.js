@@ -270,7 +270,7 @@ module.exports = {
                     }
                     else{
                         res.statusCode=200;
-                        res.json({});
+                        res.json([]);
                     }
 
                 });
