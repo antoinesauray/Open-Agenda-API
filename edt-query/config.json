@@ -3,7 +3,7 @@
     "address": "127.0.0.1",
     "port": 5432,
     "max_pool": 10,
-    "timeout": 1000,
+    "timeout": 10000,
     "user": {
         "limited": {
             "name": "edt_limited",
