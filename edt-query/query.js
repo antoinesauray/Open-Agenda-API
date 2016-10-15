@@ -66,7 +66,7 @@ pool.connect(function(err, client, done) {
       // here we declare the routes used in the central provider
       console.log(result.rows.length+' Providers available');
       result.rows.forEach(function(provider){
-          new pg.Pool({
+          var providerPool = new pg.Pool({
             user: user, //env var: PGUSER
             database: provider.database, //env var: PGDATABASE
             password: password, //env var: PGPASSWORD
@@ -74,7 +74,8 @@ pool.connect(function(err, client, done) {
             port: port, //env var: PGPORT
             max: pool, // max number of clients in the pool
             idleTimeoutMillis: timeout, // how long a client is allowed to remain idle before being closed
-          }).connect(function(err, client, done) {
+        });
+        providerPool.connect(function(err, client, done) {
               if(err) {
                   return console.error('error fetching client from pool', err);
               }
@@ -87,7 +88,9 @@ pool.connect(function(err, client, done) {
                   console.log('Connected to provider '+provider.provider);
               });
           });
-
+          providerPool.on('error', function (err, client) {
+            console.error('idle client error', err.message, err.stack)
+          });
       });
   });
 });
@@ -358,7 +361,7 @@ module.exports = {
                     return;
                 }
                 console.log("verifying token");
-                var q = central.provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
+                central.provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
                     central.done();
                     if(err) {
                         console.log("token error");
@@ -384,10 +387,6 @@ module.exports = {
                         });
                     }
                 });
-                q.on('end', function() {
-                    //This event callback always fires
-                    console.log('Finished with query');
-                  });
             });
         },
 
