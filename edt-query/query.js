@@ -264,9 +264,15 @@ module.exports = {
                 });
                 // when we have all replies
                 when.all(promises).spread(function(results) {
-                    console.log("result="+JSON.stringify(results));
-                    res.statusCode=200;
-                    res.send(results.rows);
+                    if(results){
+                        res.statusCode=200;
+                        res.send(results.rows);
+                    }
+                    else{
+                        res.statusCode=200;
+                        res.json({});
+                    }
+
                 });
             });
         }
