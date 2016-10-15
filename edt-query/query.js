@@ -233,24 +233,18 @@ module.exports = {
                 when.all(promises).spread(function(results) {
                     var ret = {};
                     console.log("finished promises: "+JSON.stringify(results));
-                    if(results.rows){
-                        results.rows.forEach(function(result){
-                            result.rows.forEach(function(event){
-                                console.log("date: "+event.date);
-                                if(!ret[event.date]){
-                                    ret[event.date] = [];
-                                }
-                                ret[event.date].push(event);
-                            });
+                    results.forEach(function(result){
+                        result.rows.forEach(function(event){
+                            console.log("date: "+event.date);
+                            if(!ret[event.date]){
+                                ret[event.date] = [];
+                            }
+                            ret[event.date].push(event);
                         });
-                        console.log(JSON.stringify(ret));
-                        res.statusCode=200;
-                        res.send(ret);
-                    }
-                    else{
-                        res.statusCode=200;
-                        res.json({});
-                    }
+                    });
+                    console.log(JSON.stringify(ret));
+                    res.statusCode=200;
+                    res.send(ret);
 
                 });
             });
