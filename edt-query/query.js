@@ -147,9 +147,9 @@ module.exports = {
             });
         },
 
-        agendas: function(provider, res){
+        agendas: function(provider, entity, res){
             if(providers[provider]){
-                providers[provider].client.query("SELECT * from agendas where agenda_entity_id in (select id from entities where public=true)", function(err, result){
+                providers[provider].client.query("SELECT * from agendas where agenda_entity_id = $1)", [entity], function(err, result){
                     providers[provider].done();
                     if(err) {
                         return console.error('error running query', err);

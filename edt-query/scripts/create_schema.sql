@@ -8,6 +8,7 @@ CREATE DATABASE provider_nantes OWNER edt_owner;
 CREATE TABLE entities (
     id character varying(20) NOT NULL,
     name character varying(255),
+    image varchar,
     public boolean DEFAULT false,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,

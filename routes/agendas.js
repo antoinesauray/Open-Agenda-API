@@ -32,8 +32,8 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-    if(req.query.provider){
-        query.GET.agendas(req.query.provider, res);
+    if(req.query.entity && req.query.provider){
+        query.GET.agendas(req.query.provider, req.query.entity, res);
     }
     else{
         res.status(403);
