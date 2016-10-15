@@ -362,6 +362,7 @@ module.exports = {
                 }
                 console.log("verifying token");
                 central.provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
+                    console.log("done");
                     central.done();
                     if(err) {
                         console.log("token error");
