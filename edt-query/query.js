@@ -228,20 +228,20 @@ module.exports = {
                     promises.push(query);
                 });
                 // when we have all replies
-                when.all(promises).spread(function(results) {
-                    var ret = {};
-                    console.log("finished promises: "+JSON.stringify(results));
-                    results.rows.forEach(function(event){
-                        console.log("date: "+event.date);
-                        if(!ret[event.date]){
-                            ret[event.date] = [];
-                        }
-                        ret[event.date].push(event);
+                Promise.all(promises).then(results => {
+                    console.log("results: "+JSON.stringify(results));
+                    var events={};
+                    results.forEach(function(result){
+                        result.rows.forEach(function(event){
+                            console.log("date: "+event.date);
+                            if(!events[event.date]){
+                                events[event.date] = [];
+                            }
+                            events[event.date].push(event);
+                        });
                     });
-                    console.log(JSON.stringify(ret));
                     res.statusCode=200;
-                    res.send(ret);
-
+                    res.send(events);
                 });
             });
         },
@@ -263,7 +263,6 @@ module.exports = {
                         providers[agenda.provider].done();
                     });
                 });
-                // when we have all replies
                 Promise.all(promises).then(results => {
                     console.log("results: "+JSON.stringify(results));
                     var agendas=[];
@@ -273,20 +272,6 @@ module.exports = {
                     res.statusCode=200;
                     res.send(agendas);
                 });
-                /*
-                when.all(promises).spread(function(results) {
-                    if(results){
-                        console.log("results: "+JSON.stringify(results))
-                        res.statusCode=200;
-                        res.send(results.rows);
-                    }
-                    else{
-                        res.statusCode=200;
-                        res.json([]);
-                    }
-
-                });
-                */
             });
         }
     },
