@@ -149,7 +149,7 @@ module.exports = {
 
         agendas: function(provider, entity, res){
             if(providers[provider]){
-                providers[provider].client.query("SELECT * from agendas where agenda_entity_id = $1", [entity], function(err, result){
+                providers[provider].client.query("SELECT id, name, editable, agenda_entity_id, agenda_type_id, more, active, $2::text as provider, $3::text as entity from agendas where agenda_entity_id = $1", [entity, provider, entity], function(err, result){
                     providers[provider].done();
                     if(err) {
                         return console.error('error running query', err);
