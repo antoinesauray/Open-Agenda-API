@@ -478,7 +478,7 @@ module.exports = {
                     });
                 }
                 catch(err){
-                    facebook_user_token(facebook_token, res);
+                    facebook_user(facebook_token, res);
                 }
             });
         }
