@@ -149,19 +149,24 @@ module.exports = {
 
         agendas: function(provider, entity, res){
             if(providers[provider]){
-                providers[provider].client.query("SELECT * from agendas where agenda_entity_id = $1", [entity], function(err, result){
+                providers[provider].client.query("SELECT * from agendas where agenda_entity_id = $1", [entity], function(err, results){
                     providers[provider].done();
                     if(err) {
                         return console.error('error running query', err);
                     }
-                    console.log(JSON.stringify(result.rows));
+                    var agendas=[];
+                    results.forEach(function(result){
+                        agendas.push(result.rows);
+                    });
+                    console.log(JSON.stringify(agendas));
+                    var
                     if(result.rows.length!=0){
                         res.statusCode=200;
-                        res.json({agendas: result.rows});
+                        res.send(agendas);
                     }
                     else{
                         res.statusCode=401;
-                        res.json({agendas: result.rows});
+                        res.send(agendas);
                     }
                 });
             }
