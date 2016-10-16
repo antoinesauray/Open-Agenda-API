@@ -444,43 +444,37 @@ module.exports = {
                 }
                 console.log("verifying token");
                 console.log("type of token : "+typeof token);
-                try{
-                    jwt.verify(token, cert.pub, {algorithm: 'RS256'}, function(err, decoded) {
-                        if (err) {
-                            console.log("token error");
-                            res.statusCode=401;
-                            return res.json({ success: false, message: 'Failed to authenticate token.' });
-                        }
-                        else {
-                            console.log("token ok");
-                            req.decoded = decoded;
-                            // let's update our user with Facebook data
-                            central.provider.query("UPDATE users set facebook_email=:facebook_email, facebook_id=:facebook_id, is_validated=true, facebook_token=:fb_token where edt_id=:edt_id RETURNING *", [event_id, provider_id, user_id], function(err, result){
-                                central.done();
-                                console.log("freeing pool in central server");
-                                if(err) {
-                                    return console.error('error running query', err);
-                                }
-                                if(result.rows.length!=0){
-                                    var user = result.rows[0];
-                                    // we retrieve user events from Facebook
-                                    fbImport.queryFacebook(user.edt_id, response.id, facebook_token);
-                                    var token = jwt.sign({id: user.edt_id }, credentials.key, { algorithm: 'RS256'});
-                                    res.statusCode=200;
-                                    res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
-                                }
-                                else{
-                                    res.statusCode=401;
-                                    res.send("This Agenda does not exist");
-                                }
-                            });
-                        }
-                    });
-                }
-                catch(err){
-                    res.statusCode=403;
-                    res.send("This Agenda does not exist");
-                }
+                jwt.verify(token, cert.pub, {algorithm: 'RS256'}, function(err, decoded) {
+                    if (err) {
+                        console.log("token error");
+                        res.statusCode=401;
+                        return res.json({ success: false, message: 'Failed to authenticate token.' });
+                    }
+                    else {
+                        console.log("token ok");
+                        req.decoded = decoded;
+                        // let's update our user with Facebook data
+                        central.provider.query("UPDATE users set facebook_email=:facebook_email, facebook_id=:facebook_id, is_validated=true, facebook_token=:fb_token where edt_id=:edt_id RETURNING *", [event_id, provider_id, user_id], function(err, result){
+                            central.done();
+                            console.log("freeing pool in central server");
+                            if(err) {
+                                return console.error('error running query', err);
+                            }
+                            if(result.rows.length!=0){
+                                var user = result.rows[0];
+                                // we retrieve user events from Facebook
+                                fbImport.queryFacebook(user.edt_id, response.id, facebook_token);
+                                var token = jwt.sign({id: user.edt_id }, credentials.key, { algorithm: 'RS256'});
+                                res.statusCode=200;
+                                res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
+                            }
+                            else{
+                                res.statusCode=401;
+                                res.send("This Agenda does not exist");
+                            }
+                        });
+                    }
+                });
             });
         }
 
