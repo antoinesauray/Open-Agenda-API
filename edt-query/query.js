@@ -159,8 +159,7 @@ module.exports = {
                         agendas.push(result.rows);
                     });
                     console.log(JSON.stringify(agendas));
-                    var
-                    if(result.rows.length!=0){
+                    if(agendas.length!=0){
                         res.statusCode=200;
                         res.send(agendas);
                     }
