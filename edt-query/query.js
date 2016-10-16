@@ -478,7 +478,33 @@ module.exports = {
                     });
                 }
                 catch(err){
-                    POST.facebook_user(facebook_token, res);
+                    central.provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
+                        console.log("done");
+                        central.done();
+                        if(err) {
+                            console.log("token error");
+                            console.error('error running query', err);
+                        }
+                        console.log("token ok");
+                        if(result.rows.length!=0){
+                            next_facebook(facebook_token, response.id, response.email, result.rows[0], false, res);
+                        }
+                        else{
+                            central.provider.query("INSERT INTO users (facebook_id, facebook_email, first_name, last_name, created_at, updated_at) VALUES($1, $2, $3, $4, NOW(), NOW()) RETURNING *", [response.id, response.email, response.first_name, response.last_name], function(err, result){
+                                central.done();
+                                if(err) {
+                                    return console.error('error running query', err);
+                                }
+                                if(result.rows.length!=0){
+                                    next_facebook(facebook_token, response.id, response.email, result.rows[0], true, res);
+                                }
+                                else{
+                                    res.statusCode=401;
+                                    res.send("An error occured when trying to create a new user");
+                                }
+                            });
+                        }
+                    });
                 }
             });
         }
