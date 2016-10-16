@@ -88,7 +88,7 @@ pool.connect(function(err, client, done) {
                   if(err) {
                       return console.error('error running query', err);
                   }
-                  console.log('Connected to provider '+provider.provider);
+                  console.log('Connected to provider '+provider.provider+" as "+user);
               });
           });
           providerPool.on('error', function (err, client) {

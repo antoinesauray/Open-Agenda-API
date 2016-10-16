@@ -28,8 +28,8 @@ INSERT INTO entities VALUES ('1', 'UFR Médecine/Pharmacie', true, NOW(), NOW(),
 --
 CREATE TABLE event_types (
     id character varying(20) NOT NULL,
-    color_light character varying(7),
-    color_dark character varying(7),
+    color_light character varying(7) default '#CCBBCC',
+    color_dark character varying(7) defaul '#CCBBCC',
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
 );
@@ -96,7 +96,7 @@ CREATE TABLE agenda_events (
     more jsonb DEFAULT '{}'::jsonb,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
-    event_type_id character varying(20),
+    event_type_id character varying(20) REFERENCES event_types(id),
     agenda_id integer
 );
 ALTER TABLE agenda_events OWNER TO edt_owner;
