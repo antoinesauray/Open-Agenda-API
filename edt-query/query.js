@@ -154,6 +154,7 @@ module.exports = {
                     if(err) {
                         return console.error('error running query', err);
                     }
+                    console.log(JSON.stringify(result.rows));
                     if(result.rows.length!=0){
                         res.statusCode=200;
                         res.send(result.rows);
