@@ -257,7 +257,7 @@ module.exports = {
                 var promises=[];
                 result.rows.forEach(function(agenda){
                     console.log("agenda: "+JSON.stringify(agenda));
-                    var query = providers[agenda.provider].client.query("select id, '"+agenda.provider+"' as provider, name, editable, agenda_entity_id, agenda_type_id, more, active from agendas where id in (select agenda_id from user_agendas where user_id=$1)", [agenda.agenda_id]);
+                    var query = providers[agenda.provider].client.query("select id, '"+agenda.provider+"' as provider, name, editable, agenda_entity_id, agenda_type_id, more, active from agendas where id =$1", [agenda.agenda_id]);
                     promises.push(query);
                     query.then(function(){
                         providers[agenda.provider].done();
