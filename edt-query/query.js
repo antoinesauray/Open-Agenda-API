@@ -149,24 +149,18 @@ module.exports = {
 
         agendas: function(provider, entity, res){
             if(providers[provider]){
-                providers[provider].client.query("SELECT * from agendas where agenda_entity_id = $1", [entity], function(err, results){
+                providers[provider].client.query("SELECT * from agendas where agenda_entity_id = $1", [entity], function(err, result){
                     providers[provider].done();
                     if(err) {
                         return console.error('error running query', err);
                     }
-                    var agendas=[];
-                    results.forEach(function(result){
-                        agendas.push(result.rows);
-                        console.log(JSON.stringify(result.rows));
-
-                    });
-                    if(agendas.length!=0){
+                    if(result.rows.length!=0){
                         res.statusCode=200;
-                        res.send(agendas);
+                        res.send(result.rows);
                     }
                     else{
                         res.statusCode=401;
-                        res.send(agendas);
+                        res.send(result.rows);
                     }
                 });
             }
@@ -270,10 +264,11 @@ module.exports = {
                     });
                 });
                 Promise.all(promises).then(results => {
-                    console.log("results: "+JSON.stringify(results));
                     var agendas=[];
                     results.forEach(function(result){
                         agendas.push(result.rows);
+                        console.log("result: "+JSON.stringify(result.rows));
+
                     });
                     res.statusCode=200;
                     res.send(agendas);
