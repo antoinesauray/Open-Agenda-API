@@ -279,7 +279,7 @@ module.exports = {
     POST: {
         event: function(user_id, provider_id, agenda_id, name, start_time, end_time, res){
             console.log("provider="+provider_id);
-            if(providers[provider]){
+            if(providers[provider_id]){
                 providers[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
                     providers[provider_id].done();
                     if(err) {
