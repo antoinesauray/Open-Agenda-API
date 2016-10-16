@@ -326,13 +326,10 @@ module.exports = {
         agendas: function(provider_id, agenda_id, user_id, res){
 
             if(providers[provider_id]){
-                central.provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3) ON CONFLICT IGNORE", [provider_id, agenda_id, user_id], function(err, result){
+                central.provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
                     central.done();
                     if(err) {
                         console.error('error running query', err);
-                        res.statusCode=401;
-                        res.json({});
-                        return;
                     }
                     res.statusCode=200;
                     res.json({message: "This agenda has been post"});
