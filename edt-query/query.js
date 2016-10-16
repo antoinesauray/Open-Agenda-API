@@ -477,9 +477,9 @@ module.exports = {
                         }
                     });
                 }
-                catch(err, res){
+                catch(err){
                     res.statusCode=403;
-                    res.send("Token is wrong");
+                    res.send("This Agenda does not exist");
                 }
             });
         }
