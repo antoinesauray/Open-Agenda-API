@@ -221,7 +221,7 @@ module.exports = {
                 // get promises from all providers
                 var promises=[];
                 result.rows.forEach(function(agenda){
-                    var query=providers[agenda.provider].client.query("SELECT agenda_events.id, agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_id=$1 AND start_time::date > $2 AND end_time::date <= $3", [agenda.agenda_id, start_date, end_date]);
+                    var query=providers[agenda.provider].client.query("SELECT agenda_events.id, agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, more FROM agenda_events LEFT JOIN user_agendas ON user_agendas.agenda_id=agenda_events.agenda_id LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_id=$1 AND start_time::date > $2 AND end_time::date <= $3", [agenda.agenda_id, start_date, end_date]);
                     query.then(function(){
                         providers[agenda.provider].done();
                     });
