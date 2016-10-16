@@ -265,7 +265,7 @@ module.exports = {
                 });
                 // when we have all replies
                 Promise.all(promises).then(results => {
-                    console.log("results: "+JSON.stringify(values));
+                    console.log("results: "+JSON.stringify(results));
                     var agendas=[];
                     results.forEach(function(result){
                         agendas.push(result.rows);
