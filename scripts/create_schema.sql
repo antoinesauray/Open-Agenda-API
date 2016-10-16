@@ -164,7 +164,8 @@ CREATE SEQUENCE agenda_events_id_seq
     CACHE 1;
 ALTER TABLE agenda_events_id_seq OWNER TO edt_owner;
 ALTER SEQUENCE agenda_events_id_seq OWNED BY agenda_events.id;
-CREATE UNIQUE INDEX facebook_id ON agenda_events USING btree (((more ->> 'facebook_id'::text)));
 
 ALTER TABLE ONLY agenda_events ALTER COLUMN id SET DEFAULT nextval('agenda_events_id_seq'::regclass);
 ALTER TABLE ONLY agenda_events ADD CONSTRAINT agenda_events_pkey PRIMARY KEY (id);
+
+CREATE UNIQUE INDEX facebook_id ON agenda_events USING btree (((more ->> 'facebook_id'::text)));
