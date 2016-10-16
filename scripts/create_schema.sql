@@ -104,6 +104,7 @@ INSERT INTO event_types VALUES ('facebook', '#CCBBCC', '#CCBBCC', NOW(), NOW());
 CREATE TABLE agenda_types (
     id character varying(20) NOT NULL,
     public boolean DEFAULT false,
+    image varchar,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL
 );
