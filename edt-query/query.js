@@ -323,7 +323,7 @@ module.exports = {
                 res.send();
             }
         },
-        agenda: function(provider_id, agenda_id, user_id, res){
+        agendas: function(provider_id, agenda_id, user_id, res){
             if(providers[provider]){
                 providers[provider_id].client.query("INSERT INTO user_agendas(created_at, updated_at, provider_id, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3) RETURNING *", [provider_id, agenda_id, user_id], function(err, result){
                     providers[provider].done();
