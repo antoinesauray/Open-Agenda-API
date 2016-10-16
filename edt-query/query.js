@@ -157,11 +157,11 @@ module.exports = {
                     console.log(JSON.stringify(result.rows));
                     if(result.rows.length!=0){
                         res.statusCode=200;
-                        res.send(result.rows);
+                        res.json({agendas: result.rows});
                     }
                     else{
                         res.statusCode=401;
-                        res.send(result.rows);
+                        res.json({agendas: result.rows});
                     }
                 });
             }
