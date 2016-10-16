@@ -266,9 +266,9 @@ module.exports = {
                 Promise.all(promises).then(results => {
                     var agendas=[];
                     results.forEach(function(result){
-                        agendas.push(result.rows);
-                        console.log("result: "+JSON.stringify(result.rows));
-
+                        result.rows.forEach(function(agenda){
+                            agendas.push(agenda);
+                        });
                     });
                     res.statusCode=200;
                     res.send(agendas);
