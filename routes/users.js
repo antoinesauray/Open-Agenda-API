@@ -18,7 +18,7 @@ router.post('/', function(req, res, next) {
     if(req.body.facebook_token!=null){
         var token = req.body.token || req.query.token || req.headers['x-access-token'];
         if(token!=null){
-            query.POST.facebook_user_token(req.body.facebook_token, res);
+            query.POST.facebook_user_token(req.body.facebook_token, token, res);
         }
         else{
             query.POST.facebook_user(req.body.facebook_token, res);
