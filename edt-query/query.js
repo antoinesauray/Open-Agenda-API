@@ -256,7 +256,7 @@ module.exports = {
                 // get promises from all providers
                 var promises=[];
                 result.rows.forEach(function(agenda){
-                    var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, entities.image, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                    var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, entities.image, entities.name as entity_name, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
                     promises.push(query);
                     query.then(function(){
                         providers[agenda.provider].done();
