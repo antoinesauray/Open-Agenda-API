@@ -259,9 +259,7 @@ module.exports = {
                     console.log("agenda: "+JSON.stringify(agenda));
                     var query = providers[agenda.provider].client.query("select * from agendas where id=$1", [agenda.agenda_id]);
                     promises.push(query);
-                    query.then(function(){
-                        providers[agenda.provider].done();
-                    });
+                    
                 });
                 // when we have all replies
                 when.all(promises).spread(function(results) {
