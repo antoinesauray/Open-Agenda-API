@@ -444,7 +444,7 @@ module.exports = {
                 }
                 console.log("verifying token");
                 console.log("type of token : "+typeof token);
-                if(token){
+                try{
                     jwt.verify(token, cert.pub, {algorithm: 'RS256'}, function(err, decoded) {
                         if (err) {
                             console.log("token error");
@@ -477,7 +477,7 @@ module.exports = {
                         }
                     });
                 }
-                else{
+                catch(err){
                     facebook_user_token(facebook_token, res);
                 }
             });
