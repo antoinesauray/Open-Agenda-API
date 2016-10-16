@@ -443,6 +443,7 @@ module.exports = {
                     return;
                 }
                 console.log("verifying token");
+                console.log("type of token : "+typeof token);
                 if(token){
                     jwt.verify(token, cert.pub, {algorithm: 'RS256'}, function(err, decoded) {
                         if (err) {
