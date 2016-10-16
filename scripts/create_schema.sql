@@ -16,7 +16,7 @@ CREATE TABLE providers (
 ALTER TABLE providers OWNER TO edt_owner;
 GRANT SELECT ON providers to edt_limited;
 
-INSERT INTO providers VALUES ('edt', 'EDT', NULL, '#FFFFFF', '#FFFFFF', '127.0.0.1', 'edt', NOW(), NOW());
+INSERT INTO providers VALUES ('edt', 'EDT', 'http://api.smart-edt.com/static/ic_launcher-web.png', '#004d40', '#004d40', '127.0.0.1', 'edt', NOW(), NOW());
 
 --
 --  Users
@@ -95,6 +95,9 @@ INSERT INTO event_types VALUES ('exam', '#FF5555', '#FF5555', NOW(), NOW());
 INSERT INTO event_types VALUES ('other', '#CCBBCC', '#CCBBCC', NOW(), NOW());
 INSERT INTO event_types VALUES ('ctd', '#FFEE66', '#FFEE66', NOW(), NOW());
 
+INSERT INTO event_types VALUES ('me', '#CCBBCC', '#CCBBCC', NOW(), NOW());
+INSERT INTO event_types VALUES ('facebook', '#CCBBCC', '#CCBBCC', NOW(), NOW());
+
 --
 --  Agenda Types
 --
@@ -119,8 +122,8 @@ CREATE TABLE agendas (
     editable boolean DEFAULT false,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
-    agenda_entity_id character varying(20),
-    agenda_type_id character varying(20),
+    agenda_entity_id character varying(20) references entities(id),
+    agenda_type_id character varying(20) references agenda_types(id),
     more jsonb,
     active boolean DEFAULT true
 );
@@ -148,8 +151,8 @@ CREATE TABLE agenda_events (
     more jsonb DEFAULT '{}'::jsonb,
     created_at timestamp with time zone NOT NULL,
     updated_at timestamp with time zone NOT NULL,
-    event_type_id character varying(20),
-    agenda_id integer
+    event_type_id character varying(20) references event_types(id),
+    agenda_id integer references agendas(id)
 );
 ALTER TABLE agenda_events OWNER TO edt_owner;
 CREATE SEQUENCE agenda_events_id_seq
