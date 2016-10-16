@@ -443,8 +443,7 @@ module.exports = {
                     return;
                 }
                 console.log("verifying token");
-                console.log("type of token : "+typeof token);
-                try{
+                
                     jwt.verify(token, cert.pub, {algorithm: 'RS256'}, function(err, decoded) {
                         if (err) {
                             console.log("token error");
@@ -476,11 +475,6 @@ module.exports = {
                             });
                         }
                     });
-                }
-                catch(err){
-                    res.statusCode=403;
-                    res.send("Token is wrong");
-                }
             });
         }
 
