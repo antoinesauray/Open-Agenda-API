@@ -452,9 +452,9 @@ module.exports = {
                     }
                     else {
                         console.log("token ok");
-                        req.decoded = decoded;
+                        var id = decoded.id;
                         // let's update our user with Facebook data
-                        central.provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, is_validated=true, facebook_token=$3 where edt_id=$4 RETURNING *", [response.id, response.email, facebook_token, req.decoded.token], function(err, result){
+                        central.provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, is_validated=true, facebook_token=$3 where edt_id=$4 RETURNING *", [response.id, response.email, facebook_token, id], function(err, result){
                             central.done();
                             console.log("freeing pool in central server");
                             if(err) {
