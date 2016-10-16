@@ -324,8 +324,9 @@ module.exports = {
             }
         },
         agendas: function(provider_id, agenda_id, user_id, res){
+
             if(providers[provider_id]){
-                central.provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3) RETURNING *", [provider_id, agenda_id, user_id], function(err, result){
+                central.provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3) ON CONFLICT DO IGNORE RETURNING *", [provider_id, agenda_id, user_id], function(err, result){
                     central.done();
                     if(err) {
                         return console.error('error running query', err);

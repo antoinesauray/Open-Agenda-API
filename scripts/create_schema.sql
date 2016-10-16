@@ -57,7 +57,7 @@ CREATE TABLE user_agendas (
 );
 
 ALTER TABLE user_agendas OWNER TO edt_owner;
-ALTER TABLE ONLY user_agendas ADD CONSTRAINT user_agendas_pkey PRIMARY KEY (agenda_id, provider);
+ALTER TABLE ONLY user_agendas ADD CONSTRAINT user_agendas_pkey PRIMARY KEY (agenda_id, provider, user_id);
 
 --
 --  Entities
