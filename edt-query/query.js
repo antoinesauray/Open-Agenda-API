@@ -157,8 +157,9 @@ module.exports = {
                     var agendas=[];
                     results.forEach(function(result){
                         agendas.push(result.rows);
+                        console.log(JSON.stringify(result.rows));
+
                     });
-                    console.log(JSON.stringify(agendas));
                     if(agendas.length!=0){
                         res.statusCode=200;
                         res.send(agendas);
