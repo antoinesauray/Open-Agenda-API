@@ -264,10 +264,14 @@ module.exports = {
                     });
                 });
                 // when we have all replies
-                Promise.all(promises).then(values => {
-                    console.log("results: "+JSON.stringify(values))
+                Promise.all(promises).then(results => {
+                    console.log("results: "+JSON.stringify(values));
+                    var agendas=[];
+                    results.forEach(function(result){
+                        agendas.push(result.rows);
+                    });
                     res.statusCode=200;
-                    res.send(values);
+                    res.send(agendas);
                 });
                 /*
                 when.all(promises).spread(function(results) {
