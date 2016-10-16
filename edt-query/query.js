@@ -259,12 +259,20 @@ module.exports = {
                     console.log("agenda: "+JSON.stringify(agenda));
                     var query = providers[agenda.provider].client.query("select * from agendas where id=$1", [agenda.agenda_id]);
                     promises.push(query);
-                    
+                    query.then(function(){
+                        providers[agenda.provider].done();
+                    });
                 });
                 // when we have all replies
+                Promise.all(promises).then(values => {
+                    console.log("results: "+JSON.stringify(values))
+                    res.statusCode=200;
+                    res.send(values);
+                });
+                /*
                 when.all(promises).spread(function(results) {
                     if(results){
-                        console.log("results: "+JSON.stringify(results));
+                        console.log("results: "+JSON.stringify(results))
                         res.statusCode=200;
                         res.send(results.rows);
                     }
@@ -274,6 +282,7 @@ module.exports = {
                     }
 
                 });
+                */
             });
         }
     },
