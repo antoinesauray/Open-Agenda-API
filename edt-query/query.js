@@ -262,10 +262,13 @@ module.exports = {
                         providers[agenda.provider].done();
                     });
                 });
+                console.log("promises ready");
                 Promise.all(promises).then(results => {
                     var agendas=[];
+                    console.log("promise results: "+JSON.stringify(results));
                     results.forEach(function(result){
                         result.rows.forEach(function(agenda){
+                            console.log("agenda: "+JSON.stringify(agenda));
                             agendas.push(agenda);
                         });
                     });
