@@ -55,8 +55,8 @@ router.post('/events', function(req, res, next) {
 });
 
 router.delete('/events/:id', function(req, res, next) {
-    if(req.params.id && req.body.provider){
-        query.DELETE.event(req.body.provider, req.params.id, req.decoded.id, res);
+    if(req.params.id && req.query.provider){
+        query.DELETE.event(req.query.provider, req.params.id, req.decoded.id, res);
     }
     else{
         res.statusCode=400;
