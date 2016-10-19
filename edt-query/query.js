@@ -233,7 +233,7 @@ module.exports = {
                 Promise.all(promises).then(results => {
                     var events={};
                     console.log("promises finished: "+results.length);
-                    results.forEach(function(results){
+                    results.forEach(function(result){
                         result.rows.forEach(function(event){
                             if(!events[event.date]){
                                 events[event.date] = [];
