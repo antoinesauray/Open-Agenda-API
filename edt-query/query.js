@@ -232,7 +232,7 @@ module.exports = {
                 // when we have all replies
                 Promise.all(promises).then(results => {
                     var events={};
-                    console.log("promises finished: "+result.length);
+                    console.log("promises finished: "+results.length);
                     results.forEach(function(result){
                         result.rows.forEach(function(event){
                             if(!events[event.date]){
