@@ -234,6 +234,7 @@ module.exports = {
                     var events={};
                     console.log("promises finished: "+results.length);
                     results.forEach(function(result){
+                        console.log("promise: "+result.rows);
                         result.rows.forEach(function(event){
                             if(!events[event.date]){
                                 events[event.date] = [];
