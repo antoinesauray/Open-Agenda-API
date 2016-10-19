@@ -64,6 +64,16 @@ router.delete('/events/:id', function(req, res, next) {
     }
 });
 
+router.delete('/agendas/:agenda_id', function(req, res, next) {
+    if(req.params.agenda_id && req.query.provider){
+        query.DELETE.agenda(req.query.provider, req.params.agenda_id, req.decoded.id, res);
+    }
+    else{
+        res.statusCode=400;
+        res.send("No Agenda provided");
+    }
+});
+
 router.post('/agendas', function(req, res, next) {
     if(req.body.provider && req.body.agenda_id){
         query.POST.agendas(req.body.provider, req.body.agenda_id, req.decoded.id, res);

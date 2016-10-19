@@ -40,3 +40,5 @@ ALTER FUNCTION public.insertuseragenda() OWNER TO postgres;
 
 CREATE TRIGGER user_agenda AFTER INSERT ON users FOR EACH ROW EXECUTE PROCEDURE insertuseragenda();
 CREATE TRIGGER user_event BEFORE INSERT ON agenda_events FOR EACH ROW EXECUTE PROCEDURE checkagendaiseditable();
+CREATE TRIGGER user_event BEFORE DELETE ON agenda_events FOR EACH ROW EXECUTE PROCEDURE checkagendaiseditable();
+CREATE TRIGGER user_event BEFORE UPDATE ON agenda_events FOR EACH ROW EXECUTE PROCEDURE checkagendaiseditable();
