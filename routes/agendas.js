@@ -32,6 +32,7 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
+    console.log("agendas");
     if(req.query.entity && req.query.provider){
         query.GET.agendas(req.query.provider, req.query.entity, res);
     }
