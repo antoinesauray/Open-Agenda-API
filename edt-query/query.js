@@ -506,7 +506,7 @@ module.exports = {
         },
         agenda: function (provider_id, agenda_id, user_id, res) {
             if(providers[provider_id]){
-                central.provider.client.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3 RETURNING *", [provider_id, agenda_id, user_id], function(err, result){
+                central.provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3 RETURNING *", [provider_id, agenda_id, user_id], function(err, result){
                     central.done();
                     if(err) {
                         return console.error('error running query', err);
