@@ -20,6 +20,9 @@ GRANT select ON user_agendas TO edt_facebook;
 GRANT insert ON user_agendas TO edt_facebook;
 GRANT update ON user_agendas TO edt_facebook;
 
+GRANT select ON users TO edt_facebook;
+
+
 
 
 GRANT SELECT,USAGE ON SEQUENCE users_edt_id_seq TO edt_limited;
