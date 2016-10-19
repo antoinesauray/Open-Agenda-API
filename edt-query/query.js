@@ -172,6 +172,7 @@ module.exports = {
         },
 
         entities: function(provider, res){
+            console.log("entities");
             if(providers[provider]){
                 providers[provider].client.query("SELECT * from entities where public=true", function(err, result){
                     providers[provider].done();
