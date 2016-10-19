@@ -178,14 +178,8 @@ module.exports = {
                     if(err) {
                         return console.error('error running query', err);
                     }
-                    if(result.rows.length!=0){
-                        res.statusCode=200;
-                        res.send(result.rows);
-                    }
-                    else{
-                        res.statusCode=401;
-                        res.send(result.rows);
-                    }
+                    res.statusCode=200;
+                    res.send(result.rows);
                 });
             }
             else{
