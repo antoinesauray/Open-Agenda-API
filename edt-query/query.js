@@ -491,7 +491,7 @@ module.exports = {
                     }
                     if(result.rows.length!=0){
                         res.statusCode=200;
-                        res.json({message: "This agenda has been post"});
+                        res.json({message: "This event has been deleted"});
                     }
                     else{
                         res.statusCode=401;
@@ -513,7 +513,7 @@ module.exports = {
                     }
                     if(result.rows.length!=0){
                         res.statusCode=200;
-                        res.json({message: "This agenda has been post"});
+                        res.json({message: "This agenda has been deleted"});
                     }
                     else{
                         res.statusCode=401;

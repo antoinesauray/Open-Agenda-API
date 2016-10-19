@@ -64,9 +64,9 @@ router.delete('/events/:id', function(req, res, next) {
     }
 });
 
-router.delete('/agendas/:agenda_id', function(req, res, next) {
-    if(req.params.agenda_id && req.query.provider){
-        query.DELETE.agenda(req.query.provider, req.params.agenda_id, req.decoded.id, res);
+router.delete('/agendas/:id', function(req, res, next) {
+    if(req.params.id && req.query.provider){
+        query.DELETE.agenda(req.query.provider, req.params.id, req.decoded.id, res);
     }
     else{
         res.statusCode=400;
