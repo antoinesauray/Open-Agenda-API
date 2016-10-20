@@ -499,20 +499,14 @@ module.exports = {
             }
         },
         agenda: function (provider_id, agenda_id, user_id, res) {
-            if(providers[provider_id]){
-                central.provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3 RETURNING *", [provider_id, agenda_id, user_id], function(err, result){
-                    central.done();
-                    if(err) {
-                        return console.error('error running query', err);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been deleted"});
-                });
-            }
-            else{
-                res.statusCode=404;
-                res.send();
-            }
+            central.provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
+                central.done();
+                if(err) {
+                    return console.error('error running query', err);
+                }
+                res.statusCode=200;
+                res.json({message: "This agenda has been deleted"});
+            });
         }
     }
 }
