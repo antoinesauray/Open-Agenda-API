@@ -57,7 +57,7 @@ pool.connect(function(err, client, done) {
         data.forEach(function(event){
                 /* handle the result */
                 var image="";
-                if(event.cover.has("source")){
+                if(event.cover&&event.cover.source){
                     image = event.cover.source;
                 }
                 console.log("event.cover="+image);
