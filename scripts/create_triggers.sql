@@ -11,6 +11,19 @@ DECLARE editable BOOLEAN;
     END;
 $$;
 
+CREATE FUNCTION checkagendaiseditableBefore() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE editable BOOLEAN;
+    BEGIN
+        SELECT agendas.editable FROM agendas WHERE id=OLD.agenda_id INTO editable;
+        IF editable=false AND current_user = 'edt_limited' THEN
+            RAISE EXCEPTION 'Not allowed to edit events on non editable agendas';
+        END IF;
+        RETURN NEW;
+    END;
+$$;
+
 
 ALTER FUNCTION public.checkagendaiseditable() OWNER TO postgres;
 
@@ -39,6 +52,6 @@ ALTER FUNCTION public.insertuseragenda() OWNER TO postgres;
 
 
 CREATE TRIGGER user_agenda AFTER INSERT ON users FOR EACH ROW EXECUTE PROCEDURE insertuseragenda();
-CREATE TRIGGER user_event BEFORE INSERT ON agenda_events FOR EACH ROW EXECUTE PROCEDURE checkagendaiseditable();
-CREATE TRIGGER user_event BEFORE DELETE ON agenda_events FOR EACH ROW EXECUTE PROCEDURE checkagendaiseditable();
-CREATE TRIGGER user_event BEFORE UPDATE ON agenda_events FOR EACH ROW EXECUTE PROCEDURE checkagendaiseditable();
+CREATE TRIGGER user_event_insert BEFORE INSERT ON agenda_events FOR EACH ROW EXECUTE PROCEDURE checkagendaiseditable();
+CREATE TRIGGER user_event_delete BEFORE DELETE ON agenda_events FOR EACH ROW EXECUTE PROCEDURE checkagendaiseditableBefore();
+CREATE TRIGGER user_event_update BEFORE UPDATE ON agenda_events FOR EACH ROW EXECUTE PROCEDURE checkagendaiseditableBefore();

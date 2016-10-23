@@ -476,10 +476,9 @@ module.exports = {
 
     DELETE: {
         event: function (provider_id, event_id, user_id, res) {
-
             if(providers[provider_id]){
-                providers[provider_id].client.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
-                    providers[provider_id].done();
+                central.provider.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
+                    central.done();
                     if(err) {
                         return console.error('error running query', err);
                     }
