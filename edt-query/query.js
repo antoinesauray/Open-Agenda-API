@@ -482,14 +482,8 @@ module.exports = {
                     if(err) {
                         return console.error('error running query', err);
                     }
-                    if(result.rows.length!=0){
-                        res.statusCode=200;
-                        res.json({message: "This event has been deleted"});
-                    }
-                    else{
-                        res.statusCode=401;
-                        res.send("This Agenda does not exist");
-                    }
+                    res.statusCode=200;
+                    res.json({message: "This event has been deleted"});
                 });
             }
             else{
