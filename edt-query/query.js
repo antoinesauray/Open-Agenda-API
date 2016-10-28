@@ -282,7 +282,7 @@ module.exports = {
                         return console.error('error running query', err);
                     }
                     res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
+                    res.json({message: "This event has been post"});
                 });
             }
             else{
@@ -300,7 +300,7 @@ module.exports = {
                         return console.error('error running query', err);
                     }
                     res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
+                    res.json({message: "This event has been post"});
                 });
             }
             else{
