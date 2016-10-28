@@ -20,7 +20,7 @@ DECLARE editable BOOLEAN;
         IF editable=false AND current_user = 'edt_limited' THEN
             RAISE EXCEPTION 'Not allowed to edit events on non editable agendas';
         END IF;
-        RETURN NEW;
+        RETURN OLD;
     END;
 $$;
 
