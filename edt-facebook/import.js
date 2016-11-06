@@ -1,5 +1,5 @@
 'use scrict';
-cfg = require('./config');
+cfg = require('../config');
 
 var database = cfg.database;
 var port = cfg.port;
