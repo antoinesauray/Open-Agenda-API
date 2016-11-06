@@ -67,7 +67,15 @@ pool.connect(function(err, client, done) {
                 client.query(query, [event.start_time, event.end_time, event.name, more, agendaId], function(err, result) {
                     done();
                     if(err) {
-                        return console.error('error running query', err);
+                        console.error('error running query', err);
+                        var query = "INSERT INTO agenda_events (start_time, end_time, name, more, created_at, updated_at, event_type_id, agenda_id) VALUES($1, $2, $3, $4, NOW(), NOW(), 'facebook', $5)";
+                        console.log(query);
+                        client.query(query, [event.start_time, event.end_time, event.name, more, agendaId], function(err, result) {
+                            done();
+                            if(err) {
+                                console.error('error running query', err);
+                            }
+                        });
                     }
                 });
             });
