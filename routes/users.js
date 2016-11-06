@@ -39,6 +39,31 @@ router.post('/', function(req, res, next) {
     }
 });
 
+router.post('/anonymous', function(req, res, next){
+    var ip_addr = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    var id = req.body.id;
+    var secret = req.body.secret;
+    if(id&&secret){
+        query.POST.anonymous_user_secret(id, secret, res);
+    }
+    else if(ip_addr){
+        query.anonymous_ip_addr(ip_addr, function(anonymous_user){
+            console.log("user: "+anonymous_user);
+            if(anonymous_user.length!=0){
+                res.statusCode=403;
+                res.send();
+            }
+            else{
+                query.POST.anonymous_user(ip_addr, res);
+            }
+        });
+    }
+    else{
+        res.statusCode=403;
+        res.json({message: 'We could not get your ip address.'});
+    }
+});
+
 router.get('/self', function(req, res, next) {
   res.send('respond with a resource');
 });
