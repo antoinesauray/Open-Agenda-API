@@ -1,5 +1,5 @@
 {
-    "database": "edt",
+    "database": "edt_staging",
     "address": "127.0.0.1",
     "user": {
         "limited": {
