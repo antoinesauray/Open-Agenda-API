@@ -39,7 +39,6 @@ function hashWithSalt(password, salt, next) {
     next(hash)
 };
 
-
 var config = {
   user: user, //env var: PGUSER
   database: database, //env var: PGDATABASE
@@ -128,6 +127,17 @@ var next_facebook = function(facebook_token, facebook_id, facebook_email, user, 
 }
 
 module.exports = {
+    // useful functions
+    anonymous_ip_addr: function(ip_addr, next){
+        central.provider.query("SELECT * from anonymous_users where ip_address=$1 LIMIT 1", [ip_addr], function(err, result){
+            central.done();
+            if(err) {
+                return console.error('error running query', err);
+            }
+            next(result.rows);
+        });
+    },
+
     GET: {
 
         providers: function(res){
@@ -183,10 +193,24 @@ module.exports = {
                 res.send();
             }
         },
-
         user: function(user_id, res){
-
             central.provider.query("SELECT edt_id, first_name, last_name, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
+                central.done();
+                if(err) {
+                    return console.error('error running query', err);
+                }
+                if(result.rows.length!=0){
+                    res.statusCode=200;
+                    res.send(result.rows);
+                }
+                else{
+                    res.statusCode=401;
+                    res.send(result.rows);
+                }
+            });
+        },
+        anonymous_user: function(user_id, res){
+            central.provider.query("SELECT * from anonymous_users where id=$1 LIMIT 1", [user_id], function(err, result){
                 central.done();
                 if(err) {
                     return console.error('error running query', err);
@@ -237,7 +261,55 @@ module.exports = {
                 });
             });
         },
+        events_anonymous: function(user_id, start_date, end_date, res){
+            console.log("user_id="+JSON.stringify(user_id));
+            central.provider.query("UPDATE anonymous_users set request_counter=request_counter+1where id=$1 RETURNING *", [user_id], function(err, result){
+                central.done();
+                if(err) {
+                    return console.error('error running query', err);
+                }
+                // get promises from all providers
+                var promises=[];
+                console.log("promises ready");
+                result.rows.forEach(function(anonymous_user){
+                    if(anonymous_user.request_counter>5){
+                        res.statusCode(403);
+                        res.json({});
+                    }
+                    else{
+                        console.log("anonymous_user: "+anonymous_user);
+                        if(anonymous_user.provider){
+                            var query=providers[anonymous_user.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [anonymous_user.agenda_id, start_date, end_date, anonymous_user.provider]);
+                            query.then(function(){
+                                providers[agenda.provider].done();
+                            });
+                            promises.push(query);
+                            Promise.all(promises).then(results => {
+                                var events={};
+                                console.log("promises finished: "+results.length);
+                                results.forEach(function(result){
+                                    console.log("promise: "+JSON.stringify(result.rows));
+                                    result.rows.forEach(function(event){
+                                        if(!events[event.date]){
+                                            events[event.date] = [];
+                                        }
+                                        events[event.date].push(event);
+                                    });
+                                });
+                                res.statusCode=200;
+                                res.send(events);
+                            });
+                        }
+                        else{
+                            res.statusCode=200;
+                            res.send({});
+                        }
+                    }
 
+                });
+
+            });
+        },
         user_agendas: function(user_id, res){
             // ask the central server for agenda providers
             central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
@@ -255,6 +327,39 @@ module.exports = {
                     query.then(function(){
                         providers[agenda.provider].done();
                     });
+                });
+                console.log("promises ready");
+                Promise.all(promises).then(results => {
+                    var agendas=[];
+                    console.log("promise results: "+JSON.stringify(results));
+                    results.forEach(function(result){
+                        result.rows.forEach(function(agenda){
+                            console.log("agenda: "+JSON.stringify(agenda));
+                            agendas.push(agenda);
+                        });
+                    });
+                    res.statusCode=200;
+                    res.send(agendas);
+                });
+            });
+        },
+        user_agendas_anonymous: function(user_id, res){
+            // ask the central server for agenda providers
+            central.provider.query("SELECT * FROM anonymous_users where id=$1", [user_id], function(err, result){
+                central.done();
+                if(err) {
+                    res.statusCode=500;
+                    res.send(agendas);
+                }
+                var promises=[];
+                result.rows.forEach(function(anonymous_user){
+                    if(anonymous_user.provider&&anonymous_user.agenda_id){
+                        var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                        promises.push(query);
+                        query.then(function(){
+                            providers[agenda.provider].done();
+                        });
+                    }
                 });
                 console.log("promises ready");
                 Promise.all(promises).then(results => {
@@ -309,7 +414,6 @@ module.exports = {
             }
         },
         agendas: function(provider_id, agenda_id, user_id, res){
-
             if(providers[provider_id]){
                 central.provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
                     central.done();
@@ -325,7 +429,22 @@ module.exports = {
                 res.send();
             }
         },
-
+        agendas_anonymous: function(provider_id, agenda_id, user_id, res){
+            if(providers[provider_id]){
+                central.provider.query("update anonymous_users set provider=$1, agenda_id=$2 where id=$3", [provider_id, agenda_id, user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        console.error('error running query', err);
+                    }
+                    res.statusCode=200;
+                    res.json({message: "This agenda has been post"});
+                });
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+            }
+        },
         sign_in_email_user: function(email, password, res){
             central.provider.query("SELECT * from users where edt_email=$1 limit 1", [email], function(err, result){
                 central.done();
@@ -458,8 +577,49 @@ module.exports = {
                     }
                 });
             });
-        }
+        },
+        anonymous_user: function(ip_addr, res){
+            crypto.randomBytes(12, function(err, buffer) {
+                var secret = buffer.toString('hex');
+                central.provider.query("insert into anonymous_users (last_request, request_counter,ip_address, secret) values(NOW(), 0, $1, $2) RETURNING *", [ip_addr, secret], function(err, result){
+                    central.done();
+                    if(err) {
+                        res.statusCode=500;
+                        res.send();
+                    }
+                    if(result.rows.length!=0){
+                        var user = result.rows[0];
+                        var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+                        res.statusCode=200;
+                        res.json({token: token, id: user.id, secret: secret});
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send();
+                    }
+                });
+            });
 
+        },
+        anonymous_user_secret: function(id, secret, res){
+            central.provider.query("select * from anonymous_users where id=$1 and secret=$2", [id, secret], function(err, result){
+                central.done();
+                console.log("freeing pool in central server");
+                if(err) {
+                    return console.error('error running query', err);
+                }
+                if(result.rows.length!=0){
+                    var user = result.rows[0];
+                    var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+                    res.statusCode=200;
+                    res.json({token: token, id: user.id});
+                }
+                else{
+                    res.statusCode=401;
+                    res.send("This Agenda does not exist");
+                }
+            });
+        }
     },
 
     DELETE: {
@@ -481,6 +641,16 @@ module.exports = {
         },
         agenda: function (provider_id, agenda_id, user_id, res) {
             central.provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
+                central.done();
+                if(err) {
+                    return console.error('error running query', err);
+                }
+                res.statusCode=200;
+                res.json({message: "This agenda has been deleted"});
+            });
+        },
+        agenda_anonymous: function (provider_id, agenda_id, user_id, res) {
+            central.provider.query("update anonymous_users set provider=NULL, agenda_id=NULL where provider_id=$1 and agenda_id=$2 and id=$3", [provider_id, agenda_id, user_id], function(err, result){
                 central.done();
                 if(err) {
                     return console.error('error running query', err);

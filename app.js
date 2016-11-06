@@ -7,6 +7,7 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var anonymous = require('./routes/anonymous');
 var providers = require('./routes/providers');
 var agendas = require('./routes/agendas');
 var entities = require('./routes/entities');
@@ -22,12 +23,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use('/', routes);
-app.use('/providers', providers);
-app.use('/agendas', agendas);
-app.use('/entities', entities);
-app.use('/users', users);
-app.use('/me', me);
+var prefix='beta';
+
+app.use(prefix+'/', routes);
+app.use(prefix+'/providers', providers);
+app.use(prefix+'/agendas', agendas);
+app.use(prefix+'/entities', entities);
+app.use(prefix+'/users', users);
+app.use(prefix+'/anonymous', anonymous);
+app.use(prefix+'/me', me);
 
 // ressources
 app.use('/static', express.static('public'));
