@@ -23,12 +23,12 @@ INSERT INTO providers VALUES ('edt', 'EDT', 'http://api.smart-edt.com/static/ic_
 --
 CREATE TABLE users (
     edt_id bigint primary key,
-    facebook_id character varying(255),
-    facebook_token character varying(255),
+    facebook_id character varying(255) unique,
+    facebook_token character varying(255) unique,
     first_name character varying(255),
     last_name character varying(255),
-    facebook_email character varying(255),
-    edt_email character varying(255),
+    facebook_email character varying(255) unique,
+    edt_email character varying(255) unique,
     password character varying(255),
     salt character varying(255),
     is_validated boolean DEFAULT false,

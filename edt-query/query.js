@@ -503,7 +503,8 @@ module.exports = {
                 central.provider.query("INSERT INTO users (edt_email, password, salt, first_name, last_name, created_at, updated_at) VALUES($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING *", [email, hashedPassword, salt, first_name, last_name], function(err, result){
                     central.done();
                     if(err) {
-                        return console.error('error running query', err);
+                        res.statusCode=401;
+                        res.json({message: "This email address already exists."});
                     }
                     if(result.rows.length!=0){
                         var user = result.rows[0];
