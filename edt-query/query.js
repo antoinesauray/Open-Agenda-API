@@ -8,7 +8,7 @@ var fs = require('fs');
 var crypto = require('crypto');
 var fbImport = require('../edt-facebook/import');
 
-cfg = require('./config');
+cfg = require('../config');
 
 var database = cfg.database;
 var user   = cfg.user.limited.name;
