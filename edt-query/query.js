@@ -616,16 +616,10 @@ module.exports = {
                         res.statusCode=500;
                         res.send();
                     }
-                    if(result.rows.length!=0){
-                        var user = result.rows[0];
-                        var token = jwt.sign({id: user.id, authenticated: false}, credentials.key, { algorithm: 'RS256'});
-                        res.statusCode=200;
-                        res.json({token: token, id: user.id, secret: secret});
-                    }
-                    else{
-                        res.statusCode=401;
-                        res.send();
-                    }
+                    var user = result.rows[0];
+                    var token = jwt.sign({id: user.id, authenticated: false}, credentials.key, { algorithm: 'RS256'});
+                    res.statusCode=200;
+                    res.json({token: token, id: user.id, secret: secret});
                 });
             });
 
