@@ -506,7 +506,7 @@ module.exports = {
                         res.statusCode=401;
                         res.json({message: "This email address already exists."});
                     }
-                    if(result.rows.length!=0){
+                    else if(result.rows.length!=0){
                         var user = result.rows[0];
                         var token = jwt.sign({id: user.edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
                         res.statusCode=201;
