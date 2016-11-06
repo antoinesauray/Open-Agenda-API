@@ -315,6 +315,7 @@ module.exports = {
         },
         user_agendas: function(user_id, authenticated, res){
             // ask the central server for agenda providers
+            console.log("authenticated="+authenticated);
             if(authenticated){
                 central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
                     central.done();
