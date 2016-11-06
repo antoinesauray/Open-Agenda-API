@@ -108,7 +108,7 @@ var next_facebook = function(facebook_token, facebook_id, facebook_email, user, 
             return console.error('error running query', err);
         }
         if(result.rows.length!=0){
-            var token = jwt.sign({id: result.rows[0].edt_id }, credentials.key, { algorithm: 'RS256'});
+            var token = jwt.sign({id: result.rows[0].edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
             if(created){
                 fbImport.queryFacebook(result.rows[0].edt_id, facebook_id, facebook_token);
                 res.statusCode=201;
@@ -139,7 +139,6 @@ module.exports = {
     },
 
     GET: {
-
         providers: function(res){
             central.provider.query("SELECT provider, name, image, primary_color, accent_color from providers", function(err, result){
                 central.done();
@@ -193,255 +192,283 @@ module.exports = {
                 res.send();
             }
         },
-        user: function(user_id, res){
-            central.provider.query("SELECT edt_id, first_name, last_name, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
-                central.done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                if(result.rows.length!=0){
-                    res.statusCode=200;
-                    res.send(result.rows);
-                }
-                else{
-                    res.statusCode=401;
-                    res.send(result.rows);
-                }
-            });
-        },
-        anonymous_user: function(user_id, res){
-            central.provider.query("SELECT * from anonymous_users where id=$1 LIMIT 1", [user_id], function(err, result){
-                central.done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                if(result.rows.length!=0){
-                    res.statusCode=200;
-                    res.send(result.rows);
-                }
-                else{
-                    res.statusCode=401;
-                    res.send(result.rows);
-                }
-            });
-        },
-        events: function(user_id, start_date, end_date, res){
-            console.log("user_id="+JSON.stringify(user_id));
-            central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
-                central.done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                // get promises from all providers
-                var promises=[];
-                console.log("promises ready");
-                result.rows.forEach(function(agenda){
-                    console.log("agenda: "+agenda);
-                    var query=providers[agenda.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [agenda.agenda_id, start_date, end_date, agenda.provider]);
-                    query.then(function(){
-                        providers[agenda.provider].done();
-                    });
-                    promises.push(query);
-                });
-                // when we have all replies
-                Promise.all(promises).then(results => {
-                    var events={};
-                    console.log("promises finished: "+results.length);
-                    results.forEach(function(result){
-                        console.log("promise: "+JSON.stringify(result.rows));
-                        result.rows.forEach(function(event){
-                            if(!events[event.date]){
-                                events[event.date] = [];
-                            }
-                            events[event.date].push(event);
-                        });
-                    });
-                    res.statusCode=200;
-                    res.send(events);
-                });
-            });
-        },
-        events_anonymous: function(user_id, start_date, end_date, res){
-            console.log("user_id="+JSON.stringify(user_id));
-            central.provider.query("UPDATE anonymous_users set request_counter=request_counter+1where id=$1 RETURNING *", [user_id], function(err, result){
-                central.done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                // get promises from all providers
-                var promises=[];
-                console.log("promises ready");
-                result.rows.forEach(function(anonymous_user){
-                    if(anonymous_user.request_counter>5){
-                        res.statusCode(403);
-                        res.json({});
+        user: function(user_id, authenticated, res){
+            if(authenticated){
+                central.provider.query("SELECT edt_id, first_name, last_name, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    if(result.rows.length!=0){
+                        res.statusCode=200;
+                        res.send(result.rows);
                     }
                     else{
-                        console.log("anonymous_user: "+anonymous_user);
-                        if(anonymous_user.provider){
-                            var query=providers[anonymous_user.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [anonymous_user.agenda_id, start_date, end_date, anonymous_user.provider]);
-                            query.then(function(){
-                                providers[agenda.provider].done();
+                        res.statusCode=401;
+                        res.send(result.rows);
+                    }
+                });
+            }
+            else{
+                central.provider.query("SELECT * from anonymous_users where id=$1 LIMIT 1", [user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    if(result.rows.length!=0){
+                        res.statusCode=200;
+                        res.send(result.rows);
+                    }
+                    else{
+                        res.statusCode=401;
+                        res.send(result.rows);
+                    }
+                });
+            }
+
+        },
+
+        events: function(user_id, authenticated, start_date, end_date, res){
+            console.log("user_id="+JSON.stringify(user_id));
+            if(authenticated){
+                central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    // get promises from all providers
+                    var promises=[];
+                    console.log("promises ready");
+                    result.rows.forEach(function(agenda){
+                        console.log("agenda: "+agenda);
+                        var query=providers[agenda.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [agenda.agenda_id, start_date, end_date, agenda.provider]);
+                        query.then(function(){
+                            providers[agenda.provider].done();
+                        });
+                        promises.push(query);
+                    });
+                    // when we have all replies
+                    Promise.all(promises).then(results => {
+                        var events={};
+                        console.log("promises finished: "+results.length);
+                        results.forEach(function(result){
+                            console.log("promise: "+JSON.stringify(result.rows));
+                            result.rows.forEach(function(event){
+                                if(!events[event.date]){
+                                    events[event.date] = [];
+                                }
+                                events[event.date].push(event);
                             });
-                            promises.push(query);
-                            Promise.all(promises).then(results => {
-                                var events={};
-                                console.log("promises finished: "+results.length);
-                                results.forEach(function(result){
-                                    console.log("promise: "+JSON.stringify(result.rows));
-                                    result.rows.forEach(function(event){
-                                        if(!events[event.date]){
-                                            events[event.date] = [];
-                                        }
-                                        events[event.date].push(event);
-                                    });
-                                });
-                                res.statusCode=200;
-                                res.send(events);
-                            });
+                        });
+                        res.statusCode=200;
+                        res.send(events);
+                    });
+                });
+            }
+            else{
+                central.provider.query("UPDATE anonymous_users set request_counter=request_counter+1where id=$1 RETURNING *", [user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    // get promises from all providers
+                    var promises=[];
+                    console.log("promises ready");
+                    result.rows.forEach(function(anonymous_user){
+                        if(anonymous_user.request_counter>5){
+                            res.statusCode(403);
+                            res.json({});
                         }
                         else{
-                            res.statusCode=200;
-                            res.send({});
+                            console.log("anonymous_user: "+anonymous_user);
+                            if(anonymous_user.provider){
+                                var query=providers[anonymous_user.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [anonymous_user.agenda_id, start_date, end_date, anonymous_user.provider]);
+                                query.then(function(){
+                                    providers[agenda.provider].done();
+                                });
+                                promises.push(query);
+                                Promise.all(promises).then(results => {
+                                    var events={};
+                                    console.log("promises finished: "+results.length);
+                                    results.forEach(function(result){
+                                        console.log("promise: "+JSON.stringify(result.rows));
+                                        result.rows.forEach(function(event){
+                                            if(!events[event.date]){
+                                                events[event.date] = [];
+                                            }
+                                            events[event.date].push(event);
+                                        });
+                                    });
+                                    res.statusCode=200;
+                                    res.send(events);
+                                });
+                            }
+                            else{
+                                res.statusCode=200;
+                                res.send({});
+                            }
                         }
+                    });
+                });
+            }
+
+        },
+        user_agendas: function(user_id, authenticated, res){
+            // ask the central server for agenda providers
+            if(authenticated){
+                central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        return console.error('error running query', err);
                     }
-
-                });
-
-            });
-        },
-        user_agendas: function(user_id, res){
-            // ask the central server for agenda providers
-            central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
-                central.done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                // get promises from all providers
-                var promises=[];
-                result.rows.forEach(function(agenda){
-                    console.log("agenda provider: "+agenda.provider);
-                    console.log("agenda id: "+agenda.agenda_id);
-                    var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
-                    promises.push(query);
-                    query.then(function(){
-                        providers[agenda.provider].done();
-                    });
-                });
-                console.log("promises ready");
-                Promise.all(promises).then(results => {
-                    var agendas=[];
-                    console.log("promise results: "+JSON.stringify(results));
-                    results.forEach(function(result){
-                        result.rows.forEach(function(agenda){
-                            console.log("agenda: "+JSON.stringify(agenda));
-                            agendas.push(agenda);
-                        });
-                    });
-                    res.statusCode=200;
-                    res.send(agendas);
-                });
-            });
-        },
-        user_agendas_anonymous: function(user_id, res){
-            // ask the central server for agenda providers
-            central.provider.query("SELECT * FROM anonymous_users where id=$1", [user_id], function(err, result){
-                central.done();
-                if(err) {
-                    res.statusCode=500;
-                    res.send(agendas);
-                }
-                var promises=[];
-                result.rows.forEach(function(anonymous_user){
-                    if(anonymous_user.provider&&anonymous_user.agenda_id){
+                    // get promises from all providers
+                    var promises=[];
+                    result.rows.forEach(function(agenda){
+                        console.log("agenda provider: "+agenda.provider);
+                        console.log("agenda id: "+agenda.agenda_id);
                         var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
                         promises.push(query);
                         query.then(function(){
                             providers[agenda.provider].done();
                         });
-                    }
-                });
-                console.log("promises ready");
-                Promise.all(promises).then(results => {
-                    var agendas=[];
-                    console.log("promise results: "+JSON.stringify(results));
-                    results.forEach(function(result){
-                        result.rows.forEach(function(agenda){
-                            console.log("agenda: "+JSON.stringify(agenda));
-                            agendas.push(agenda);
-                        });
                     });
-                    res.statusCode=200;
-                    res.send(agendas);
+                    console.log("promises ready");
+                    Promise.all(promises).then(results => {
+                        var agendas=[];
+                        console.log("promise results: "+JSON.stringify(results));
+                        results.forEach(function(result){
+                            result.rows.forEach(function(agenda){
+                                console.log("agenda: "+JSON.stringify(agenda));
+                                agendas.push(agenda);
+                            });
+                        });
+                        res.statusCode=200;
+                        res.send(agendas);
+                    });
                 });
-            });
+            }
+            else{
+                central.provider.query("SELECT * FROM anonymous_users where id=$1", [user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        res.statusCode=500;
+                        res.send(agendas);
+                    }
+                    var promises=[];
+                    result.rows.forEach(function(anonymous_user){
+                        if(anonymous_user.provider&&anonymous_user.agenda_id){
+                            var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                            promises.push(query);
+                            query.then(function(){
+                                providers[agenda.provider].done();
+                            });
+                        }
+                    });
+                    console.log("promises ready");
+                    Promise.all(promises).then(results => {
+                        var agendas=[];
+                        console.log("promise results: "+JSON.stringify(results));
+                        results.forEach(function(result){
+                            result.rows.forEach(function(agenda){
+                                console.log("agenda: "+JSON.stringify(agenda));
+                                agendas.push(agenda);
+                            });
+                        });
+                        res.statusCode=200;
+                        res.send(agendas);
+                    });
+                });
+            }
         }
     },
     POST: {
-        event: function(user_id, provider_id, agenda_id, name, start_time, end_time, res){
+        event: function(user_id, authenticated, provider_id, agenda_id, name, start_time, end_time, res){
             console.log("provider="+provider_id);
-            if(providers[provider_id]){
-                providers[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
-                    providers[provider_id].done();
-                    if(err) {
-                        return console.error('error running query', err);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This event has been post"});
-                });
+            if(authenticated){
+                if(providers[provider_id]){
+                    providers[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
+                        providers[provider_id].done();
+                        if(err) {
+                            return console.error('error running query', err);
+                        }
+                        res.statusCode=200;
+                        res.json({message: "This event has been post"});
+                    });
+                }
+                else{
+                    res.statusCode=404;
+                    res.send();
+                }
             }
             else{
-                res.statusCode=404;
+                res.statusCode=403;
                 res.send();
             }
-
         },
-        detailed_event: function(user_id, provider_id, agenda_id, name, start_time, end_time, more, res){
+        detailed_event: function(user_id, authenticated, provider_id, agenda_id, name, start_time, end_time, more, res){
             console.log("provider="+provider_id);
-            if(providers[provider]){
-                providers[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
-                    providers[provider_id].done();
-                    if(err) {
-                        return console.error('error running query', err);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This event has been post"});
-                });
+            if(authenticated){
+                if(providers[provider]){
+                    providers[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
+                        providers[provider_id].done();
+                        if(err) {
+                            return console.error('error running query', err);
+                        }
+                        res.statusCode=200;
+                        res.json({message: "This event has been post"});
+                    });
+                }
+                else{
+                    res.statusCode=404;
+                    res.send();
+                }
             }
             else{
-                res.statusCode=404;
+                res.statusCode=403;
                 res.send();
             }
         },
-        agendas: function(provider_id, agenda_id, user_id, res){
-            if(providers[provider_id]){
-                central.provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
-                    central.done();
-                    if(err) {
-                        console.error('error running query', err);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
-                });
+        agendas: function(provider_id, agenda_id, user_id, authenticated, res){
+            if(authenticated){
+                if(providers[provider_id]){
+                    central.provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
+                        central.done();
+                        if(err) {
+                            console.error('error running query', err);
+                        }
+                        res.statusCode=200;
+                        res.json({message: "This agenda has been post"});
+                    });
+                }
+                else{
+                    res.statusCode=404;
+                    res.send();
+                }
             }
             else{
-                res.statusCode=404;
+                res.statusCode=403;
                 res.send();
             }
         },
-        agendas_anonymous: function(provider_id, agenda_id, user_id, res){
-            if(providers[provider_id]){
-                central.provider.query("update anonymous_users set provider=$1, agenda_id=$2 where id=$3", [provider_id, agenda_id, user_id], function(err, result){
-                    central.done();
-                    if(err) {
-                        console.error('error running query', err);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
-                });
+        agendas_anonymous: function(provider_id, agenda_id, user_id, authenticated, res){
+            if(authenticated){
+                if(providers[provider_id]){
+                    central.provider.query("update anonymous_users set provider=$1, agenda_id=$2 where id=$3", [provider_id, agenda_id, user_id], function(err, result){
+                        central.done();
+                        if(err) {
+                            console.error('error running query', err);
+                        }
+                        res.statusCode=200;
+                        res.json({message: "This agenda has been post"});
+                    });
+                }
+                else{
+                    res.statusCode=404;
+                    res.send();
+                }
             }
             else{
-                res.statusCode=404;
+                res.statusCode=403;
                 res.send();
             }
         },
@@ -455,7 +482,7 @@ module.exports = {
                     var user = result.rows[0];
                     hashWithSalt(password, user.salt, function(hash){
                         if(hash==user.password){
-                            var token = jwt.sign({id: user.edt_id }, credentials.key, { algorithm: 'RS256'});
+                            var token = jwt.sign({id: user.edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
                             res.statusCode=200;
                             res.json({token: token, first_name: user.first_name, last_name: user.last_name, mail: user.edt_email})
                         }
@@ -480,7 +507,7 @@ module.exports = {
                     }
                     if(result.rows.length!=0){
                         var user = result.rows[0];
-                        var token = jwt.sign({id: user.edt_id }, credentials.key, { algorithm: 'RS256'});
+                        var token = jwt.sign({id: user.edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
                         res.statusCode=201;
                         res.json({token: token, first_name: user.first_name, last_name: user.last_name, mail: user.edtemail});
                     }
@@ -565,7 +592,7 @@ module.exports = {
                                 var user = result.rows[0];
                                 // we retrieve user events from Facebook
                                 fbImport.queryFacebook(user.edt_id, response.id, facebook_token);
-                                var token = jwt.sign({id: user.edt_id }, credentials.key, { algorithm: 'RS256'});
+                                var token = jwt.sign({id: user.edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
                                 res.statusCode=200;
                                 res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
                             }
@@ -589,7 +616,7 @@ module.exports = {
                     }
                     if(result.rows.length!=0){
                         var user = result.rows[0];
-                        var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+                        var token = jwt.sign({id: user.id, authenticated: false}, credentials.key, { algorithm: 'RS256'});
                         res.statusCode=200;
                         res.json({token: token, id: user.id, secret: secret});
                     }
@@ -610,7 +637,7 @@ module.exports = {
                 }
                 if(result.rows.length!=0){
                     var user = result.rows[0];
-                    var token = jwt.sign({id: user.id }, credentials.key, { algorithm: 'RS256'});
+                    var token = jwt.sign({id: user.id, authenticated: false}, credentials.key, { algorithm: 'RS256'});
                     res.statusCode=200;
                     res.json({token: token, id: user.id});
                 }
@@ -623,41 +650,50 @@ module.exports = {
     },
 
     DELETE: {
-        event: function (provider_id, event_id, user_id, res) {
-            if(providers[provider_id]){
-                central.provider.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
+        event: function (provider_id, event_id, user_id, authenticated, res) {
+            if(authenticated){
+                if(providers[provider_id]){
+                    central.provider.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
+                        central.done();
+                        if(err) {
+                            return console.error('error running query', err);
+                        }
+                        res.statusCode=200;
+                        res.json({message: "This event has been deleted"});
+                    });
+                }
+                else{
+                    res.statusCode=404;
+                    res.send();
+                }
+            }
+            else{
+                res.statusCode=403;
+                res.send();
+            }
+        },
+        agenda: function (provider_id, agenda_id, user_id, authenticated, res) {
+            if(authenticated){
+                central.provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
                     central.done();
                     if(err) {
                         return console.error('error running query', err);
                     }
                     res.statusCode=200;
-                    res.json({message: "This event has been deleted"});
+                    res.json({message: "This agenda has been deleted"});
                 });
             }
             else{
-                res.statusCode=404;
-                res.send();
+                central.provider.query("update anonymous_users set provider=NULL, agenda_id=NULL where provider_id=$1 and agenda_id=$2 and id=$3", [provider_id, agenda_id, user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    res.statusCode=200;
+                    res.json({message: "This agenda has been deleted"});
+                });
             }
-        },
-        agenda: function (provider_id, agenda_id, user_id, res) {
-            central.provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
-                central.done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                res.statusCode=200;
-                res.json({message: "This agenda has been deleted"});
-            });
-        },
-        agenda_anonymous: function (provider_id, agenda_id, user_id, res) {
-            central.provider.query("update anonymous_users set provider=NULL, agenda_id=NULL where provider_id=$1 and agenda_id=$2 and id=$3", [provider_id, agenda_id, user_id], function(err, result){
-                central.done();
-                if(err) {
-                    return console.error('error running query', err);
-                }
-                res.statusCode=200;
-                res.json({message: "This agenda has been deleted"});
-            });
+
         }
     }
 }

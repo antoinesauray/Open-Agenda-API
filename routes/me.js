@@ -32,21 +32,20 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-    query.GET.user(req.decoded.id, res);
+    query.GET.user(req.decoded.id, req.decoded.authenticated, res);
 });
 
 router.get('/agendas', function(req, res, next) {
-    query.GET.user_agendas(req.decoded.id, res);
+    query.GET.user_agendas(req.decoded.id, req.decoded.authenticated, res);
 });
 
 router.get('/events/', function(req, res, next) {
-    query.GET.events(req.decoded.id, req.query.start_date, req.query.end_date, res);
+    query.GET.events(req.decoded.id, req.decoded.authenticated, req.query.start_date, req.query.end_date, res);
 });
 
 router.post('/events', function(req, res, next) {
-
     if(req.body.provider && req.body.agenda_id && req.body.name && req.body.start_time && req.body.end_time){
-        query.POST.event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, res);
+        query.POST.event(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, res);
     }
     else{
         res.statusCode=403;
@@ -56,7 +55,7 @@ router.post('/events', function(req, res, next) {
 
 router.delete('/events/:id', function(req, res, next) {
     if(req.params.id && req.query.provider){
-        query.DELETE.event(req.query.provider, req.params.id, req.decoded.id, res);
+        query.DELETE.event(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, res);
     }
     else{
         res.statusCode=400;
@@ -66,7 +65,7 @@ router.delete('/events/:id', function(req, res, next) {
 
 router.delete('/agendas/:id', function(req, res, next) {
     if(req.params.id && req.query.provider){
-        query.DELETE.agenda(req.query.provider, req.params.id, req.decoded.id, res);
+        query.DELETE.agenda(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, res);
     }
     else{
         res.statusCode=400;
@@ -76,7 +75,7 @@ router.delete('/agendas/:id', function(req, res, next) {
 
 router.post('/agendas', function(req, res, next) {
     if(req.body.provider && req.body.agenda_id){
-        query.POST.agendas(req.body.provider, req.body.agenda_id, req.decoded.id, res);
+        query.POST.agendas(req.body.provider, req.body.agenda_id, req.decoded.id, req.decoded.authenticated, res);
     }
     else{
         res.statusCode=400;
@@ -89,10 +88,10 @@ router.post('/events', function(req, res, next) {
         var sqlQuery=null;
         var more = req.body.more;
         if(more){
-            query.POST.detailed_event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, more, res);
+            query.POST.detailed_event(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, more, res);
         }
         else{
-            query.POST.event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, res);
+            query.POST.event(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, res);
         }
     }
     else{

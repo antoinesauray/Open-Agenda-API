@@ -7,7 +7,6 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
-var anonymous = require('./routes/anonymous');
 var providers = require('./routes/providers');
 var agendas = require('./routes/agendas');
 var entities = require('./routes/entities');
@@ -28,7 +27,6 @@ app.use('/providers', providers);
 app.use('/agendas', agendas);
 app.use('/entities', entities);
 app.use('/users', users);
-app.use('/anonymous', anonymous);
 app.use('/me', me);
 
 // ressources
