@@ -23,15 +23,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-var prefix='beta';
-
-app.use(prefix+'/', routes);
-app.use(prefix+'/providers', providers);
-app.use(prefix+'/agendas', agendas);
-app.use(prefix+'/entities', entities);
-app.use(prefix+'/users', users);
-app.use(prefix+'/anonymous', anonymous);
-app.use(prefix+'/me', me);
+app.use('/', routes);
+app.use('/providers', providers);
+app.use('/agendas', agendas);
+app.use('/entities', entities);
+app.use('/users', users);
+app.use('/anonymous', anonymous);
+app.use('/me', me);
 
 // ressources
 app.use('/static', express.static('public'));
