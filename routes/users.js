@@ -49,15 +49,22 @@ router.post('/anonymous', function(req, res, next){
     else if(ip_addr){
         query.anonymous_ip_addr(ip_addr, function(anonymous_user){
             console.log("user: "+JSON.stringify(anonymous_user));
-            /*
+
             if(anonymous_user.length!=0){
-                res.statusCode=403;
-                res.json({});
+                var count = anonymous_user[0].ip_counter;
+                if(count<15){
+                    query.POST.anonymous_user(ip_addr, res);
+                }
+                else{
+                    res.statusCode=403;
+                    res.json({});
+                }
             }
             else{
-                query.POST.anonymous_user(ip_addr, res);
+                res.statusCode=400;
+                res.json({});
             }
-            */
+
         });
     }
     else{
