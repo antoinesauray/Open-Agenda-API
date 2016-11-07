@@ -23,16 +23,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use('/', routes);
-app.use('/providers', providers);
-app.use('/agendas', agendas);
-app.use('/entities', entities);
-app.use('/users', users);
-app.use('/anonymous', anonymous);
-app.use('/me', me);
+app.use('', routes);
+app.use('providers', providers);
+app.use('agendas', agendas);
+app.use('entities', entities);
+app.use('users', users);
+app.use('anonymous', anonymous);
+app.use('me', me);
 
 // ressources
-app.use('/static', express.static('public'));
+app.use('static', express.static('public'));
 
 // catch 404
 app.use(function(req, res, next) {
