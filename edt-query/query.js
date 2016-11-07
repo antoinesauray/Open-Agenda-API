@@ -424,6 +424,34 @@ module.exports = {
         }
     },
     POST: {
+        firebase: function(user_id, authenticated, firebase_token, res){
+            if(authenticated){
+                central.provider.query("update users set firebase_token=$1 where edt_id=$2", [firebase_token, user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        console.error('error running query', err);
+                        res.statusCode=400;
+                        res.json({});
+                        return;
+                    }
+                    res.statusCode=200;
+                    res.json({message: "Token updated"});
+                });
+            }
+            else{
+                central.provider.query("update anonymous_users set firebase_token=$1 where id=$2", [firebase_token, user_id], function(err, result){
+                    central.done();
+                    if(err) {
+                        console.error('error running query', err);
+                        res.statusCode=400;
+                        res.json({});
+                        return;
+                    }
+                    res.statusCode=200;
+                    res.json({message: "Token updated"});
+                });
+            }
+        },
         event: function(user_id, authenticated, provider_id, agenda_id, name, start_time, end_time, res){
             console.log("provider="+provider_id);
             if(authenticated){
