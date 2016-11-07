@@ -619,6 +619,7 @@ module.exports = {
                             central.done();
                             console.log("freeing pool in central server");
                             if(err) {
+                                console.log("ICI!!!!!");
                                 return console.error('error running query', err);
                             }
                             if(result.rows.length!=0){
