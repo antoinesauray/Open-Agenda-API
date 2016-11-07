@@ -41,7 +41,7 @@ DECLARE agenda_id INTEGER;
         INSERT INTO agendas(name, editable, updated_at, created_at, agenda_entity_id, agenda_type_id) VALUES ('Facebook', false, 'NOW()', 'NOW()', NEW.edt_id, 'facebook') RETURNING id INTO agenda_id;
         INSERT INTO user_agendas(provider, user_id, agenda_id, updated_at, created_at) VALUES ('edt', NEW.edt_id, agenda_id, current_timestamp, current_timestamp);
 
-        INSERT INTO agendas(name, editable, updated_at, created_at, agenda_entity_id, agenda_type_id) VALUES ('Personnel', true, 'NOW()', 'NOW()', NEW.edt_id, 'personal') RETURNING id INTO agenda_id;
+        INSERT INTO agendas(name, editable, updated_at, created_at, agenda_entity_id, agenda_type_id) VALUES (NEW.first_name || ' ' || NEW.last_name, true, 'NOW()', 'NOW()', NEW.edt_id, 'personal') RETURNING id INTO agenda_id;
         INSERT INTO user_agendas(provider, user_id, agenda_id, updated_at, created_at) VALUES ('edt', NEW.edt_id, agenda_id, current_timestamp, current_timestamp);
         RETURN NEW;
     END;

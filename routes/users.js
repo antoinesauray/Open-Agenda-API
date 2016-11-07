@@ -51,7 +51,7 @@ router.post('/anonymous', function(req, res, next){
             console.log("user: "+anonymous_user);
             if(anonymous_user.length!=0){
                 res.statusCode=403;
-                res.send();
+                res.json({});
             }
             else{
                 query.POST.anonymous_user(ip_addr, res);
