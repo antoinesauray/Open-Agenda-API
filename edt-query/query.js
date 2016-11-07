@@ -622,7 +622,7 @@ module.exports = {
                                 res.statusCode=403;
                                 res.json({message: "Facebook account already associated"});
                             }
-                            if(result.rows.length!=0){
+                            if(result&&result.rows.length!=0){
                                 var user = result.rows[0];
                                 // we retrieve user events from Facebook
                                 fbImport.queryFacebook(user.edt_id, response.id, facebook_token);
