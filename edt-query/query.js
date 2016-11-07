@@ -422,6 +422,7 @@ module.exports = {
     POST: {
         firebase_token: function(user_id, authenticated, firebase_token, res){
             if(authenticated){
+                console.log("firebase: authenticated");
                 central.provider.query("update users set firebase_token=$1 where edt_id=$2", [firebase_token, user_id], function(err, result){
                     central.done();
                     if(err) {
@@ -435,6 +436,7 @@ module.exports = {
                 });
             }
             else{
+                console.log("firebase: not authenticated");
                 central.provider.query("update anonymous_users set firebase_token=$1 where id=$2", [firebase_token, user_id], function(err, result){
                     central.done();
                     if(err) {
