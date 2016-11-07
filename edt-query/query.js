@@ -572,7 +572,7 @@ module.exports = {
                     }
                     console.log("token ok");
                     if(result.rows.length!=0){
-                        next_facebook(facebook_token, response.id, response.email, result.rows[0], false, res);
+                        next_facebook(ip_addr, facebook_token, response.id, response.email, result.rows[0], false, res);
                     }
                     else{
                         central.provider.query("INSERT INTO users (facebook_id, facebook_email, first_name, last_name, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING *", [response.id, response.email, response.first_name, response.last_name, ip_addr], function(err, result){
@@ -581,7 +581,7 @@ module.exports = {
                                 return console.error('error running query', err);
                             }
                             if(result.rows.length!=0){
-                                next_facebook(facebook_token, response.id, response.email, result.rows[0], true, res);
+                                next_facebook(ip_addr, facebook_token, response.id, response.email, result.rows[0], true, res);
                             }
                             else{
                                 res.statusCode=401;
