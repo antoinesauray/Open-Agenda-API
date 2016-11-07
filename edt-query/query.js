@@ -324,7 +324,7 @@ module.exports = {
                     }
                     if(result.rows.length==0){
                         // if result=0 we will check our user
-                        central.provider.query("SELECT id, first_name, last_name from users where user_id=$1", [user_id], function(err, result){
+                        central.provider.query("SELECT edt_id, first_name, last_name from users where user_id=$1", [user_id], function(err, result){
                             central.done();
                             if(err) {
                                 return console.error('error running query', err);
@@ -377,7 +377,7 @@ module.exports = {
                         res.send(agendas);
                     }
                     if(result.rows.length==0){
-                        central.provider.query("SELECT id, first_name, last_name from users where user_id=$1", [user_id], function(err, result){
+                        central.provider.query("SELECT edt_id, first_name, last_name from users where user_id=$1", [user_id], function(err, result){
                             central.done();
                             if(err) {
                                 return console.error('error running query', err);
