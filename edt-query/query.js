@@ -424,7 +424,7 @@ module.exports = {
         }
     },
     POST: {
-        firebase: function(user_id, authenticated, firebase_token, res){
+        firebase_token: function(user_id, authenticated, firebase_token, res){
             if(authenticated){
                 central.provider.query("update users set firebase_token=$1 where edt_id=$2", [firebase_token, user_id], function(err, result){
                     central.done();
