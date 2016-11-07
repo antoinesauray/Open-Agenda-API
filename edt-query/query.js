@@ -619,8 +619,8 @@ module.exports = {
                             central.done();
                             console.log("freeing pool in central server");
                             if(err) {
-                                console.log("ICI!!!!!");
-                                return console.error('error running query', err);
+                                res.statusCode=403;
+                                res.json({message: "Facebook account already associated"});
                             }
                             if(result.rows.length!=0){
                                 var user = result.rows[0];
