@@ -106,7 +106,7 @@ router.post('/firebase', function(req, res, next) {
     }
     else{
         res.statusCode=400;
-        res.send("This Agenda does not exist");
+        res.json({});
     }
 });
 

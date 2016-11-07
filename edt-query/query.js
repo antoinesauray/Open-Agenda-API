@@ -345,8 +345,6 @@ module.exports = {
                         // get promises from all providers
                         var promises=[];
                         result.rows.forEach(function(agenda){
-                            console.log("agenda provider: "+agenda.provider);
-                            console.log("agenda id: "+agenda.agenda_id);
                             var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
                             promises.push(query);
                             query.then(function(){
@@ -356,10 +354,8 @@ module.exports = {
                         console.log("promises ready");
                         Promise.all(promises).then(results => {
                             var agendas=[];
-                            console.log("promise results: "+JSON.stringify(results));
                             results.forEach(function(result){
                                 result.rows.forEach(function(agenda){
-                                    console.log("agenda: "+JSON.stringify(agenda));
                                     agendas.push(agenda);
                                 });
                             });
