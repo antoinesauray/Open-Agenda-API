@@ -322,30 +322,51 @@ module.exports = {
                     if(err) {
                         return console.error('error running query', err);
                     }
-                    // get promises from all providers
-                    var promises=[];
-                    result.rows.forEach(function(agenda){
-                        console.log("agenda provider: "+agenda.provider);
-                        console.log("agenda id: "+agenda.agenda_id);
-                        var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
-                        promises.push(query);
-                        query.then(function(){
-                            providers[agenda.provider].done();
+                    if(result.rows.length==0){
+                        // if result=0 we will check our user
+                        central.provider.query("SELECT id, first_name, last_name from users where user_id=$1", [user_id], function(err, result){
+                            central.done();
+                            if(err) {
+                                return console.error('error running query', err);
+                            }
+                            if(result.rows.length==0){
+                                // if result=0 then this user does not exist
+                                res.statusCode=404;
+                                res.json([]);
+                            }
+                            else{
+                                // if it exists then it just has no agendas
+                                res.statusCode=200;
+                                res.json([]);
+                            }
                         });
-                    });
-                    console.log("promises ready");
-                    Promise.all(promises).then(results => {
-                        var agendas=[];
-                        console.log("promise results: "+JSON.stringify(results));
-                        results.forEach(function(result){
-                            result.rows.forEach(function(agenda){
-                                console.log("agenda: "+JSON.stringify(agenda));
-                                agendas.push(agenda);
+                    }
+                    else{
+                        // get promises from all providers
+                        var promises=[];
+                        result.rows.forEach(function(agenda){
+                            console.log("agenda provider: "+agenda.provider);
+                            console.log("agenda id: "+agenda.agenda_id);
+                            var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                            promises.push(query);
+                            query.then(function(){
+                                providers[agenda.provider].done();
                             });
                         });
-                        res.statusCode=200;
-                        res.send(agendas);
-                    });
+                        console.log("promises ready");
+                        Promise.all(promises).then(results => {
+                            var agendas=[];
+                            console.log("promise results: "+JSON.stringify(results));
+                            results.forEach(function(result){
+                                result.rows.forEach(function(agenda){
+                                    console.log("agenda: "+JSON.stringify(agenda));
+                                    agendas.push(agenda);
+                                });
+                            });
+                            res.statusCode=200;
+                            res.send(agendas);
+                        });
+                    }
                 });
             }
             else{
@@ -355,29 +376,49 @@ module.exports = {
                         res.statusCode=500;
                         res.send(agendas);
                     }
-                    var promises=[];
-                    result.rows.forEach(function(anonymous_user){
-                        if(anonymous_user.provider&&anonymous_user.agenda_id){
-                            var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
-                            promises.push(query);
-                            query.then(function(){
-                                providers[agenda.provider].done();
-                            });
-                        }
-                    });
-                    console.log("promises ready");
-                    Promise.all(promises).then(results => {
-                        var agendas=[];
-                        console.log("promise results: "+JSON.stringify(results));
-                        results.forEach(function(result){
-                            result.rows.forEach(function(agenda){
-                                console.log("agenda: "+JSON.stringify(agenda));
-                                agendas.push(agenda);
-                            });
+                    if(result.rows.length==0){
+                        central.provider.query("SELECT id, first_name, last_name from users where user_id=$1", [user_id], function(err, result){
+                            central.done();
+                            if(err) {
+                                return console.error('error running query', err);
+                            }
+                            if(result.rows.length==0){
+                                // if result=0 then this user does not exist
+                                res.statusCode=404;
+                                res.json([]);
+                            }
+                            else{
+                                // if it exists then it just has no agendas
+                                res.statusCode=200;
+                                res.json([]);
+                            }
                         });
-                        res.statusCode=200;
-                        res.send(agendas);
-                    });
+                    }
+                    else{
+                        var promises=[];
+                        result.rows.forEach(function(anonymous_user){
+                            if(anonymous_user.provider&&anonymous_user.agenda_id){
+                                var query = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                                promises.push(query);
+                                query.then(function(){
+                                    providers[agenda.provider].done();
+                                });
+                            }
+                        });
+                        console.log("promises ready");
+                        Promise.all(promises).then(results => {
+                            var agendas=[];
+                            console.log("promise results: "+JSON.stringify(results));
+                            results.forEach(function(result){
+                                result.rows.forEach(function(agenda){
+                                    console.log("agenda: "+JSON.stringify(agenda));
+                                    agendas.push(agenda);
+                                });
+                            });
+                            res.statusCode=200;
+                            res.send(agendas);
+                        });
+                    }
                 });
             }
         }
