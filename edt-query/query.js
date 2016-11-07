@@ -101,8 +101,8 @@ pool.on('error', function (err, client) {
   console.error('idle client error', err.message, err.stack)
 });
 
-var next_facebook = function(facebook_token, facebook_id, facebook_email, user, created, res){
-    central.provider.query("UPDATE users set facebook_token=$1 where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email], function(err, result){
+var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_email, user, created, res){
+    central.provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
         central.done();
         if(err) {
             return console.error('error running query', err);
@@ -504,7 +504,7 @@ module.exports = {
                 }
             }
         },
-        sign_in_email_user: function(email, password, res){
+        sign_in_email_user: function(ip_addr, email, password, res){
             central.provider.query("SELECT * from users where edt_email=$1 limit 1", [email], function(err, result){
                 central.done();
                 if(err) {
@@ -530,9 +530,9 @@ module.exports = {
                 }
             });
         },
-        sign_up_email_user: function(email, password, first_name, last_name, res){
+        sign_up_email_user: function(ip_addr, email, password, first_name, last_name, res){
             hash(password, function(hashedPassword, salt){
-                central.provider.query("INSERT INTO users (edt_email, password, salt, first_name, last_name, created_at, updated_at) VALUES($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING *", [email, hashedPassword, salt, first_name, last_name], function(err, result){
+                central.provider.query("INSERT INTO users (edt_email, password, salt, first_name, last_name, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *", [email, hashedPassword, salt, first_name, last_name, ip_addr], function(err, result){
                     central.done();
                     if(err) {
                         res.statusCode=401;
@@ -551,7 +551,7 @@ module.exports = {
                 });
             });
         },
-        facebook_user: function(facebook_token, res){
+        facebook_user: function(ip_addr, facebook_token, res){
             FB.setAccessToken(facebook_token);
             FB.api('/me', { fields: ['id', 'email', 'first_name', 'last_name'] }, function (response) {
                 console.log("response: "+JSON.stringify(response));
@@ -575,7 +575,7 @@ module.exports = {
                         next_facebook(facebook_token, response.id, response.email, result.rows[0], false, res);
                     }
                     else{
-                        central.provider.query("INSERT INTO users (facebook_id, facebook_email, first_name, last_name, created_at, updated_at) VALUES($1, $2, $3, $4, NOW(), NOW()) RETURNING *", [response.id, response.email, response.first_name, response.last_name], function(err, result){
+                        central.provider.query("INSERT INTO users (facebook_id, facebook_email, first_name, last_name, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING *", [response.id, response.email, response.first_name, response.last_name, ip_addr], function(err, result){
                             central.done();
                             if(err) {
                                 return console.error('error running query', err);
@@ -593,7 +593,7 @@ module.exports = {
             });
         },
 
-        facebook_user_token: function(facebook_token, token, res){
+        facebook_user_token: function(ip_addr, facebook_token, token, res){
             FB.setAccessToken(facebook_token);
             FB.api('/me', { fields: ['id', 'email', 'first_name', 'last_name'] }, function (response) {
                 console.log("response: "+response);
@@ -615,7 +615,7 @@ module.exports = {
                         console.log("token ok");
                         var id = decoded.id;
                         // let's update our user with Facebook data
-                        central.provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, is_validated=true, facebook_token=$3 where edt_id=$4 RETURNING *", [response.id, response.email, facebook_token, id], function(err, result){
+                        central.provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, is_validated=true, facebook_token=$3, ip_addr=$4 where edt_id=$4 RETURNING *", [response.id, response.email, facebook_token, id, ip_addr], function(err, result){
                             central.done();
                             console.log("freeing pool in central server");
                             if(err) {
@@ -662,7 +662,7 @@ module.exports = {
             });
 
         },
-        anonymous_user_secret: function(id, secret, res){
+        anonymous_user_secret: function(ip_addr, id, secret, res){
             central.provider.query("select * from anonymous_users where id=$1 and secret=$2", [id, secret], function(err, result){
                 central.done();
                 console.log("freeing pool in central server");

@@ -15,22 +15,22 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/', function(req, res, next) {
+    var ip_addr = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     if(req.body.facebook_token!=null){
         var token = req.body.token || req.query.token || req.headers['x-access-token'];
         if(token!=null){
-            query.POST.facebook_user_token(req.body.facebook_token, token, res);
+            query.POST.facebook_user_token(ip_addr, req.body.facebook_token, token, res);
         }
         else{
-            query.POST.facebook_user(req.body.facebook_token, res);
+            query.POST.facebook_user(ip_addr, req.body.facebook_token, res);
         }
     }
     else if(req.body.email!=null&&req.body.password!=null){
-
         if(req.body.first_name&&req.body.last_name){
-            query.POST.sign_up_email_user(req.body.email, req.body.password, req.body.first_name, req.body.last_name, res);
+            query.POST.sign_up_email_user(ip_addr, req.body.email, req.body.password, req.body.first_name, req.body.last_name, res);
         }
         else{
-            query.POST.sign_in_email_user(req.body.email, req.body.password, res);
+            query.POST.sign_in_email_user(ip_addr, req.body.email, req.body.password, res);
         }
     }
     else{
@@ -44,7 +44,7 @@ router.post('/anonymous', function(req, res, next){
     var id = req.body.id;
     var secret = req.body.secret;
     if(id&&secret){
-        query.POST.anonymous_user_secret(id, secret, res);
+        query.POST.anonymous_user_secret(ip_addr, id, secret, res);
     }
     else if(ip_addr){
         query.anonymous_ip_addr(ip_addr, function(anonymous_user){
