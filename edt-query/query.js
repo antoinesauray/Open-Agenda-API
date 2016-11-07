@@ -102,7 +102,7 @@ pool.on('error', function (err, client) {
 });
 
 var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_email, user, created, res){
-    central.provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
+    central.provider.query("UPDATE users set facebook_token=$1, ip_addr=$4 where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
         central.done();
         if(err) {
             return console.error('error running query', err);
