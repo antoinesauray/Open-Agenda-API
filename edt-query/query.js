@@ -129,7 +129,7 @@ var next_facebook = function(facebook_token, facebook_id, facebook_email, user, 
 module.exports = {
     // useful functions
     anonymous_ip_addr: function(ip_addr, next){
-        central.provider.query("SELECT * from anonymous_users where ip_address=$1 LIMIT 1", [ip_addr], function(err, result){
+        central.provider.query("SELECT count(*) as ip_counter from anonymous_users where ip_address=$1", [ip_addr], function(err, result){
             central.done();
             if(err) {
                 return console.error('error running query', err);

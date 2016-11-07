@@ -49,6 +49,7 @@ router.post('/anonymous', function(req, res, next){
     else if(ip_addr){
         query.anonymous_ip_addr(ip_addr, function(anonymous_user){
             console.log("user: "+anonymous_user);
+            /*
             if(anonymous_user.length!=0){
                 res.statusCode=403;
                 res.json({});
@@ -56,6 +57,7 @@ router.post('/anonymous', function(req, res, next){
             else{
                 query.POST.anonymous_user(ip_addr, res);
             }
+            */
         });
     }
     else{
