@@ -275,7 +275,7 @@ module.exports = {
                     var promises=[];
                     console.log("promises ready");
                     result.rows.forEach(function(anonymous_user){
-                        if(anonymous_user.request_counter>5){
+                        if(anonymous_user.request_counter>30){
                             res.statusCode=403;
                             res.json({});
                         }
@@ -447,12 +447,6 @@ module.exports = {
                 }
             }
             else{
-                res.statusCode=403;
-                res.send();
-            }
-        },
-        agendas_anonymous: function(provider_id, agenda_id, user_id, authenticated, res){
-            if(authenticated){
                 if(providers[provider_id]){
                     central.provider.query("update anonymous_users set provider=$1, agenda_id=$2 where id=$3", [provider_id, agenda_id, user_id], function(err, result){
                         central.done();
@@ -467,10 +461,6 @@ module.exports = {
                     res.statusCode=404;
                     res.send();
                 }
-            }
-            else{
-                res.statusCode=403;
-                res.send();
             }
         },
         sign_in_email_user: function(email, password, res){
