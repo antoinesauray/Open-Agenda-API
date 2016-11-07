@@ -276,7 +276,7 @@ module.exports = {
                     console.log("promises ready");
                     result.rows.forEach(function(anonymous_user){
                         if(anonymous_user.request_counter>5){
-                            res.statusCode(403);
+                            res.statusCode=403;
                             res.json({});
                         }
                         else{
