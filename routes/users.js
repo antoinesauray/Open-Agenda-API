@@ -15,7 +15,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.post('/', function(req, res, next) {
-    var ip_addr = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    var ip_addr = req.headers['x-forwarded-for'];
     if(req.body.facebook_token!=null){
         var token = req.body.token || req.query.token || req.headers['x-access-token'];
         if(token!=null){
@@ -40,7 +40,7 @@ router.post('/', function(req, res, next) {
 });
 
 router.post('/anonymous', function(req, res, next){
-    var ip_addr = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    var ip_addr = req.headers['x-forwarded-for'];
     var id = req.body.id;
     var secret = req.body.secret;
     if(id&&secret){
