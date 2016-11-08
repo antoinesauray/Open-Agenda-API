@@ -52,7 +52,7 @@ router.post('/anonymous', function(req, res, next){
             if(anonymous_user.length!=0){
                 var count = anonymous_user[0].ip_counter;
                 if(count<15&&req.body.device_os){
-                    query.POST.anonymous_user(ip_addr, device_os, res);
+                    query.POST.anonymous_user(ip_addr, req.body.device_os, res);
                 }
                 else{
                     res.statusCode=403;
