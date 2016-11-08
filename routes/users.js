@@ -49,11 +49,10 @@ router.post('/anonymous', function(req, res, next){
     else if(ip_addr){
         query.anonymous_ip_addr(ip_addr, function(anonymous_user){
             console.log("user: "+JSON.stringify(anonymous_user));
-
             if(anonymous_user.length!=0){
                 var count = anonymous_user[0].ip_counter;
-                if(count<15){
-                    query.POST.anonymous_user(ip_addr, res);
+                if(count<15&&req.body.device_os){
+                    query.POST.anonymous_user(ip_addr, device_os, res);
                 }
                 else{
                     res.statusCode=403;

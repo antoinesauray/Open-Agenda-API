@@ -666,10 +666,10 @@ module.exports = {
                 });
             });
         },
-        anonymous_user: function(ip_addr, res){
+        anonymous_user: function(ip_addr, device_os, res){
             crypto.randomBytes(12, function(err, buffer) {
                 var secret = buffer.toString('hex');
-                central.provider.query("insert into anonymous_users (last_request, request_counter,ip_address, secret) values(NOW(), 0, $1, $2) RETURNING id", [ip_addr, secret], function(err, result){
+                central.provider.query("insert into anonymous_users (last_request, request_counter,ip_address, secret, device_os) values(NOW(), 0, $1, $2, $3) RETURNING id", [ip_addr, secret, device_os], function(err, result){
                     central.done();
                     if(err) {
                         res.statusCode=500;
@@ -688,7 +688,6 @@ module.exports = {
                     }
                 });
             });
-
         },
         anonymous_user_secret: function(ip_addr, id, secret, res){
             central.provider.query("select * from anonymous_users where id=$1 and secret=$2", [id, secret], function(err, result){
