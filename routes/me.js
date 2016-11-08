@@ -101,7 +101,6 @@ router.post('/events', function(req, res, next) {
 });
 
 router.post('/firebase', function(req, res, next) {
-    console.log("firebase");
     if(req.body.firebase_token){
         query.POST.firebase_token(req.decoded.id, req.decoded.authenticated, req.body.firebase_token, res);
     }
