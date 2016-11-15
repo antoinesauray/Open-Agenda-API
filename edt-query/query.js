@@ -102,7 +102,7 @@ pool.on('error', function (err, client) {
 });
 
 var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_email, user, created, res){
-    central.provider.query("UPDATE users set facebook_token=$1, ip_addr=$4 where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
+    central.provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, updated_at=NOW() where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
         central.done();
         if(err) {
             return console.error('error running query', err);
@@ -266,7 +266,7 @@ module.exports = {
                 });
             }
             else{
-                central.provider.query("UPDATE anonymous_users set request_counter=request_counter+1where id=$1 RETURNING *", [user_id], function(err, result){
+                central.provider.query("UPDATE anonymous_users set request_counter=request_counter+1, updated_at=NOW() where id=$1 RETURNING *", [user_id], function(err, result){
                     central.done();
                     if(err) {
                         return console.error('error running query', err);
@@ -437,7 +437,7 @@ module.exports = {
             }
             else{
                 console.log("firebase: not authenticated");
-                central.provider.query("update anonymous_users set firebase_token=$1 where id=$2", [firebase_token, user_id], function(err, result){
+                central.provider.query("update anonymous_users set firebase_token=$1, updated_at=NOW() where id=$2", [firebase_token, user_id], function(err, result){
                     central.done();
                     if(err) {
                         console.error('error running query', err);
@@ -515,7 +515,7 @@ module.exports = {
             }
             else{
                 if(providers[provider_id]){
-                    central.provider.query("update anonymous_users set provider=$1, agenda_id=$2 where id=$3", [provider_id, agenda_id, user_id], function(err, result){
+                    central.provider.query("update anonymous_users set provider=$1, agenda_id=$2, updated_at=NOW() where id=$3", [provider_id, agenda_id, user_id], function(err, result){
                         central.done();
                         if(err) {
                             console.error('error running query', err);
@@ -641,7 +641,7 @@ module.exports = {
                         console.log("token ok");
                         var id = decoded.id;
                         // let's update our user with Facebook data
-                        central.provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, is_validated=true, facebook_token=$3, ip_addr=$5 where edt_id=$4 RETURNING edt_id, first_name, last_name, facebook_email", [response.id, response.email, facebook_token, id, ip_addr], function(err, result){
+                        central.provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, is_validated=true, facebook_token=$3, ip_addr=$5, updated_at=NOW() where edt_id=$4 RETURNING edt_id, first_name, last_name, facebook_email", [response.id, response.email, facebook_token, id, ip_addr], function(err, result){
                             central.done();
                             console.log("freeing pool in central server");
                             if(err) {
@@ -745,7 +745,7 @@ module.exports = {
                 });
             }
             else{
-                central.provider.query("update anonymous_users set provider=NULL, agenda_id=NULL where provider_id=$1 and agenda_id=$2 and id=$3", [provider_id, agenda_id, user_id], function(err, result){
+                central.provider.query("update anonymous_users set provider=NULL, agenda_id=NULL, updated_at=NOW() where provider_id=$1 and agenda_id=$2 and id=$3", [provider_id, agenda_id, user_id], function(err, result){
                     central.done();
                     if(err) {
                         return console.error('error running query', err);
