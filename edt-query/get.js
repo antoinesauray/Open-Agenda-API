@@ -136,7 +136,6 @@ module.exports = {
     },
 
     events: function(user_id, authenticated, start_date, end_date, res){
-        console.log("GET /events");
         if(authenticated){
             query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
                 query.getCentral().done();
@@ -165,6 +164,7 @@ module.exports = {
                     });
                     res.statusCode=200;
                     res.send(events);
+                    console.log("GET /events -> count()="+events.length);
                 });
             });
         }
