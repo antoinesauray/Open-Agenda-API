@@ -59,23 +59,15 @@ module.exports = {
     },
 
     notes: function(user_id, provider, event_id, res){
-        if(query.getProviders()[provider]){
-            query.getProviders()[provider].client.query("SELECT type, content, first_name, user_id, last_name, public, user_notes.created_at, user_notes.updated_at from user_notes JOIN users on user_id = edt_id where event_id = $1 AND (public=true OR (public=false AND user_id=$2))", [event_id, user_id], function(err, result){
-                query.getProviders()[provider].done();
-                if(err) {
-                    return query.throwError(res);
-                }
-                res.statusCode=200;
-                res.send(result.rows);
-                console.log("GET /notes : "+res.statusCode);
-            });
-        }
-        else{
-            res.statusCode=404;
-            res.send();
+        query.getCentral().provider.query("SELECT type, content, first_name, user_id, last_name, public, user_notes.created_at, user_notes.updated_at from user_notes JOIN users on user_id = edt_id where event_id = $1 AND (public=true OR (public=false AND user_id=$2))", [event_id, user_id], function(err, result){
+            query.getCentral().done();
+            if(err) {
+                return query.throwError(res);
+            }
+            res.statusCode=200;
+            res.send(result.rows);
             console.log("GET /notes : "+res.statusCode);
-
-        }
+        });
     },
 
     entities: function(provider, res){
