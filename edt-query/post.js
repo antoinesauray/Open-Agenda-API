@@ -30,15 +30,18 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
                 fbImport.queryFacebook(result.rows[0].edt_id, facebook_id, facebook_token);
                 res.statusCode=201;
                 res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
+                console.log("POST /facebook_user : "+res.statusCode);
             }
             else{
                 res.statusCode=200;
                 res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
+                console.log("POST /facebook_user : "+res.statusCode);
             }
         }
         else{
             res.statusCode=401;
             res.send("An error occured when trying to create a new user");
+            console.log("POST /facebook_user : "+res.statusCode);
         }
     });
 }
@@ -97,7 +100,6 @@ module.exports = {
         }
     },
     detailed_event: function(user_id, authenticated, provider_id, agenda_id, name, start_time, end_time, more, res){
-        console.log("POST /detailed_event");
         if(authenticated){
             if(query.getProviders()[provider]){
                 query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
@@ -112,15 +114,16 @@ module.exports = {
             else{
                 res.statusCode=404;
                 res.send();
+                console.log("POST /detailed_event : "+res.statusCode);
             }
         }
         else{
             res.statusCode=403;
             res.send();
+            console.log("POST /detailed_event : "+res.statusCode);
         }
     },
     agendas: function(provider_id, agenda_id, user_id, authenticated, res){
-        console.log("POST /agendas");
         if(authenticated){
             if(query.getProviders()[provider_id]){
                 query.getCentral().provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
@@ -130,11 +133,13 @@ module.exports = {
                     }
                     res.statusCode=200;
                     res.json({message: "This agenda has been post"});
+                    console.log("POST /agendas : "+res.statusCode);
                 });
             }
             else{
                 res.statusCode=404;
                 res.send();
+                console.log("POST /agendas : "+res.statusCode);
             }
         }
         else{
@@ -146,16 +151,17 @@ module.exports = {
                     }
                     res.statusCode=200;
                     res.json({message: "This agenda has been post"});
+                    console.log("POST /agendas : "+res.statusCode);
                 });
             }
             else{
                 res.statusCode=404;
                 res.send();
+                console.log("POST /agendas : "+res.statusCode);
             }
         }
     },
     sign_in_email_user: function(ip_addr, email, password, res){
-        console.log("POST /sign_in_email_user");
         query.getCentral().provider.query("SELECT * from users where edt_email=$1 limit 1", [email], function(err, result){
             query.getCentral().done();
             if(err) {
@@ -167,50 +173,55 @@ module.exports = {
                     if(hash==user.password){
                         var token = jwt.sign({id: user.edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
                         res.statusCode=200;
-                        res.json({token: token, first_name: user.first_name, last_name: user.last_name, mail: user.edt_email})
+                        res.json({token: token, first_name: user.first_name, last_name: user.last_name, mail: user.edt_email});
+                        console.log("POST /sign_in_email_user : "+res.statusCode);
                     }
                     else{
                         res.statusCode=403;
                         res.json({});
+                        console.log("POST /sign_in_email_user : "+res.statusCode);
                     }
                 });
             }
             else{
                 res.statusCode=404;
                 res.json({});
+                console.log("POST /sign_in_email_user : "+res.statusCode);
             }
         });
     },
     sign_up_email_user: function(ip_addr, email, password, first_name, last_name, res){
-        console.log("POST /sign_up_email_user");
         hash(password, function(hashedPassword, salt){
             query.getCentral().provider.query("INSERT INTO users (edt_email, password, salt, first_name, last_name, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *", [email, hashedPassword, salt, first_name, last_name, ip_addr], function(err, result){
                 query.getCentral().done();
                 if(err) {
                     res.statusCode=401;
                     res.json({message: "This email address already exists."});
+                    console.log("POST /sign_up_email_user : "+res.statusCode);
                 }
                 else if(result.rows.length!=0){
                     var user = result.rows[0];
                     var token = jwt.sign({id: user.edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
                     res.statusCode=201;
                     res.json({token: token, first_name: user.first_name, last_name: user.last_name, mail: user.edtemail});
+                    console.log("POST /sign_up_email_user : "+res.statusCode);
                 }
                 else{
                     res.statusCode=404;
                     res.json({});
+                    console.log("POST /sign_up_email_user : "+res.statusCode);
                 }
             });
         });
     },
     facebook_user: function(ip_addr, facebook_token, res){
-        console.log("POST /facebook_user");
         FB.setAccessToken(facebook_token);
         FB.api('/me', { fields: ['id', 'email', 'first_name', 'last_name'] }, function (response) {
             console.log("response: "+JSON.stringify(response));
             if(!response || response.error) {
                 res.statusCode=400;
                 res.send('Could not verify access token');
+                console.log("POST /facebook_user : "+res.statusCode);
                 return;
             }
             query.getCentral().provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
@@ -235,6 +246,7 @@ module.exports = {
                         else{
                             res.statusCode=401;
                             res.send("An error occured when trying to create a new user");
+                            console.log("POST /facebook_user : "+res.statusCode);
                         }
                     });
                 }
