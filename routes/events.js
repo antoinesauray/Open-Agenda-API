@@ -42,3 +42,5 @@ router.get('/notes/', function(req, res, next) {
 router.post('/notes/', function(req, res, next) {
     POST.notes(req.decoded.id, req.query.provider, req.query.event_id, req.query.content, req.query.type, req.query.access_level, res);
 });
+
+module.exports = router;
