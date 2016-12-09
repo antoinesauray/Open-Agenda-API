@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var morgan = require('morgan');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -19,6 +20,11 @@ var app = express();
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 //app.use(logger('dev'));
+
+app.use(morgan('combined', {
+  skip: function (req, res) { return res.statusCode < 400 }
+}));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
