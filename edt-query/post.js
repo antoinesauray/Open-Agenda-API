@@ -48,7 +48,6 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 
 module.exports = {
     notes: function(user_id, authenticated, provider, event_id, content, type, access_level, res){
-        console.log("POST /firebase_token");
         if(authenticated){
             query.getCentral().provider.query("insert into user_notes values($1, $2, $3, $4, $5, $6, NOW(), NOW())", [content, type, provider, event_id, user_id, access_level], function(err, result){
                 query.getCentral().done();
@@ -57,15 +56,16 @@ module.exports = {
                 }
                 res.statusCode=200;
                 res.json({message: "Note inserted"});
+                console.log("POST /notes : "+res.statusCode);
             });
         }
         else{
             res.statusCode=403;
             res.json({message: "Anonymous users can not provide notes."});
+            console.log("POST /notes : "+res.statusCode);
         }
     },
     firebase_token: function(user_id, authenticated, firebase_token, res){
-        console.log("POST /firebase_token");
         if(authenticated){
             query.getCentral().provider.query("update users set firebase_token=$1 where edt_id=$2", [firebase_token, user_id], function(err, result){
                 query.getCentral().done();
@@ -74,6 +74,7 @@ module.exports = {
                 }
                 res.statusCode=200;
                 res.json({message: "Token updated"});
+                console.log("POST /firebase_token : "+res.statusCode);
             });
         }
         else{
@@ -84,6 +85,7 @@ module.exports = {
                 }
                 res.statusCode=200;
                 res.json({message: "Token updated"});
+                console.log("POST /firebase_token : "+res.statusCode);
             });
         }
     },
