@@ -47,6 +47,23 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 }
 
 module.exports = {
+    notes: function(user_id, provider, event_id, content, type, access_level, res){
+        console.log("POST /firebase_token");
+        if(authenticated){
+            query.getCentral().provider.query("insert into user_notes values($1, $2, $3, $4, $5, NOW(), NOW())", [content, type, event_id, user_id, access_level], function(err, result){
+                query.getCentral().done();
+                if(err) {
+                    return query.throwError(res);
+                }
+                res.statusCode=200;
+                res.json({message: "Note inserted"});
+            });
+        }
+        else{
+            res.statusCode=403;
+            res.json({message: "Anonymous users can not provide notes."});
+        }
+    },
     firebase_token: function(user_id, authenticated, firebase_token, res){
         console.log("POST /firebase_token");
         if(authenticated){
