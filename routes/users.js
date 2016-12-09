@@ -42,7 +42,7 @@ router.post('/', function(req, res, next) {
     }
     else{
         res.statusCode=400;
-        res.json(message: "Missing parameters");
+        res.json({message: "Missing parameters"});
     }
 });
 

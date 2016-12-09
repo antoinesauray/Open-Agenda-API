@@ -222,7 +222,7 @@ module.exports = {
                         query.getCentral().done();
                         if(err) {
                             res.status(400);
-                            res.json(message: "error");
+                            res.json({message: "error"});
                             return console.error('error running query', err);
                         }
                         if(result.rows.length!=0){
@@ -318,7 +318,7 @@ module.exports = {
             }
             else{
                 res.statusCode=401;
-                res.json(message: "This Agenda does not exist");
+                res.json({message: "This Agenda does not exist"});
             }
         });
     }
