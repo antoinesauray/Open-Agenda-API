@@ -45,6 +45,7 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 
 module.exports = {
     firebase_token: function(user_id, authenticated, firebase_token, res){
+        console.log("POST /firebase_token");
         if(authenticated){
             console.log("firebase: authenticated");
             query.getCentral().provider.query("update users set firebase_token=$1 where edt_id=$2", [firebase_token, user_id], function(err, result){
@@ -75,7 +76,7 @@ module.exports = {
         }
     },
     event: function(user_id, authenticated, provider_id, agenda_id, event_name, start_time, end_time, details, res){
-        console.log("provider="+provider_id);
+        console.log("POST /event");
         if(authenticated){
             if(query.getProviders()[provider_id]){
                 query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id, more) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me', $5) RETURNING *", [event_name, agenda_id, start_time, end_time, details], function(err, result){
@@ -98,7 +99,7 @@ module.exports = {
         }
     },
     detailed_event: function(user_id, authenticated, provider_id, agenda_id, name, start_time, end_time, more, res){
-        console.log("provider="+provider_id);
+        console.log("POST /detailed_event");
         if(authenticated){
             if(query.getProviders()[provider]){
                 query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
@@ -121,6 +122,7 @@ module.exports = {
         }
     },
     agendas: function(provider_id, agenda_id, user_id, authenticated, res){
+        console.log("POST /agendas");
         if(authenticated){
             if(query.getProviders()[provider_id]){
                 query.getCentral().provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
@@ -155,6 +157,7 @@ module.exports = {
         }
     },
     sign_in_email_user: function(ip_addr, email, password, res){
+        console.log("POST /sign_in_email_user");
         query.getCentral().provider.query("SELECT * from users where edt_email=$1 limit 1", [email], function(err, result){
             query.getCentral().done();
             if(err) {
@@ -181,6 +184,7 @@ module.exports = {
         });
     },
     sign_up_email_user: function(ip_addr, email, password, first_name, last_name, res){
+        console.log("POST /sign_up_email_user");
         hash(password, function(hashedPassword, salt){
             query.getCentral().provider.query("INSERT INTO users (edt_email, password, salt, first_name, last_name, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *", [email, hashedPassword, salt, first_name, last_name, ip_addr], function(err, result){
                 query.getCentral().done();
@@ -202,6 +206,7 @@ module.exports = {
         });
     },
     facebook_user: function(ip_addr, facebook_token, res){
+        console.log("POST /facebook_user");
         FB.setAccessToken(facebook_token);
         FB.api('/me', { fields: ['id', 'email', 'first_name', 'last_name'] }, function (response) {
             console.log("response: "+JSON.stringify(response));
@@ -244,6 +249,7 @@ module.exports = {
     },
 
     facebook_user_token: function(ip_addr, facebook_token, token, res){
+        console.log("POST /facebook_user_token");
         FB.setAccessToken(facebook_token);
         FB.api('/me', { fields: ['id', 'email', 'first_name', 'last_name'] }, function (response) {
             console.log("response: "+response);
@@ -291,6 +297,7 @@ module.exports = {
         });
     },
     anonymous_user: function(ip_addr, device_os, res){
+        console.log("POST /anonymous_user");
         crypto.randomBytes(12, function(err, buffer) {
             var secret = buffer.toString('hex');
             query.getCentral().provider.query("insert into anonymous_users (last_request, request_counter,ip_address, secret, device_os) values(NOW(), 0, $1, $2, $3) RETURNING id", [ip_addr, secret, device_os], function(err, result){
@@ -314,6 +321,7 @@ module.exports = {
         });
     },
     anonymous_user_secret: function(ip_addr, id, secret, res){
+        console.log("POST /anonymous_user_secret");
         query.getCentral().provider.query("select * from anonymous_users where id=$1 and secret=$2", [id, secret], function(err, result){
             query.getCentral().done();
             console.log("freeing pool in query.getCentral() server");
