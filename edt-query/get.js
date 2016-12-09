@@ -164,7 +164,7 @@ module.exports = {
                     });
                     res.statusCode=200;
                     res.send(events);
-                    console.log("GET /events -> count()="+events.length);
+                    console.log("GET /events -> count()="+events.size);
                 });
             });
         }
