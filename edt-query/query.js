@@ -111,8 +111,9 @@ module.exports = {
         });
     },
     throwError: function(res){
+        console.log("could not run query");
         res.status(400);
         res.json({message: "error"});
-        return console.error('error running query', err);
+        return;
     }
 }
