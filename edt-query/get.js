@@ -154,17 +154,19 @@ module.exports = {
                 // when we have all replies
                 Promise.all(promises).then(results => {
                     var events={};
+                    var count=0;
                     results.forEach(function(result){
                         result.rows.forEach(function(event){
                             if(!events[event.date]){
                                 events[event.date] = [];
                             }
                             events[event.date].push(event);
+                            count++;
                         });
                     });
                     res.statusCode=200;
                     res.send(events);
-                    console.log("GET /events -> count()="+events.size);
+                    console.log("GET /events -> count()="+count);
                 });
             });
         }
