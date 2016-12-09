@@ -50,7 +50,7 @@ module.exports = {
     notes: function(user_id, provider, event_id, content, type, access_level, res){
         console.log("POST /firebase_token");
         if(authenticated){
-            query.getCentral().provider.query("insert into user_notes values($1, $2, $3, $4, $5, NOW(), NOW())", [content, type, event_id, user_id, access_level], function(err, result){
+            query.getCentral().provider.query("insert into user_notes values($1, $2, $3, $4, $5, $6, NOW(), NOW())", [content, type, provider, event_id, user_id, access_level], function(err, result){
                 query.getCentral().done();
                 if(err) {
                     return query.throwError(res);
