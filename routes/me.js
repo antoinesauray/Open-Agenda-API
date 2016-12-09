@@ -47,14 +47,6 @@ router.get('/events/', function(req, res, next) {
     GET.events(req.decoded.id, req.decoded.authenticated, req.query.start_date, req.query.end_date, res);
 });
 
-router.get('/notes/', function(req, res, next) {
-    GET.notes(req.decoded.id, req.query.provider, req.query.event_id, res);
-});
-
-router.post('/notes/', function(req, res, next) {
-    POST.notes(req.decoded.id, req.query.provider, req.query.event_id, req.query.content, req.query.type, req.query.access_level, res);
-});
-
 router.post('/events', function(req, res, next) {
     if(req.body.provider && req.body.agenda_id && req.body.event_name && req.body.start_time && req.body.end_time && req.body.details){
         POST.event(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.event_name, req.body.start_time, req.body.end_time, req.body.details, res);

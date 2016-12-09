@@ -15,6 +15,7 @@ var providers = require('./routes/providers');
 var agendas = require('./routes/agendas');
 var entities = require('./routes/entities');
 var me = require('./routes/me');
+var events = require('./routes/events');
 
 var app = express();
 
@@ -47,6 +48,7 @@ app.use('/providers', providers);
 app.use('/agendas', agendas);
 app.use('/entities', entities);
 app.use('/users', users);
+app.use('/events', events);
 app.use('/anonymous', anonymous);
 app.use('/me', me);
 
