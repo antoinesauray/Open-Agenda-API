@@ -46,7 +46,7 @@ module.exports = {
     },
     agenda: function (provider_id, agenda_id, user_id, authenticated, res) {
         if(authenticated){
-            query.getquery.getCentral()().provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
+            query.getCentral()().provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
                     return throwError(res);
