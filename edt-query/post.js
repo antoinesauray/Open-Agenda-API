@@ -73,7 +73,7 @@ module.exports = {
         console.log("POST /event");
         if(authenticated){
             if(query.getProviders()[provider_id]){
-			console.log("details="+JSON.parse(details));
+			console.log("details="+JSON.stringify(details));
                 query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id, more) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me', $5) RETURNING *", [event_name, agenda_id, start_time, end_time, details], function(err, result){
                     query.getProviders()[provider_id].done();
                     if(err) {
