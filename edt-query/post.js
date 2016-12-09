@@ -47,7 +47,7 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 }
 
 module.exports = {
-    notes: function(user_id, provider, event_id, content, type, access_level, res){
+    notes: function(user_id, authenticated, provider, event_id, content, type, access_level, res){
         console.log("POST /firebase_token");
         if(authenticated){
             query.getCentral().provider.query("insert into user_notes values($1, $2, $3, $4, $5, $6, NOW(), NOW())", [content, type, provider, event_id, user_id, access_level], function(err, result){
