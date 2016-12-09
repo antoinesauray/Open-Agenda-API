@@ -3,6 +3,7 @@ var router = express.Router();
 var jwt    = require('jsonwebtoken');
 var fs = require('fs');
 var query = require('../edt-query/query');
+var GET = require('../edt-query/get');
 
 var cert = {
     pub: fs.readFileSync('cert.pem')
@@ -34,7 +35,7 @@ router.use(function(req, res, next) {
 router.get('/', function(req, res, next) {
     console.log("agendas");
     if(req.query.entity && req.query.provider){
-        query.GET.agendas(req.query.provider, req.query.entity, res);
+        GET.agendas(req.query.provider, req.query.entity, res);
     }
     else{
         res.status(403);

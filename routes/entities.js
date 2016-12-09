@@ -4,6 +4,8 @@ var jwt    = require('jsonwebtoken');
 var fs = require('fs');
 var query = require('../edt-query/query');
 
+var GET = require('../edt-query/get');
+
 var cert = {
     pub: fs.readFileSync('cert.pem')
 }
@@ -33,7 +35,7 @@ router.use(function(req, res, next) {
 
 router.get('/', function(req, res, next) {
     if(req.query.provider){
-        query.GET.entities(req.query.provider, res);
+        GET.entities(req.query.provider, res);
     }
     else{
         res.status(403);

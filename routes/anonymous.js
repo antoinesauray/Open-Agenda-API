@@ -4,6 +4,9 @@ var jwt    = require('jsonwebtoken');
 var fs = require('fs');
 var query = require('../edt-query/query');
 
+var POST = require('../edt-query/post');
+var GET = require('../edt-query/get');
+
 var cert = {
     pub: fs.readFileSync('cert.pem')
 }
@@ -33,7 +36,7 @@ router.use(function(req, res, next) {
 
 router.get('/', function(req, res, next) {
     if(req.decoded.id){
-        query.GET.user_anonymous(req.decoded.id, res);
+        GET.user_anonymous(req.decoded.id, res);
     }
     else{
         res.status(403).json({message: "Who are you?"});
@@ -41,16 +44,16 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/events', function(req, res, next) {
-    query.GET.events_anonymous(req.decoded.id, req.query.start_date, req.query.end_date, res);
+    GET.events_anonymous(req.decoded.id, req.query.start_date, req.query.end_date, res);
 });
 
 router.get('/agendas', function(req, res, next) {
-    query.GET.user_agendas_anonymous(req.decoded.id, res);
+    GET.user_agendas_anonymous(req.decoded.id, res);
 });
 
 router.post('/agendas', function(req, res, next) {
     if(req.body.provider && req.body.agenda_id){
-        query.POST.agendas_anonymous(req.body.provider, req.body.agenda_id, req.decoded.id, res);
+        POST.agendas_anonymous(req.body.provider, req.body.agenda_id, req.decoded.id, res);
     }
     else{
         res.statusCode=400;
