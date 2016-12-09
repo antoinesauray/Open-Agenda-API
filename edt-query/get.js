@@ -250,10 +250,10 @@ module.exports = {
                     // get promises from all query.getProviders()
                     var promises=[];
                     result.rows.forEach(function(agenda){
-                        var query = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
-                        promises.push(query);
-                        query.then(function(){
-                            query.getProviders()[agenda.provider].done();
+                        var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                        promises.push(sqlQuery);
+                        sqlQuery.then(function(){
+                            sqlQuery.getProviders()[agenda.provider].done();
                         });
                     });
                     console.log("promises ready");
