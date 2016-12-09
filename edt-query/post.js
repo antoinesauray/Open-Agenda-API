@@ -70,7 +70,7 @@ module.exports = {
         }
     },
     event: function(user_id, authenticated, provider_id, agenda_id, event_name, start_time, end_time, details, res){
-        console.log("POST /event");
+
         if(authenticated){
             if(query.getProviders()[provider_id]){
 			console.log("details="+JSON.stringify(details));
@@ -81,16 +81,19 @@ module.exports = {
                     }
                     res.statusCode=200;
                     res.json({message: "This event has been post"});
+                    console.log("POST /event : "res.statusCode);
                 });
             }
             else{
                 res.statusCode=404;
                 res.send();
+                console.log("POST /event : "res.statusCode);
             }
         }
         else{
             res.statusCode=403;
             res.send();
+            console.log("POST /event : "res.statusCode);
         }
     },
     detailed_event: function(user_id, authenticated, provider_id, agenda_id, name, start_time, end_time, more, res){
