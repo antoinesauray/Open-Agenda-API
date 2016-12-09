@@ -74,11 +74,11 @@ module.exports = {
             });
         }
     },
-    event: function(user_id, authenticated, provider_id, agenda_id, event_name, start_time, end_time, more, res){
+    event: function(user_id, authenticated, provider_id, agenda_id, event_name, start_time, end_time, details, res){
         console.log("provider="+provider_id);
         if(authenticated){
             if(query.getProviders()[provider_id]){
-                query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
+                query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id, more) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me', $5) RETURNING *", [event_name, agenda_id, start_time, end_time, details], function(err, result){
                     query.getProviders()[provider_id].done();
                     if(err) {
                         return console.error('error running query', err);
