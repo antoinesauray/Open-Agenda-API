@@ -103,11 +103,18 @@ module.exports = {
         central.provider.query("SELECT count(*) as ip_counter from anonymous_users where ip_address=$1 limit 1", [ip_addr], function(err, result){
             central.done();
             if(err) {
+                res.status(400);
+                res.json(message: "error");
                 return console.error('error running query', err);
             }
             next(result.rows);
         });
     },
+    throwError: function(res){
+        res.status(400);
+        res.json(message: "error");
+        return console.error('error running query', err);
+    }
     DELETE: {
         event: function (provider_id, event_id, user_id, authenticated, res) {
             if(authenticated){
@@ -115,6 +122,8 @@ module.exports = {
                     central.provider.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
                         central.done();
                         if(err) {
+                            res.status(400);
+                            res.json(message: "error");
                             return console.error('error running query', err);
                         }
                         res.statusCode=200;
@@ -123,12 +132,12 @@ module.exports = {
                 }
                 else{
                     res.statusCode=404;
-                    res.send();
+                    res.json({message: "Error with parameters. Make sure this provider exists."});
                 }
             }
             else{
                 res.statusCode=403;
-                res.send();
+                res.json({message: "You are not authenticated."});
             }
         },
         agenda: function (provider_id, agenda_id, user_id, authenticated, res) {
@@ -136,6 +145,8 @@ module.exports = {
                 central.provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
                     central.done();
                     if(err) {
+                        res.status(400);
+                        res.json(message: "error");
                         return console.error('error running query', err);
                     }
                     res.statusCode=200;

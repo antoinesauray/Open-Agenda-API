@@ -42,7 +42,7 @@ router.post('/', function(req, res, next) {
     }
     else{
         res.statusCode=400;
-        res.send('You need to provide an access token');
+        res.json(message: "Missing parameters");
     }
 });
 
@@ -55,7 +55,6 @@ router.post('/anonymous', function(req, res, next){
     }
     else if(ip_addr){
         query.anonymous_ip_addr(ip_addr, function(anonymous_user){
-            console.log("user: "+JSON.stringify(anonymous_user));
             if(anonymous_user.length!=0){
                 var count = anonymous_user[0].ip_counter;
                 if(count<15&&req.body.device_os){
@@ -77,13 +76,5 @@ router.post('/anonymous', function(req, res, next){
         res.statusCode=403;
         res.json({message: 'We could not get your ip address.'});
     }
-});
-
-router.get('/self', function(req, res, next) {
-  res.send('respond with a resource');
-});
-
-router.get('/self/agenda', function(req, res, next) {
-  res.send('respond with a resource');
 });
 module.exports = router;

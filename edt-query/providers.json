@@ -1,9 +1,0 @@
-{
-    "providers":[
-        {
-            "name": "Université de Nantes",
-            "id": "univ-nantes",
-            "database": "provider_nantes"
-        }
-    ]
-}

@@ -26,7 +26,7 @@ router.use(function(req, res, next) {
       }
     });
   } else {
-    return res.status(403).send({
+    return res.status(403).json({
         success: false,
         message: 'No token provided.'
     });
@@ -39,7 +39,7 @@ router.get('/', function(req, res, next) {
     }
     else{
         res.status(403);
-        res.json({});
+        res.json({message: "Missing parameters."});
     }
 });
 

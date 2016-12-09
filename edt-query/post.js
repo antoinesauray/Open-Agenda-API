@@ -22,7 +22,7 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
     query.getCentral().provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, updated_at=NOW() where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
         query.getCentral().done();
         if(err) {
-            return console.error('error running query', err);
+            return query.throwError(res);
         }
         if(result.rows.length!=0){
             var token = jwt.sign({id: result.rows[0].edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
@@ -51,10 +51,7 @@ module.exports = {
             query.getCentral().provider.query("update users set firebase_token=$1 where edt_id=$2", [firebase_token, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
-                    console.error('error running query', err);
-                    res.statusCode=400;
-                    res.json({});
-                    return;
+                    return query.throwError(res);
                 }
                 res.statusCode=200;
                 res.json({message: "Token updated"});
@@ -65,10 +62,7 @@ module.exports = {
             query.getCentral().provider.query("update anonymous_users set firebase_token=$1, updated_at=NOW() where id=$2", [firebase_token, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
-                    console.error('error running query', err);
-                    res.statusCode=400;
-                    res.json({});
-                    return;
+                    return query.throwError(res);
                 }
                 res.statusCode=200;
                 res.json({message: "Token updated"});
@@ -82,7 +76,7 @@ module.exports = {
                 query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id, more) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me', $5) RETURNING *", [event_name, agenda_id, start_time, end_time, details], function(err, result){
                     query.getProviders()[provider_id].done();
                     if(err) {
-                        return console.error('error running query', err);
+                        return query.throwError(res);
                     }
                     res.statusCode=200;
                     res.json({message: "This event has been post"});
@@ -105,7 +99,7 @@ module.exports = {
                 query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
                     query.getProviders()[provider_id].done();
                     if(err) {
-                        return console.error('error running query', err);
+                        return query.throwError(res);
                     }
                     res.statusCode=200;
                     res.json({message: "This event has been post"});
@@ -128,7 +122,7 @@ module.exports = {
                 query.getCentral().provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
                     query.getCentral().done();
                     if(err) {
-                        console.error('error running query', err);
+                        return query.throwError(res);
                     }
                     res.statusCode=200;
                     res.json({message: "This agenda has been post"});
@@ -144,7 +138,7 @@ module.exports = {
                 query.getCentral().provider.query("update anonymous_users set provider=$1, agenda_id=$2, updated_at=NOW() where id=$3", [provider_id, agenda_id, user_id], function(err, result){
                     query.getCentral().done();
                     if(err) {
-                        console.error('error running query', err);
+                        return query.throwError(res);
                     }
                     res.statusCode=200;
                     res.json({message: "This agenda has been post"});
@@ -161,7 +155,7 @@ module.exports = {
         query.getCentral().provider.query("SELECT * from users where edt_email=$1 limit 1", [email], function(err, result){
             query.getCentral().done();
             if(err) {
-                return console.error('error running query', err);
+                return query.throwError(res);
             }
             if(result.rows.length!=0){
                 var user = result.rows[0];
@@ -213,19 +207,13 @@ module.exports = {
             if(!response || response.error) {
                 res.statusCode=400;
                 res.send('Could not verify access token');
-                console.log(!response ? 'error occurred' : response.error);
                 return;
             }
-            console.log("verifying token");
-            console.log("...");
             query.getCentral().provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
-                console.log("done");
                 query.getCentral().done();
                 if(err) {
-                    console.log("token error");
-                    console.error('error running query', err);
+                    return query.throwError(res);
                 }
-                console.log("token ok");
                 if(result.rows.length!=0){
                     next_facebook(ip_addr, facebook_token, response.id, response.email, result.rows[0], false, res);
                 }
@@ -233,6 +221,8 @@ module.exports = {
                     query.getCentral().provider.query("INSERT INTO users (facebook_id, facebook_email, first_name, last_name, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING *", [response.id, response.email, response.first_name, response.last_name, ip_addr], function(err, result){
                         query.getCentral().done();
                         if(err) {
+                            res.status(400);
+                            res.json(message: "error");
                             return console.error('error running query', err);
                         }
                         if(result.rows.length!=0){
@@ -255,25 +245,20 @@ module.exports = {
             console.log("response: "+response);
             if(!response || response.error) {
                 res.statusCode=400;
-                res.send('Could not verify access token');
+                res.json({message: 'Could not verify access token'});
                 console.log(!response ? 'error occurred' : response.error);
                 return;
             }
-            console.log("verifying token");
-            console.log("type of token : "+typeof token);
             jwt.verify(token, cert.pub, {algorithm: 'RS256'}, function(err, decoded) {
                 if (err) {
-                    console.log("token error");
                     res.statusCode=401;
                     return res.json({ success: false, message: 'Failed to authenticate token.' });
                 }
                 else {
-                    console.log("token ok");
                     var id = decoded.id;
                     // let's update our user with Facebook data
                     query.getCentral().provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, is_validated=true, facebook_token=$3, ip_addr=$5, updated_at=NOW() where edt_id=$4 RETURNING edt_id, first_name, last_name, facebook_email", [response.id, response.email, facebook_token, id, ip_addr], function(err, result){
                         query.getCentral().done();
-                        console.log("freeing pool in query.getCentral() server");
                         if(err) {
                             res.statusCode=403;
                             res.json({message: "Facebook account already associated"});
@@ -303,10 +288,8 @@ module.exports = {
             query.getCentral().provider.query("insert into anonymous_users (last_request, request_counter,ip_address, secret, device_os) values(NOW(), 0, $1, $2, $3) RETURNING id", [ip_addr, secret, device_os], function(err, result){
                 query.getCentral().done();
                 if(err) {
-                    res.statusCode=500;
-                    res.send();
+                    return query.throwError(res);
                 }
-                console.log("result="+result);
                 if(result.rows.length!=0){
                     var user = result.rows[0];
                     var token = jwt.sign({id: user.id, authenticated: false}, credentials.key, { algorithm: 'RS256'});
@@ -324,9 +307,8 @@ module.exports = {
         console.log("POST /anonymous_user_secret");
         query.getCentral().provider.query("select * from anonymous_users where id=$1 and secret=$2", [id, secret], function(err, result){
             query.getCentral().done();
-            console.log("freeing pool in query.getCentral() server");
             if(err) {
-                return console.error('error running query', err);
+                return query.throwError(res);
             }
             if(result.rows.length!=0){
                 var user = result.rows[0];
@@ -336,7 +318,7 @@ module.exports = {
             }
             else{
                 res.statusCode=401;
-                res.send("This Agenda does not exist");
+                res.json(message: "This Agenda does not exist");
             }
         });
     }

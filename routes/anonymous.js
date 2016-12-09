@@ -39,7 +39,7 @@ router.get('/', function(req, res, next) {
         GET.user_anonymous(req.decoded.id, res);
     }
     else{
-        res.status(403).json({message: "Who are you?"});
+        res.status(403).json({message: "Token error."});
     }
 });
 
@@ -57,7 +57,7 @@ router.post('/agendas', function(req, res, next) {
     }
     else{
         res.statusCode=400;
-        res.send("This Agenda does not exist");
+        res.json({message: "Missing parameters."});
     }
 });
 
@@ -67,7 +67,7 @@ router.delete('/agendas/:id', function(req, res, next) {
     }
     else{
         res.statusCode=400;
-        res.send("No Agenda provided");
+        res.json({message: "Missing parameters."});
     }
 });
 

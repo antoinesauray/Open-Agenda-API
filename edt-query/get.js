@@ -22,7 +22,7 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
     query.getCentral().provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, updated_at=NOW() where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
         query.getCentral().done();
         if(err) {
-            return console.error('error running query', err);
+            return query.throwError(res);
         }
         if(result.rows.length!=0){
             var token = jwt.sign({id: result.rows[0].edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
@@ -45,10 +45,11 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 
 module.exports = {
     providers: function(res){
+        console.log("GET /providers");
         query.getCentral().provider.query("SELECT provider, name, image, primary_color, accent_color from providers", function(err, result){
             query.getCentral().done();
             if(err) {
-                return console.error('error running query', err);
+                return query.throwError(res);
             }
             if(result.rows.length!=0){
                 res.statusCode=200;
@@ -62,12 +63,12 @@ module.exports = {
     },
 
     agendas: function(provider, entity, res){
-        console.log("query agendas");
+        console.log("GET /agendas");
         if(query.getProviders()[provider]){
             query.getProviders()[provider].client.query("SELECT id, name, editable, agenda_entity_id, agenda_type_id, more, active, $2::text as provider, $3::text as entity from agendas where agenda_entity_id = $1", [entity, provider, entity], function(err, result){
                 query.getProviders()[provider].done();
                 if(err) {
-                    return console.error('error running query', err);
+                    return query.throwError(res);
                 }
                 res.statusCode=200;
                 res.send(result.rows);
@@ -81,12 +82,12 @@ module.exports = {
     },
 
     entities: function(provider, res){
-        console.log("entities");
+        console.log("GET /entities");
         if(query.getProviders()[provider]){
             query.getProviders()[provider].client.query("SELECT * from entities where public=true", function(err, result){
                 query.getProviders()[provider].done();
                 if(err) {
-                    return console.error('error running query', err);
+                    return query.throwError(res);
                 }
                 res.statusCode=200;
                 res.send(result.rows);
@@ -98,11 +99,12 @@ module.exports = {
         }
     },
     user: function(user_id, authenticated, res){
+        console.log("GET /user");
         if(authenticated){
             query.getCentral().provider.query("SELECT edt_id, first_name, last_name, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
-                    return console.error('error running query', err);
+                    return query.throwError(res);
                 }
                 if(result.rows.length!=0){
                     res.statusCode=200;
@@ -118,7 +120,7 @@ module.exports = {
             query.getCentral().provider.query("SELECT * from anonymous_users where id=$1 LIMIT 1", [user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
-                    return console.error('error running query', err);
+                    return query.throwError(res);
                 }
                 if(result.rows.length!=0){
                     res.statusCode=200;
@@ -134,18 +136,16 @@ module.exports = {
     },
 
     events: function(user_id, authenticated, start_date, end_date, res){
-        console.log("user_id="+JSON.stringify(user_id));
+        console.log("GET /events");
         if(authenticated){
             query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
-                    return console.error('error running query', err);
+                    return query.throwError(res);
                 }
                 // get promises from all query.getProviders()
                 var promises=[];
-                console.log("promises ready");
                 result.rows.forEach(function(agenda){
-                    console.log("agenda: "+agenda);
                     var sqlQuery=query.getProviders()[agenda.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [agenda.agenda_id, start_date, end_date, agenda.provider]);
                     sqlQuery.then(function(){
                         sqlQuery.getProviders()[agenda.provider].done();
@@ -155,9 +155,7 @@ module.exports = {
                 // when we have all replies
                 Promise.all(promises).then(results => {
                     var events={};
-                    console.log("promises finished: "+results.length);
                     results.forEach(function(result){
-                        console.log("promise: "+JSON.stringify(result.rows));
                         result.rows.forEach(function(event){
                             if(!events[event.date]){
                                 events[event.date] = [];
@@ -174,18 +172,16 @@ module.exports = {
             query.getCentral().provider.query("UPDATE anonymous_users set request_counter=request_counter+1, updated_at=NOW() where id=$1 RETURNING *", [user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
-                    return console.error('error running query', err);
+                    return query.throwError(res);
                 }
                 // get promises from all query.getProviders()
                 var promises=[];
-                console.log("promises ready");
                 result.rows.forEach(function(anonymous_user){
                     if(anonymous_user.request_counter>30){
                         res.statusCode=429; // too many requests
                         res.json({});
                     }
                     else{
-                        console.log("anonymous_user: "+anonymous_user);
                         if(anonymous_user.provider){
                             var query=query.getProviders()[anonymous_user.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [anonymous_user.agenda_id, start_date, end_date, anonymous_user.provider]);
                             query.then(function(){
@@ -194,9 +190,7 @@ module.exports = {
                             promises.push(query);
                             Promise.all(promises).then(results => {
                                 var events={};
-                                console.log("promises finished: "+results.length);
                                 results.forEach(function(result){
-                                    console.log("promise: "+JSON.stringify(result.rows));
                                     result.rows.forEach(function(event){
                                         if(!events[event.date]){
                                             events[event.date] = [];
@@ -219,20 +213,19 @@ module.exports = {
 
     },
     user_agendas: function(user_id, authenticated, res){
-        // ask the query.getCentral() server for agenda query.getProviders()
-        console.log("authenticated="+authenticated);
+        console.log("GET /user_agendas");
         if(authenticated){
             query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
-                    return console.error('error running query', err);
+                    return query.throwError(res);
                 }
                 if(result.rows.length==0){
                     // if result=0 we will check our user
                     query.getCentral().provider.query("SELECT edt_id, first_name, last_name from users where edt_id=$1", [user_id], function(err, result){
                         query.getCentral().done();
                         if(err) {
-                            return console.error('error running query', err);
+                            return query.throwError(res);
                         }
                         if(result.rows.length==0){
                             // if result=0 then this user does not exist
@@ -256,7 +249,6 @@ module.exports = {
                             sqlQuery.getProviders()[agenda.provider].done();
                         });
                     });
-                    console.log("promises ready");
                     Promise.all(promises).then(results => {
                         var agendas=[];
                         results.forEach(function(result){
@@ -281,7 +273,7 @@ module.exports = {
                     query.getCentral().provider.query("SELECT edt_id, first_name, last_name from users where edt_id=$1", [user_id], function(err, result){
                         query.getCentral().done();
                         if(err) {
-                            return console.error('error running query', err);
+                            return query.throwError(res);
                         }
                         if(result.rows.length==0){
                             // if result=0 then this user does not exist
@@ -306,13 +298,10 @@ module.exports = {
                             });
                         }
                     });
-                    console.log("promises ready");
                     Promise.all(promises).then(results => {
                         var agendas=[];
-                        console.log("promise results: "+JSON.stringify(results));
                         results.forEach(function(result){
                             result.rows.forEach(function(agenda){
-                                console.log("agenda: "+JSON.stringify(agenda));
                                 agendas.push(agenda);
                             });
                         });

@@ -52,7 +52,7 @@ router.post('/events', function(req, res, next) {
     }
     else{
         res.statusCode=403;
-        res.send("Missing parameters");
+        res.json(message: "Missing parameters.");
     }
 });
 
@@ -62,7 +62,7 @@ router.delete('/events/:id', function(req, res, next) {
     }
     else{
         res.statusCode=400;
-        res.send("No Agenda provided");
+        res.json(message: "Missing parameters.");
     }
 });
 
@@ -72,7 +72,7 @@ router.delete('/agendas/:id', function(req, res, next) {
     }
     else{
         res.statusCode=400;
-        res.send("No Agenda provided");
+        res.json(message: "Missing parameters.");
     }
 });
 
@@ -82,7 +82,7 @@ router.post('/agendas', function(req, res, next) {
     }
     else{
         res.statusCode=400;
-        res.send("This Agenda does not exist");
+        res.json(message: "This Agenda does not exist.");
     }
 });
 
@@ -99,7 +99,7 @@ router.post('/events', function(req, res, next) {
     }
     else{
         res.statusCode=403;
-        res.send("Missing parameters");
+        res.json(message: "Missing parameters");
     }
 });
 
