@@ -20,7 +20,6 @@ var cert = {
 
 module.exports = {
     event: function (provider_id, event_id, user_id, authenticated, res) {
-        console.log("DELETE /event");
         if(authenticated){
             if(query.getProviders()[provider_id]){
                 query.getCentral().provider.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
@@ -46,7 +45,6 @@ module.exports = {
         }
     },
     agenda: function (provider_id, agenda_id, user_id, authenticated, res) {
-        console.log("DELETE /agenda");
         if(authenticated){
             query.getquery.getCentral()().provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
                 query.getCentral().done();
