@@ -6,6 +6,7 @@ var query = require('../edt-query/query');
 
 var POST = require('../edt-query/post');
 var GET = require('../edt-query/get');
+var DELETE = require('../edt-query/delete');
 
 var cert = {
     pub: fs.readFileSync('cert.pem')
@@ -58,7 +59,7 @@ router.post('/events', function(req, res, next) {
 
 router.delete('/events/:id', function(req, res, next) {
     if(req.params.id && req.query.provider){
-        query.DELETE.event(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, res);
+        DELETE.event(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, res);
     }
     else{
         res.statusCode=400;
@@ -68,7 +69,7 @@ router.delete('/events/:id', function(req, res, next) {
 
 router.delete('/agendas/:id', function(req, res, next) {
     if(req.params.id && req.query.provider){
-        query.DELETE.agenda(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, res);
+        DELETE.agenda(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, res);
     }
     else{
         res.statusCode=400;

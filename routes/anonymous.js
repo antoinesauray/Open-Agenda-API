@@ -6,6 +6,7 @@ var query = require('../edt-query/query');
 
 var POST = require('../edt-query/post');
 var GET = require('../edt-query/get');
+var DELETE = require('../edt-query/delete');
 
 var cert = {
     pub: fs.readFileSync('cert.pem')
@@ -63,7 +64,7 @@ router.post('/agendas', function(req, res, next) {
 
 router.delete('/agendas/:id', function(req, res, next) {
     if(req.params.id && req.query.provider){
-        query.DELETE.agenda_anonymous(req.query.provider, req.params.id, req.decoded.id, res);
+        DELETE.agenda_anonymous(req.query.provider, req.params.id, req.decoded.id, res);
     }
     else{
         res.statusCode=400;

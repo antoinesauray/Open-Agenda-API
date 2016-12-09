@@ -114,52 +114,5 @@ module.exports = {
         res.status(400);
         res.json({message: "error"});
         return console.error('error running query', err);
-    },
-    DELETE: {
-        event: function (provider_id, event_id, user_id, authenticated, res) {
-            if(authenticated){
-                if(providers[provider_id]){
-                    central.provider.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
-                        central.done();
-                        if(err) {
-                            return throwError(res);
-                        }
-                        res.statusCode=200;
-                        res.json({message: "This event has been deleted"});
-                    });
-                }
-                else{
-                    res.statusCode=404;
-                    res.json({message: "Error with parameters. Make sure this provider exists."});
-                }
-            }
-            else{
-                res.statusCode=403;
-                res.json({message: "You are not authenticated."});
-            }
-        },
-        agenda: function (provider_id, agenda_id, user_id, authenticated, res) {
-            if(authenticated){
-                central.provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
-                    central.done();
-                    if(err) {
-                        return throwError(res);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been deleted"});
-                });
-            }
-            else{
-                central.provider.query("update anonymous_users set provider=NULL, agenda_id=NULL, updated_at=NOW() where provider_id=$1 and agenda_id=$2 and id=$3", [provider_id, agenda_id, user_id], function(err, result){
-                    central.done();
-                    if(err) {
-                        return throwError(res);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been deleted"});
-                });
-            }
-
-        }
     }
 }
