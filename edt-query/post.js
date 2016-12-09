@@ -50,7 +50,6 @@ module.exports = {
     firebase_token: function(user_id, authenticated, firebase_token, res){
         console.log("POST /firebase_token");
         if(authenticated){
-            console.log("firebase: authenticated");
             query.getCentral().provider.query("update users set firebase_token=$1 where edt_id=$2", [firebase_token, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
@@ -61,7 +60,6 @@ module.exports = {
             });
         }
         else{
-            console.log("firebase: not authenticated");
             query.getCentral().provider.query("update anonymous_users set firebase_token=$1, updated_at=NOW() where id=$2", [firebase_token, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
