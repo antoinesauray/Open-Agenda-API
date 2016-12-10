@@ -56,7 +56,7 @@ var completeWithUserProfile = function(user_id, authenticated, agendas, res){
             }
             else{
                 res.statusCode=401;
-                res.send(result.rows);
+                res.json({user: result.rows[0], agendas: agendas});
             }
         });
     }
@@ -68,7 +68,7 @@ var completeWithUserProfile = function(user_id, authenticated, agendas, res){
             }
             if(result.rows.length!=0){
                 res.statusCode=200;
-                res.send(result.rows);
+                res.json({user: result.rows[0], agendas: agendas});
             }
             else{
                 res.statusCode=401;
@@ -134,7 +134,7 @@ module.exports = {
         }
     },
     user: function(user_id, authenticated, res){
-        console.log("GET /user_agendas");
+        console.log("GET /user");
         if(authenticated){
             query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
                 query.getCentral().done();
