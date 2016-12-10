@@ -52,11 +52,11 @@ var completeWithUserProfile = function(user_id, authenticated, agendas, res){
             }
             if(result.rows.length!=0){
                 res.statusCode=200;
-                res.send(result.rows);
+                res.json({user: result.rows[0], agendas: agendas});
             }
             else{
                 res.statusCode=401;
-                res.json({user: result.rows[0], agendas: agendas});
+                res.json({user: null, agendas: agendas});
             }
         });
     }
@@ -72,7 +72,7 @@ var completeWithUserProfile = function(user_id, authenticated, agendas, res){
             }
             else{
                 res.statusCode=401;
-                res.send(result.rows);
+                res.json({user: null, agendas: agendas});
             }
         });
     }
