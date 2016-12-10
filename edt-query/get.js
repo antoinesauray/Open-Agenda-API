@@ -45,7 +45,7 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 
 var completeWithUserProfile = function(user_id, authenticated, agendas, res){
     if(authenticated){
-        query.getCentral().provider.query("SELECT edt_id, first_name, last_name, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
+        query.getCentral().provider.query("SELECT edt_id, first_name, last_name, profile_picture, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
             query.getCentral().done();
             if(err) {
                 return query.throwError(res);
