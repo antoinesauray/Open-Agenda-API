@@ -18,8 +18,69 @@ var cert = {
     pub: fs.readFileSync('cert.pem')
 }
 
+var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_email, user, created, res){
+    query.getCentral().provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, updated_at=NOW() where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
+        query.getCentral().done();
+        if(err) {
+            return query.throwError(res);
+        }
+        if(result.rows.length!=0){
+            var token = jwt.sign({id: result.rows[0].edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
+            if(created){
+                fbImport.queryFacebook(result.rows[0].edt_id, facebook_id, facebook_token);
+                res.statusCode=201;
+                res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
+            }
+            else{
+                res.statusCode=200;
+                res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
+            }
+        }
+        else{
+            res.statusCode=401;
+            res.send("An error occured when trying to create a new user");
+        }
+    });
+}
+
+var completeWithUserProfile = function(user_id, authenticated, agendas, res){
+    if(authenticated){
+        query.getCentral().provider.query("SELECT edt_id, first_name, last_name, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
+            query.getCentral().done();
+            if(err) {
+                return query.throwError(res);
+            }
+            if(result.rows.length!=0){
+                res.statusCode=200;
+                res.send(result.rows);
+            }
+            else{
+                res.statusCode=401;
+                res.send(result.rows);
+            }
+        });
+    }
+    else{
+        query.getCentral().provider.query("SELECT * from anonymous_users where id=$1 LIMIT 1", [user_id], function(err, result){
+            query.getCentral().done();
+            if(err) {
+                return query.throwError(res);
+            }
+            if(result.rows.length!=0){
+                res.statusCode=200;
+                res.send(result.rows);
+            }
+            else{
+                res.statusCode=401;
+                res.send(result.rows);
+            }
+        });
+    }
+}
+
 module.exports = {
     providers: function(res){
+        console.log("GET /providers");
         query.getCentral().provider.query("SELECT provider, name, image, primary_color, accent_color from providers", function(err, result){
             query.getCentral().done();
             if(err) {
@@ -28,17 +89,16 @@ module.exports = {
             if(result.rows.length!=0){
                 res.statusCode=200;
                 res.send(result.rows);
-                console.log("GET /providers : "+res.statusCode);
             }
             else{
                 res.statusCode=401;
                 res.send(result.rows);
-                console.log("GET /providers : "+res.statusCode);
             }
         });
     },
 
     agendas: function(provider, entity, res){
+        console.log("GET /agendas");
         if(query.getProviders()[provider]){
             query.getProviders()[provider].client.query("SELECT id, name, editable, agenda_entity_id, agenda_type_id, more, active, $2::text as provider, $3::text as entity from agendas where agenda_entity_id = $1", [entity, provider, entity], function(err, result){
                 query.getProviders()[provider].done();
@@ -47,31 +107,17 @@ module.exports = {
                 }
                 res.statusCode=200;
                 res.send(result.rows);
-                console.log("GET /agendas : "+res.statusCode);
             });
         }
         else{
             res.statusCode=404;
             res.send();
-            console.log("GET /agendas : "+res.statusCode);
-
         }
-    },
 
-    notes: function(user_id, provider, event_id, res){
-        query.getCentral().provider.query("SELECT type, content, user_id, first_name, last_name, profile_picture, public, user_notes.created_at, user_notes.updated_at from user_notes JOIN users on user_id = edt_id where provider=$1 AND event_id = $2 AND (public=true OR (public=false AND user_id=$3))", [provider, event_id, user_id], function(err, result){
-            query.getCentral().done();
-            if(err) {
-                console.log("err: "+err);
-                return query.throwError(res);
-            }
-            res.statusCode=200;
-            res.send(result.rows);
-            console.log("GET /notes : "+res.statusCode);
-        });
     },
 
     entities: function(provider, res){
+        console.log("GET /entities");
         if(query.getProviders()[provider]){
             query.getProviders()[provider].client.query("SELECT * from entities where public=true", function(err, result){
                 query.getProviders()[provider].done();
@@ -80,55 +126,108 @@ module.exports = {
                 }
                 res.statusCode=200;
                 res.send(result.rows);
-                console.log("GET /entities : "+res.statusCode);
-
             });
         }
         else{
             res.statusCode=404;
             res.send();
-            console.log("GET /entities : "+res.statusCode);
         }
     },
     user: function(user_id, authenticated, res){
-
+        console.log("GET /user_agendas");
         if(authenticated){
-            query.getCentral().provider.query("SELECT edt_id, first_name, last_name, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
+            query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
                     return query.throwError(res);
                 }
-                if(result.rows.length!=0){
-                    res.statusCode=200;
-                    res.send(result.rows);
-                    console.log("GET /user : "+res.statusCode);
+                if(result.rows.length==0){
+                    // if result=0 we will check our user
+                    query.getCentral().provider.query("SELECT edt_id, first_name, last_name from users where edt_id=$1", [user_id], function(err, result){
+                        query.getCentral().done();
+                        if(err) {
+                            return query.throwError(res);
+                        }
+                        if(result.rows.length==0){
+                            // if result=0 then this user does not exist
+                            res.statusCode=404;
+                            res.json({user: {}, agendas: []});
+                        }
+                        else{
+                            // if it exists then it just has no agendas
+                            completeWithUserProfile(user_id, authenticated, [], res);
+                        }
+                    });
                 }
                 else{
-                    res.statusCode=401;
-                    res.send(result.rows);
-                    console.log("GET /user : "+res.statusCode);
+                    // get promises from all query.getProviders()
+                    var promises=[];
+                    result.rows.forEach(function(agenda){
+                        var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                        promises.push(sqlQuery);
+                        sqlQuery.then(function(){
+                            sqlQuery.getProviders()[agenda.provider].done();
+                        });
+                    });
+                    Promise.all(promises).then(results => {
+                        var agendas=[];
+                        results.forEach(function(result){
+                            result.rows.forEach(function(agenda){
+                                agendas.push(agenda);
+                            });
+                        });
+                        completeWithUserProfile(user_id, authenticated, agendas, res);
+                    });
                 }
             });
         }
         else{
-            query.getCentral().provider.query("SELECT * from anonymous_users where id=$1 LIMIT 1", [user_id], function(err, result){
+            query.getCentral().provider.query("SELECT * FROM anonymous_users where id=$1", [user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
-                    return query.throwError(res);
+                    res.statusCode=500;
+                    res.send(agendas);
                 }
-                if(result.rows.length!=0){
-                    res.statusCode=200;
-                    res.send(result.rows);
-                    console.log("GET /user : "+res.statusCode);
+                if(result.rows.length==0){
+                    query.getCentral().provider.query("SELECT edt_id, first_name, last_name from users where edt_id=$1", [user_id], function(err, result){
+                        query.getCentral().done();
+                        if(err) {
+                            return query.throwError(res);
+                        }
+                        if(result.rows.length==0){
+                            // if result=0 then this user does not exist
+                            res.statusCode=404;
+                            res.json({user: {}, agendas: []});
+                        }
+                        else{
+                            // if it exists then it just has no agendas
+                            completeWithUserProfile(user_id, authenticated, [], res);
+                        }
+                    });
                 }
                 else{
-                    res.statusCode=401;
-                    res.send(result.rows);
-                    console.log("GET /user : "+res.statusCode);
+                    var promises=[];
+                    result.rows.forEach(function(anonymous_user){
+                        if(anonymous_user.provider&&anonymous_user.agenda_id){
+                            var query = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [anonymous_user.agenda_id, anonymous_user.provider]);
+                            promises.push(query);
+                            query.then(function(){
+                                query.getProviders()[anonymous_user.provider].done();
+                            });
+                        }
+                    });
+                    Promise.all(promises).then(results => {
+                        var agendas=[];
+                        results.forEach(function(result){
+                            result.rows.forEach(function(agenda){
+                                agendas.push(agenda);
+                            });
+                        });
+                        completeWithUserProfile(user_id, authenticated, agendas, res);
+                    });
                 }
             });
         }
-
     },
 
     events: function(user_id, authenticated, start_date, end_date, res){
@@ -188,25 +287,21 @@ module.exports = {
                             promises.push(query);
                             Promise.all(promises).then(results => {
                                 var events={};
-                                var count=0;
                                 results.forEach(function(result){
                                     result.rows.forEach(function(event){
                                         if(!events[event.date]){
                                             events[event.date] = [];
                                         }
                                         events[event.date].push(event);
-                                        count++;
                                     });
                                 });
                                 res.statusCode=200;
                                 res.send(events);
-                                console.log("GET /events  : "+res.statusCode+" -----> count()="+count);
                             });
                         }
                         else{
                             res.statusCode=200;
                             res.send({});
-                            console.log("GET /events  : "+res.statusCode);
                         }
                     }
                 });
@@ -215,6 +310,7 @@ module.exports = {
 
     },
     user_agendas: function(user_id, authenticated, res){
+        console.log("GET /user_agendas");
         if(authenticated){
             query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
                 query.getCentral().done();
@@ -232,13 +328,11 @@ module.exports = {
                             // if result=0 then this user does not exist
                             res.statusCode=404;
                             res.json([]);
-                            console.log("GET /user_agendas  : "+res.statusCode);
                         }
                         else{
                             // if it exists then it just has no agendas
                             res.statusCode=200;
                             res.json([]);
-                            console.log("GET /user_agendas  : "+res.statusCode);
                         }
                     });
                 }
@@ -261,7 +355,6 @@ module.exports = {
                         });
                         res.statusCode=200;
                         res.send(agendas);
-                        console.log("GET /user_agendas  : "+res.statusCode);
                     });
                 }
             });
@@ -272,7 +365,6 @@ module.exports = {
                 if(err) {
                     res.statusCode=500;
                     res.send(agendas);
-                    console.log("GET /user_agendas  : "+res.statusCode);
                 }
                 if(result.rows.length==0){
                     query.getCentral().provider.query("SELECT edt_id, first_name, last_name from users where edt_id=$1", [user_id], function(err, result){
@@ -284,13 +376,11 @@ module.exports = {
                             // if result=0 then this user does not exist
                             res.statusCode=404;
                             res.json([]);
-                            console.log("GET /user_agendas  : "+res.statusCode);
                         }
                         else{
                             // if it exists then it just has no agendas
                             res.statusCode=200;
                             res.json([]);
-                            console.log("GET /user_agendas  : "+res.statusCode);
                         }
                     });
                 }
@@ -314,7 +404,6 @@ module.exports = {
                         });
                         res.statusCode=200;
                         res.send(agendas);
-                        console.log("GET /user_agendas  : "+res.statusCode);
                     });
                 }
             });
