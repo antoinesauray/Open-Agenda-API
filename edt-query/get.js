@@ -95,6 +95,7 @@ module.exports = {
         else{
             res.statusCode=404;
             res.send();
+            console.log("GET /notes : "+res.statusCode);
         }
     },
     providers: function(res){
