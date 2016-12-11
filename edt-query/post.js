@@ -4,7 +4,7 @@ var fs = require('fs');
 
 var query=require('./query');
 
-var fbImport = require('../edt-facebook/update_events');
+var fbImport = require('../edt-facebook/import');
 
 var credentials=query.credentials;
 var cert=query.cert;
