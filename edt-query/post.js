@@ -237,7 +237,7 @@ module.exports = {
                         res.statusCode=401;
                         res.json({message: "This Facebook account already exists in our database."});
                         console.log("POST /sign_up_facebook : "+res.statusCode);
-                        authenticate_facebook(ip_addr, facebook_token, res);
+                        module.exports.authenticate_facebook(ip_addr, facebook_token, res);
                     }
                     else{
                         if(result.rows.length!=0){
