@@ -254,9 +254,11 @@ module.exports = {
                                 else{
                                     if(result.rows.length>0){
                                         var user_id = result.rows[0].id;
-                                        res.statusCode=201;
-                                        res.json({access_token: createToken(user_id, 'facebook'), user_id: user_id, first_name: response.first_name, last_name: response.last_name, email: response.email});
-                                        console.log("POST /sign_up_facebook : "+res.statusCode);
+                                        query.getUserProfile(user_id, function(accounts, agendas){
+                                            res.statusCode=201;
+                                            res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
+                                            console.log("POST /sign_up_facebook : "+res.statusCode);
+                                        });
                                     }
                                     else{
                                         query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
@@ -298,9 +300,11 @@ module.exports = {
                         else{
                             if(result.rows.length>0){
                                 var user_id = result.rows[0].id;
-                                res.statusCode=201;
-                                res.json({access_token: createToken(user_id, 'email'), user_id: user_id, first_name: first_name, last_name: last_name, email: email});
-                                console.log("POST /signup_email : "+res.statusCode);
+                                query.getUserProfile(user_id, function(accounts, agendas){
+                                    res.statusCode=201;
+                                    res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
+                                    console.log("POST /sign_up_facebook : "+res.statusCode);
+                                });
                             }
                             else{
                                 query.getCentral().provider.query("DELETE FROM email_accounts where id=$1", [account_id], function(err, result){
@@ -333,10 +337,12 @@ module.exports = {
                         return query.throwError(res);
                     }
                     if(result.rows.length!=0){
-                        var user = result.rows[0];
-                        var token = jwt.sign({id: user.id, method: 'facebook'}, credentials.key, { algorithm: 'RS256'});
-                        res.statusCode=200;
-                        res.json({access_token: token, user_id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email});
+                        var user_id = result.rows[0].id;
+                        query.getUserProfile(user_id, function(accounts, agendas){
+                            res.statusCode=200;
+                            res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
+                            console.log("POST /sign_up_facebook : "+res.statusCode);
+                        });
                     }
                     else{
                         res.statusCode=403;
@@ -359,9 +365,11 @@ module.exports = {
                     var user = result.rows[0];
                     query.hashWithSalt(password, user.salt, function(hash){
                         if(hash==user.password){
-                            res.statusCode=200;
-                            res.json({token: createToken(user.id, 'email'), first_name: user.first_name, last_name: user.last_name, mail: user.edt_email});
-                            console.log("POST /sign_in_email_user : "+res.statusCode);
+                            query.getUserProfile(user.id, function(accounts, agendas){
+                                res.statusCode=200;
+                                res.json({access_token: createToken(user.id, 'facebook'), id: user.id, user_accounts: accounts, agendas: agendas});
+                                console.log("POST /sign_up_facebook : "+res.statusCode);
+                            });
                         }
                         else{
                             res.statusCode=403;

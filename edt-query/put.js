@@ -42,7 +42,7 @@ module.exports = {
                         }
                         else{
                             res.statusCode=201;
-                            res.json({access_token: createToken(user_id, 'email'), user_id: user_id, first_name: first_name, last_name: last_name, email: email});
+                            res.json({user_id: user_id, first_name: first_name, last_name: last_name, email: email});
                             console.log("PUT /account_email : "+res.statusCode);
                         }
                     });
@@ -83,8 +83,8 @@ module.exports = {
                                 else{
                                     if(result.rows.length>0){
                                         var user_id = result.rows[0].id;
-                                        res.statusCode=201;
-                                        res.json({access_token: createToken(user_id, 'facebook'), user_id: user_id, first_name: response.first_name, last_name: response.last_name, email: response.email});
+                                        res.statusCode=200;
+                                        res.json({user_id: user_id, first_name: response.first_name, last_name: response.last_name, email: response.email});
                                         console.log("PUT /sign_up_facebook : "+res.statusCode);
                                     }
                                     else{

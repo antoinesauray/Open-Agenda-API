@@ -44,25 +44,25 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 }
 
 var completeWithUserProfile = function(user_id, agendas, res){
-    query.getCentral().provider.query("SELECT email, first_name, last_name from email_accounts where id in (select email_account from users where id=$1) UNION SELECT email, first_name, last_name from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
+    query.getCentral().provider.query("SELECT 'email'::text as account, email, first_name, last_name, picture from email_accounts where id in (select email_account from users where id=$1) UNION SELECT 'facebook'::text as account, email, first_name, last_name, picture from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
         query.getCentral().done();
         if(err) {
             return query.throwError(res);
         }
         if(result.rows.length!=0){
             res.statusCode=200;
-            res.json({user: result.rows[0], agendas: agendas});
+            res.json({user_accounts: result.rows, id: user_id, agendas: agendas});
         }
         else{
             res.statusCode=401;
-            res.json({user: null, agendas: agendas});
+            res.json({user_accounts: null, id: user_id, agendas: agendas});
         }
     });
 }
 
 module.exports = {
     accounts: function(user_id, res){
-        query.getCentral().provider.query("SELECT email, first_name, last_name from email_accounts where id in (select email_account from users where id=$1) UNION SELECT email, first_name, last_name from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
+        query.getCentral().provider.query("SELECT 'email'::text as account, email, first_name, last_name, picture from email_accounts where id in (select email_account from users where id=$1) UNION SELECT 'facebook'::text as account, email, first_name, last_name, picture from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
             query.getCentral().done();
             if(err) {
                 console.log(err);
@@ -71,18 +71,19 @@ module.exports = {
             else{
                 if(result.rows.length==0){
                     res.statusCode=404;
-                    res.send(result.rows);
+                    res.json(result.rows);
                 }
                 else{
                     res.statusCode=200;
-                    res.send(result.rows);
+                    res.json(result.rows);
                 }
                 console.log("GET /accounts : "+res.statusCode);
             }
         });
     },
     accounts_email: function(user_id, res){
-        query.getCentral().provider.query("SELECT email, first_name, last_name from email_accounts where id in (select email_account from users where id=$1)", [user_id], function(err, result){
+        console.log("user_id="+user_id);
+        query.getCentral().provider.query("SELECT email, first_name, last_name, picture from email_accounts where id in (select email_account from users where id=$1)", [user_id], function(err, result){
             query.getCentral().done();
             if(err) {
                 console.log(err);
@@ -102,7 +103,7 @@ module.exports = {
         });
     },
     accounts_facebook: function(user_id, res){
-        query.getCentral().provider.query("SELECT email, first_name, last_name from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
+        query.getCentral().provider.query("SELECT email, first_name, last_name, picture from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
             query.getCentral().done();
             if(err) {
                 console.log(err);
@@ -123,7 +124,7 @@ module.exports = {
     },
     notes: function(user_id, provider, event_id, res){
         if(query.getProviders()[provider]){
-            query.getCentral().provider.query("SELECT type, content, attachment, first_name, last_name, profile_picture, user_id, public, user_notes.created_at, user_notes.updated_at from user_notes JOIN users on user_id = edt_id where event_id = $1 AND provider=$2 AND (public=true OR (public=false AND user_id=$3))", [event_id, provider, user_id], function(err, result){
+            query.getCentral().provider.query("SELECT type, content, attachment, first_name, last_name, picture, user_id, public, user_notes.created_at, user_notes.updated_at from user_notes JOIN users on user_id = edt_id where event_id = $1 AND provider=$2 AND (public=true OR (public=false AND user_id=$3))", [event_id, provider, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
                     return query.throwError(res);
