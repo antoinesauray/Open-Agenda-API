@@ -53,6 +53,26 @@ pool.connect(function(err, client, done) {
             );
     }
 
+    exports.updatePicture = function(userId, facebookId, facebookToken){
+            FB.setAccessToken(facebookToken);
+            FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
+                console.log("response: "+response);
+                if(!response || response.error) {
+                    res.statusCode=400;
+                    res.json({message: 'Could not verify access token'});
+                    console.log(!response ? 'error occurred' : response.error);
+                    return;
+                }
+                console.log(JSON.stringify(response));});
+                client.query("update users set profile_picture=$1 where user_id=$2", [response.picture.data.url, userId], function(err, result) {
+                    done();
+                    if(err) {
+                        return console.error('error running query', err);
+                    }
+                    insertEvents(result.rows[0].id, response.data);
+                });
+    }
+
     function insertEvents(agendaId, data){
         data.forEach(function(event){
                 /* handle the result */
