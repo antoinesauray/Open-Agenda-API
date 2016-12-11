@@ -25,6 +25,9 @@ var FCM = require('fcm-push');
 var serverKey = process.env.FIREBASE_KEY;
 var fcm = new FCM(serverKey);
 
+var createToken = function(user_id, auth_method){
+    return jwt.sign({id: user_id, method: auth_method}, credentials.key, { algorithm: 'RS256'});
+}
 
 var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_email, user, created, res){
     query.getCentral().provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, updated_at=NOW() where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
@@ -225,182 +228,160 @@ module.exports = {
             }
         }
     },
-    sign_in_email_user: function(ip_addr, email, password, res){
-        query.getCentral().provider.query("SELECT * from users where edt_email=$1 limit 1", [email], function(err, result){
-            query.getCentral().done();
-            if(err) {
-                return query.throwError(res);
+    signup_facebook: function(ip_addr, facebook_token, res){
+        FB.setAccessToken(facebook_token);
+        FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
+            if(!response || response.error) {
+                res.statusCode=403;
+                res.json({message: "This token is not valid."});
+                console.log("POST /facebook_user : "+res.statusCode);
             }
-            if(result.rows.length!=0){
-                var user = result.rows[0];
-                query.hashWithSalt(password, user.salt, function(hash){
-                    if(hash==user.password){
-                        var token = jwt.sign({id: user.edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
-                        res.statusCode=200;
-                        res.json({token: token, first_name: user.first_name, last_name: user.last_name, mail: user.edt_email});
-                        console.log("POST /sign_in_email_user : "+res.statusCode);
+            else{
+                // look in our database if this Facebook account exists
+                query.getCentral().provider.query("insert into facebook_accounts(email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5) RETURNING id", [response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
+                    query.getCentral().done();
+                    if(err) {
+                        res.statusCode=401;
+                        res.json({message: "This Facebook account already exists in our database."});
+                        console.log("POST /sign_up_facebook : "+res.statusCode);
                     }
                     else{
-                        res.statusCode=403;
-                        res.json({});
-                        console.log("POST /sign_in_email_user : "+res.statusCode);
+                        if(result.rows.length!=0){
+                            var account_id = result.rows[0].id;
+                            query.getCentral().provider.query("insert into users (ip_address, facebook_account) values($1, $2) RETURNING id", [ip_addr, account_id], function(err, result){
+                                query.getCentral().done();
+                                if(err) {
+                                    query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
+                                        query.getCentral().done();
+                                        res.statusCode=401;
+                                        res.json({message: "This facebook address is already associated."});
+                                        console.log("POST /sign_up_facebook : "+res.statusCode);
+                                    });
+                                }
+                                else{
+                                    if(result.rows.length>0){
+                                        var user_id = result.rows[0].id;
+                                        res.statusCode=201;
+                                        res.json({access_token: createToken(user_id, 'facebook'), user_id: user_id, first_name: response.first_name, last_name: response.last_name, email: response.email});
+                                        console.log("POST /sign_up_facebook : "+res.statusCode);
+                                    }
+                                    else{
+                                        query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
+                                            query.getCentral().done();
+                                            res.statusCode=401;
+                                            res.json({message: "Could not retrieve a new user id"});
+                                            console.log("POST /sign_up_facebook : "+res.statusCode);
+                                        });
+                                    }
+                                }
+                            });
+                        }
                     }
                 });
             }
-            else{
-                res.statusCode=404;
-                res.json({});
-                console.log("POST /sign_in_email_user : "+res.statusCode);
-            }
         });
     },
-    sign_up_email_user: function(ip_addr, email, password, first_name, last_name, res){
+    signup_email: function(ip_addr, email, password, first_name, last_name, res){
         hash(password, function(hashedPassword, salt){
-            query.getCentral().provider.query("INSERT INTO users (edt_email, password, salt, first_name, last_name, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *", [email, hashedPassword, salt, first_name, last_name, ip_addr], function(err, result){
+            query.getCentral().provider.query("INSERT INTO email_accounts (email, password, salt, first_name, last_name, created_at, updated_at) VALUES($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id", [email, hashedPassword, salt, first_name, last_name], function(err, result){
                 query.getCentral().done();
                 if(err) {
                     res.statusCode=401;
                     res.json({message: "This email address already exists."});
                     console.log("POST /sign_up_email_user : "+res.statusCode);
                 }
-                else if(result.rows.length!=0){
-                    var user = result.rows[0];
-                    var token = jwt.sign({id: user.edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
-                    res.statusCode=201;
-                    res.json({token: token, first_name: user.first_name, last_name: user.last_name, mail: user.edtemail});
-                    console.log("POST /sign_up_email_user : "+res.statusCode);
-                }
                 else{
-                    res.statusCode=404;
-                    res.json({});
-                    console.log("POST /sign_up_email_user : "+res.statusCode);
-                }
-            });
-        });
-    },
-    facebook_user: function(ip_addr, facebook_token, res){
-        FB.setAccessToken(facebook_token);
-        FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
-            console.log("response: "+JSON.stringify(response));
-            if(!response || response.error) {
-                res.statusCode=400;
-                res.send('Could not verify access token');
-                console.log("POST /facebook_user : "+res.statusCode);
-                return;
-            }
-            query.getCentral().provider.query("SELECT * from users where facebook_id=$1 OR facebook_email=$2", [response.id, response.email], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    return query.throwError(res);
-                }
-                if(result.rows.length!=0){
-                    next_facebook(ip_addr, facebook_token, response.id, response.email, result.rows[0], false, res);
-                }
-                else{
-                    query.getCentral().provider.query("INSERT INTO users (facebook_id, facebook_email, first_name, last_name, profile_picture, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *", [response.id, response.email, response.first_name, response.last_name, response.picture.data.url, ip_addr], function(err, result){
+                    var account_id=result.rows[0].id;
+                    query.getCentral().provider.query("insert into users (ip_address, email_account) values($1, $2) RETURNING id", [ip_addr, account_id], function(err, result){
                         query.getCentral().done();
                         if(err) {
-                            res.status(400);
-                            res.json({message: "error"});
-                            return console.error('error running query', err);
-                        }
-                        if(result.rows.length!=0){
-                            next_facebook(ip_addr, facebook_token, response.id, response.email, result.rows[0], true, res);
+                            query.getCentral().provider.query("DELETE FROM email_accounts where id=$1", [account_id], function(err, result){
+                                query.getCentral().done();
+                                res.statusCode=401;
+                                res.json({message: "This email address already exists."});
+                                console.log("POST /sign_up_email_user : "+res.statusCode);
+                            });
                         }
                         else{
-                            res.statusCode=401;
-                            res.send("An error occured when trying to create a new user");
-                            console.log("POST /facebook_user : "+res.statusCode);
+                            if(result.rows.length>0){
+                                var user_id = result.rows[0].id;
+                                res.statusCode=201;
+                                res.json({access_token: createToken(user_id, 'email'), user_id: user_id, first_name: first_name, last_name: last_name, email: email});
+                                console.log("POST /signup_email : "+res.statusCode);
+                            }
+                            else{
+                                query.getCentral().provider.query("DELETE FROM email_accounts where id=$1", [account_id], function(err, result){
+                                    query.getCentral().done();
+                                    res.statusCode=401;
+                                    res.json({message: "Could not retrieve a new user id"});
+                                    console.log("POST /sign_up_email_user : "+res.statusCode);
+                                });
+                            }
+
                         }
                     });
                 }
             });
+        });
+    },
+    authenticate_facebook: function(ip_addr, facebook_token, res){
+        FB.setAccessToken(facebook_token);
+        FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
+            if(!response || response.error) {
+                res.statusCode=403;
+                res.json({message: "This token is not valid."});
+                console.log("POST /facebook_user : "+res.statusCode);
+            }
+            else{
+                // look in our database if this Facebook account exists
+                query.getCentral().provider.query("SELECT id, first_name, last_name, email from users join facebook_accounts on facebook_account=$1", [response.id], function(err, result){
+                    query.getCentral().done();
+                    if(err) {
+                        return query.throwError(res);
+                    }
+                    if(result.rows.length!=0){
+                        var user = result.rows[0];
+                        var token = jwt.sign({id: user.id, method: 'facebook'}, credentials.key, { algorithm: 'RS256'});
+                        res.statusCode=200;
+                        res.json({access_token: token, user_id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email});
+                    }
+                    else{
+                        res.statusCode=403;
+                        res.json({message: "Authentication failed"});
+                    }
+                });
+            }
         });
     },
 
-    facebook_user_token: function(ip_addr, facebook_token, token, res){
-        console.log("POST /facebook_user_token");
-        FB.setAccessToken(facebook_token);
-        FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
-            console.log("response: "+response);
-            if(!response || response.error) {
-                res.statusCode=400;
-                res.json({message: 'Could not verify access token'});
-                console.log(!response ? 'error occurred' : response.error);
-                return;
-            }
-            jwt.verify(token, cert.pub, {algorithm: 'RS256'}, function(err, decoded) {
-                if (err) {
-                    res.statusCode=401;
-                    return res.json({ success: false, message: 'Failed to authenticate token.' });
-                }
-                else {
-                    var id = decoded.id;
-                    // let's update our user with Facebook data
-                    query.getCentral().provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, profile_picture=$6, is_validated=true, facebook_token=$3, ip_addr=$5, updated_at=NOW() where edt_id=$4 RETURNING edt_id, first_name, last_name, facebook_email", [response.id, response.email, facebook_token, id, ip_addr, response.picture.data.url], function(err, result){
-                        query.getCentral().done();
-                        if(err) {
-                            res.statusCode=403;
-                            res.json({message: "Facebook account already associated"});
-                            return;
-                        }
-                        if(result.rows.length!=0){
-                            var user = result.rows[0];
-                            // we retrieve user events from Facebook
-                            fbImport.queryFacebook(user.edt_id, response.id, facebook_token);
-                            var token = jwt.sign({id: user.edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
-                            res.statusCode=200;
-                            res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
-                        }
-                        else{
-                            res.statusCode=401;
-                            res.send("This Agenda does not exist");
-                        }
-                    });
-                }
-            });
-        });
-    },
-    anonymous_user: function(ip_addr, device_os, res){
-        console.log("POST /anonymous_user");
-        crypto.randomBytes(12, function(err, buffer) {
-            var secret = buffer.toString('hex');
-            query.getCentral().provider.query("insert into anonymous_users (last_request, request_counter,ip_address, secret, device_os) values(NOW(), 0, $1, $2, $3) RETURNING id", [ip_addr, secret, device_os], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    return query.throwError(res);
-                }
-                if(result.rows.length!=0){
-                    var user = result.rows[0];
-                    var token = jwt.sign({id: user.id, authenticated: false}, credentials.key, { algorithm: 'RS256'});
-                    res.statusCode=200;
-                    res.json({token: token, id: user.id, secret: secret});
-                }
-                else{
-                    res.statusCode=401;
-                    res.send();
-                }
-            });
-        });
-    },
-    anonymous_user_secret: function(ip_addr, id, secret, res){
-        console.log("POST /anonymous_user_secret");
-        query.getCentral().provider.query("select * from anonymous_users where id=$1 and secret=$2", [id, secret], function(err, result){
+    authenticate_email: function(ip_addr, email, password, res){
+        query.getCentral().provider.query("SELECT users.id, first_name, last_name, email, password, salt from users join email_accounts on email_account=email_accounts.id where email=$1", [email], function(err, result){
             query.getCentral().done();
             if(err) {
+                console.log(err);
                 return query.throwError(res);
             }
             if(result.rows.length!=0){
-                var user = result.rows[0];
-                var token = jwt.sign({id: user.id, authenticated: false}, credentials.key, { algorithm: 'RS256'});
-                res.statusCode=200;
-                res.json({token: token, id: user.id});
+                // we check if the password is ok
+                    var user = result.rows[0];
+                    query.hashWithSalt(password, user.salt, function(hash){
+                        if(hash==user.password){
+                            res.statusCode=200;
+                            res.json({token: createToken(user.id, 'email'), first_name: user.first_name, last_name: user.last_name, mail: user.edt_email});
+                            console.log("POST /sign_in_email_user : "+res.statusCode);
+                        }
+                        else{
+                            res.statusCode=403;
+                            res.json({message: "The user and password combinaison does not match any user"});
+                            console.log("POST /sign_in_email_user : "+res.statusCode);
+                        }
+                    });
             }
             else{
-                res.statusCode=401;
-                res.json({message: "This Agenda does not exist"});
+                    res.statusCode=403;
+                    res.json({message: "The user and password combinaison does not match any user"});
+                    console.log("POST /sign_in_email_user : "+res.statusCode);
             }
         });
-    }
-
+    },
 }
