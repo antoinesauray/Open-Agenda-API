@@ -319,7 +319,7 @@ module.exports = {
     facebook_user_token: function(ip_addr, facebook_token, token, res){
         console.log("POST /facebook_user_token");
         FB.setAccessToken(facebook_token);
-        FB.api('/me', { fields: ['id', 'picture' 'email', 'first_name', 'last_name'] }, function (response) {
+        FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
             console.log("response: "+response);
             if(!response || response.error) {
                 res.statusCode=400;
