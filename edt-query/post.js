@@ -94,7 +94,7 @@ module.exports = {
         					})
     						.catch(function(err){
             					console.log("Something has gone wrong!");
-            					//console.error(err);
+            					console.error(err);
     						});
     					}
     				});
