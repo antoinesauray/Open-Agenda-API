@@ -40,7 +40,7 @@ router.get('/notes/', function(req, res, next) {
 });
 
 router.post('/notes/', function(req, res, next) {
-    POST.notes(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.event_id, req.body.content, req.body.type, req.body.access_level, res);
+    POST.notes(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.event_id, req.body.content, req.body.type, req.body.attachment, req.body.access_level, res);
 });
 
 module.exports = router;
