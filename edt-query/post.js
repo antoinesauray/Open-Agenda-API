@@ -4,6 +4,8 @@ var fs = require('fs');
 
 var query=require('./query');
 
+var fbImport = require('../edt-facebook/update_events');
+
 var credentials=query.credentials;
 var cert=query.cert;
 var hash=query.hash;
@@ -278,7 +280,7 @@ module.exports = {
     },
     facebook_user: function(ip_addr, facebook_token, res){
         FB.setAccessToken(facebook_token);
-        FB.api('/me', { fields: ['id', 'email', 'first_name', 'last_name'] }, function (response) {
+        FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
             console.log("response: "+JSON.stringify(response));
             if(!response || response.error) {
                 res.statusCode=400;
@@ -295,7 +297,7 @@ module.exports = {
                     next_facebook(ip_addr, facebook_token, response.id, response.email, result.rows[0], false, res);
                 }
                 else{
-                    query.getCentral().provider.query("INSERT INTO users (facebook_id, facebook_email, first_name, last_name, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING *", [response.id, response.email, response.first_name, response.last_name, ip_addr], function(err, result){
+                    query.getCentral().provider.query("INSERT INTO users (facebook_id, facebook_email, first_name, last_name, profile_picture, ip_addr, created_at, updated_at) VALUES($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING *", [response.id, response.email, response.first_name, response.last_name, response.picture.data.url, ip_addr], function(err, result){
                         query.getCentral().done();
                         if(err) {
                             res.status(400);
