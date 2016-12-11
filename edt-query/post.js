@@ -53,7 +53,7 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 }
 
 module.exports = {
-    notes: function(user_id, authenticated, provider, event_id, content, type, access_level, res){
+    notes: function(user_id, authenticated, provider, agenda_id, event_id, content, type, access_level, res){
         if(authenticated){
             query.getCentral().provider.query("insert into user_notes(content, type, provider, event_id, user_id, public, created_at, updated_at) values($1, $2, $3, $4, $5, $6, NOW(), NOW())", [content, type, provider, event_id, user_id, access_level], function(err, result){
                 query.getCentral().done();
@@ -63,16 +63,17 @@ module.exports = {
                 res.statusCode=200;
                 res.json({message: "Note inserted"});
                 console.log("POST /notes : "+res.statusCode);
-			
+
 				query.getCentral().provider.query("select * from users where edt_id=$1 limit 1", [user_id], function(err, result){
          			query.getCentral().done();
 					if(result.rows.length!=0){
 						var user = result.rows[0];
 						var message = {
-			    			to: provider+'_'+event_id, // required fill with device token or topics
-    						collapse_key: provider+'_'+event_id, 
+			    			to: provider+'_'+agenda_id, // required fill with device token or topics
+    						collapse_key: provider+'_'+agenda_id,
     						data: {
 								user_id: user_id,
+                                agenda_id: agenda_id,
         						first_name: user.first_name,
 								last_name: user.last_name,
 								profile_picture: user.profile_picture,
@@ -90,7 +91,7 @@ module.exports = {
         					//console.error(err);
 						});
 					}
-				});		
+				});
             });
         }
         else{
