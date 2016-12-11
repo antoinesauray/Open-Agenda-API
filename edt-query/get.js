@@ -82,7 +82,7 @@ module.exports = {
 
     notes: function(user_id, provider, event_id, res){
         if(query.getProviders()[provider]){
-            query.getCentral().provider.query("SELECT type, content, first_name, last_name, profile_picture, user_id, public, user_notes.created_at, user_notes.updated_at from user_notes JOIN users on user_id = edt_id where event_id = $1 AND provider=$2 AND (public=true OR (public=false AND user_id=$3))", [event_id, provider, user_id], function(err, result){
+            query.getCentral().provider.query("SELECT type, content, attachment, first_name, last_name, profile_picture, user_id, public, user_notes.created_at, user_notes.updated_at from user_notes JOIN users on user_id = edt_id where event_id = $1 AND provider=$2 AND (public=true OR (public=false AND user_id=$3))", [event_id, provider, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
                     return query.throwError(res);
