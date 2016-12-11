@@ -64,7 +64,7 @@ pool.connect(function(err, client, done) {
                     return;
                 }
                 console.log("response="+JSON.stringify(response));
-                client.query("update users set profile_picture=$1 where user_id=$2", [response.picture.data.url, userId], function(err, result) {
+                client.query("update users set profile_picture=$1 where edt_id=$2", [response.picture.data.url, userId], function(err, result) {
                     done();
                     if(err) {
                         return console.error('error running query', err);
