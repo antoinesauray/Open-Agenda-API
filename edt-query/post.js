@@ -64,6 +64,12 @@ module.exports = {
                 res.json({message: "Note inserted"});
                 console.log("POST /notes : "+res.statusCode);
 
+                if(access_level=='true'){
+                    console.log("access_level=true");
+                }
+                else{
+                    console.log("access_level=false");
+                }
 				query.getCentral().provider.query("select * from users where edt_id=$1 limit 1", [user_id], function(err, result){
          			query.getCentral().done();
 					if(result.rows.length!=0){
@@ -73,7 +79,9 @@ module.exports = {
     						collapse_key: provider+'_'+agenda_id,
     						data: {
 								user_id: user_id,
+                                provider: provider,
                                 agenda_id: agenda_id,
+                                event_id: event_id,
         						first_name: user.first_name,
 								last_name: user.last_name,
 								profile_picture: user.profile_picture,
