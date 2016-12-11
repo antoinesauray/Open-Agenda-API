@@ -319,7 +319,7 @@ module.exports = {
     facebook_user_token: function(ip_addr, facebook_token, token, res){
         console.log("POST /facebook_user_token");
         FB.setAccessToken(facebook_token);
-        FB.api('/me', { fields: ['id', 'email', 'first_name', 'last_name'] }, function (response) {
+        FB.api('/me', { fields: ['id', 'picture' 'email', 'first_name', 'last_name'] }, function (response) {
             console.log("response: "+response);
             if(!response || response.error) {
                 res.statusCode=400;
@@ -335,7 +335,7 @@ module.exports = {
                 else {
                     var id = decoded.id;
                     // let's update our user with Facebook data
-                    query.getCentral().provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, is_validated=true, facebook_token=$3, ip_addr=$5, updated_at=NOW() where edt_id=$4 RETURNING edt_id, first_name, last_name, facebook_email", [response.id, response.email, facebook_token, id, ip_addr], function(err, result){
+                    query.getCentral().provider.query("UPDATE users set facebook_id=$1, facebook_email=$2, profile_picture=$6, is_validated=true, facebook_token=$3, ip_addr=$5, updated_at=NOW() where edt_id=$4 RETURNING edt_id, first_name, last_name, facebook_email", [response.id, response.email, facebook_token, id, ip_addr, response.picture.data.url], function(err, result){
                         query.getCentral().done();
                         if(err) {
                             res.statusCode=403;
