@@ -233,10 +233,7 @@ module.exports = {
                 query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) RETURNING id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
                     query.getCentral().done();
                     if(err) {
-                        console.log(err);
-                        res.statusCode=401;
-                        res.json({message: "This Facebook account already exists in our database."});
-                        console.log("POST /sign_up_facebook : "+res.statusCode);
+                        console.log("POST /sign_up_facebook : redirection to authenticate");
                         module.exports.authenticate_facebook(ip_addr, facebook_token, res);
                     }
                     else{
