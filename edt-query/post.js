@@ -139,29 +139,21 @@ module.exports = {
             });
         }
     },
-    event: function(user_id, authenticated, provider_id, agenda_id, event_name, start_time, end_time, details, res){
-
-        if(authenticated){
-            if(query.getProviders()[provider_id]){
-			console.log("details="+JSON.stringify(details));
-                query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id, more) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me', $5) RETURNING *", [event_name, agenda_id, start_time, end_time, details], function(err, result){
-                    query.getProviders()[provider_id].done();
-                    if(err) {
-                        return query.throwError(res);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This event has been post"});
-                    console.log("POST /event : "+res.statusCode);
-                });
-            }
-            else{
-                res.statusCode=404;
-                res.send();
+    event: function(user_id, provider_id, agenda_id, event_name, start_time, end_time, details, res){
+        if(query.getProviders()[provider_id]){
+            console.log("details="+JSON.stringify(details));
+            query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id, more) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me', $5) RETURNING *", [event_name, agenda_id, start_time, end_time, details], function(err, result){
+                query.getProviders()[provider_id].done();
+                if(err) {
+                    return query.throwError(res);
+                }
+                res.statusCode=200;
+                res.json({message: "This event has been post"});
                 console.log("POST /event : "+res.statusCode);
-            }
+            });
         }
         else{
-            res.statusCode=403;
+            res.statusCode=404;
             res.send();
             console.log("POST /event : "+res.statusCode);
         }
@@ -238,9 +230,10 @@ module.exports = {
             }
             else{
                 // look in our database if this Facebook account exists
-                query.getCentral().provider.query("insert into facebook_accounts(email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5) RETURNING id", [response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
+                query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) RETURNING id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
                     query.getCentral().done();
                     if(err) {
+                        console.log(err);
                         res.statusCode=401;
                         res.json({message: "This Facebook account already exists in our database."});
                         console.log("POST /sign_up_facebook : "+res.statusCode);
@@ -334,7 +327,7 @@ module.exports = {
             }
             else{
                 // look in our database if this Facebook account exists
-                query.getCentral().provider.query("SELECT id, first_name, last_name, email from users join facebook_accounts on facebook_account=$1", [response.id], function(err, result){
+                query.getCentral().provider.query("SELECT users.id, first_name, last_name, email from users join facebook_accounts on facebook_accounts.id=$1", [response.id], function(err, result){
                     query.getCentral().done();
                     if(err) {
                         return query.throwError(res);

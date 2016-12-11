@@ -43,43 +43,84 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
     });
 }
 
-var completeWithUserProfile = function(user_id, authenticated, agendas, res){
-    if(authenticated){
-        query.getCentral().provider.query("SELECT edt_id, first_name, last_name, profile_picture, edt_email, facebook_email, created_at, updated_at FROM users where users.edt_id=$1 LIMIT 1", [user_id], function(err, result){
-            query.getCentral().done();
-            if(err) {
-                return query.throwError(res);
-            }
-            if(result.rows.length!=0){
-                res.statusCode=200;
-                res.json({user: result.rows[0], agendas: agendas});
-            }
-            else{
-                res.statusCode=401;
-                res.json({user: null, agendas: agendas});
-            }
-        });
-    }
-    else{
-        query.getCentral().provider.query("SELECT * from anonymous_users where id=$1 LIMIT 1", [user_id], function(err, result){
-            query.getCentral().done();
-            if(err) {
-                return query.throwError(res);
-            }
-            if(result.rows.length!=0){
-                res.statusCode=200;
-                res.json({user: result.rows[0], agendas: agendas});
-            }
-            else{
-                res.statusCode=401;
-                res.json({user: null, agendas: agendas});
-            }
-        });
-    }
+var completeWithUserProfile = function(user_id, agendas, res){
+    query.getCentral().provider.query("SELECT email, first_name, last_name from email_accounts where id in (select email_account from users where id=$1) UNION SELECT email, first_name, last_name from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
+        query.getCentral().done();
+        if(err) {
+            return query.throwError(res);
+        }
+        if(result.rows.length!=0){
+            res.statusCode=200;
+            res.json({user: result.rows[0], agendas: agendas});
+        }
+        else{
+            res.statusCode=401;
+            res.json({user: null, agendas: agendas});
+        }
+    });
 }
 
 module.exports = {
-
+    accounts: function(user_id, res){
+        query.getCentral().provider.query("SELECT email, first_name, last_name from email_accounts where id in (select email_account from users where id=$1) UNION SELECT email, first_name, last_name from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
+            query.getCentral().done();
+            if(err) {
+                console.log(err);
+                return query.throwError(res);
+            }
+            else{
+                if(result.rows.length==0){
+                    res.statusCode=404;
+                    res.send(result.rows);
+                }
+                else{
+                    res.statusCode=200;
+                    res.send(result.rows);
+                }
+                console.log("GET /accounts : "+res.statusCode);
+            }
+        });
+    },
+    accounts_email: function(user_id, res){
+        query.getCentral().provider.query("SELECT email, first_name, last_name from email_accounts where id in (select email_account from users where id=$1)", [user_id], function(err, result){
+            query.getCentral().done();
+            if(err) {
+                console.log(err);
+                return query.throwError(res);
+            }
+            else{
+                if(result.rows.length==0){
+                    res.statusCode=404;
+                    res.send(result.rows);
+                }
+                else{
+                    res.statusCode=200;
+                    res.send(result.rows);
+                }
+                console.log("GET me/accounts/email : "+res.statusCode);
+            }
+        });
+    },
+    accounts_facebook: function(user_id, res){
+        query.getCentral().provider.query("SELECT email, first_name, last_name from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
+            query.getCentral().done();
+            if(err) {
+                console.log(err);
+                return query.throwError(res);
+            }
+            else{
+                if(result.rows.length==0){
+                    res.statusCode=404;
+                    res.send(result.rows);
+                }
+                else{
+                    res.statusCode=200;
+                    res.send(result.rows);
+                }
+                console.log("GET me/accounts/facebook : "+res.statusCode);
+            }
+        });
+    },
     notes: function(user_id, provider, event_id, res){
         if(query.getProviders()[provider]){
             query.getCentral().provider.query("SELECT type, content, attachment, first_name, last_name, profile_picture, user_id, public, user_notes.created_at, user_notes.updated_at from user_notes JOIN users on user_id = edt_id where event_id = $1 AND provider=$2 AND (public=true OR (public=false AND user_id=$3))", [event_id, provider, user_id], function(err, result){
@@ -152,280 +193,137 @@ module.exports = {
             res.send();
         }
     },
-    user: function(user_id, authenticated, res){
+    user: function(user_id, res){
         console.log("GET /user");
-        if(authenticated){
-            query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    return query.throwError(res);
-                }
-                if(result.rows.length==0){
-                    // if result=0 we will check our user
-                    query.getCentral().provider.query("SELECT edt_id, first_name, last_name from users where edt_id=$1", [user_id], function(err, result){
-                        query.getCentral().done();
-                        if(err) {
-                            return query.throwError(res);
-                        }
-                        if(result.rows.length==0){
-                            // if result=0 then this user does not exist
-                            res.statusCode=404;
-                            res.json({user: {}, agendas: []});
-                        }
-                        else{
-                            // if it exists then it just has no agendas
-                            completeWithUserProfile(user_id, authenticated, [], res);
-                        }
-                    });
-                }
-                else{
-                    // get promises from all query.getProviders()
-                    var promises=[];
-                    result.rows.forEach(function(agenda){
-                        var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
-                        promises.push(sqlQuery);
-                        sqlQuery.then(function(){
-                            sqlQuery.getProviders()[agenda.provider].done();
-                        });
-                    });
-                    Promise.all(promises).then(results => {
-                        var agendas=[];
-                        results.forEach(function(result){
-                            result.rows.forEach(function(agenda){
-                                agendas.push(agenda);
-                            });
-                        });
-                        completeWithUserProfile(user_id, authenticated, agendas, res);
-                    });
-                }
-            });
-        }
-        else{
-            query.getCentral().provider.query("SELECT * FROM anonymous_users where id=$1", [user_id], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    res.statusCode=500;
-                    res.send(agendas);
-                }
-                if(result.rows.length==0){
-                    query.getCentral().provider.query("SELECT edt_id, first_name, last_name from users where edt_id=$1", [user_id], function(err, result){
-                        query.getCentral().done();
-                        if(err) {
-                            return query.throwError(res);
-                        }
-                        if(result.rows.length==0){
-                            // if result=0 then this user does not exist
-                            res.statusCode=404;
-                            res.json({user: {}, agendas: []});
-                        }
-                        else{
-                            // if it exists then it just has no agendas
-                            completeWithUserProfile(user_id, authenticated, [], res);
-                        }
-                    });
-                }
-                else{
-                    var promises=[];
-                    result.rows.forEach(function(anonymous_user){
-                        if(anonymous_user.provider&&anonymous_user.agenda_id){
-                            var query = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [anonymous_user.agenda_id, anonymous_user.provider]);
-                            promises.push(query);
-                            query.then(function(){
-                                query.getProviders()[anonymous_user.provider].done();
-                            });
-                        }
-                    });
-                    Promise.all(promises).then(results => {
-                        var agendas=[];
-                        results.forEach(function(result){
-                            result.rows.forEach(function(agenda){
-                                agendas.push(agenda);
-                            });
-                        });
-                        completeWithUserProfile(user_id, authenticated, agendas, res);
-                    });
-                }
-            });
-        }
-    },
-
-    events: function(user_id, authenticated, start_date, end_date, res){
-        if(authenticated){
-            query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    return query.throwError(res);
-                }
+        query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
+            query.getCentral().done();
+            if(err) {
+                console.log(err);
+                return query.throwError(res);
+            }
+            if(result.rows.length==0){
+                // if result=0 we will check our user
+                query.getCentral().provider.query("SELECT * from users where id=$1", [user_id], function(err, result){
+                    query.getCentral().done();
+                    if(err) {
+                        console.log(err);
+                        return query.throwError(res);
+                    }
+                    if(result.rows.length==0){
+                        // if result=0 then this user does not exist
+                        res.statusCode=404;
+                        res.json({user: {}, agendas: []});
+                    }
+                    else{
+                        // if it exists then it just has no agendas
+                        completeWithUserProfile(user_id, [], res);
+                    }
+                });
+            }
+            else{
                 // get promises from all query.getProviders()
                 var promises=[];
                 result.rows.forEach(function(agenda){
-                    var sqlQuery=query.getProviders()[agenda.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [agenda.agenda_id, start_date, end_date, agenda.provider]);
+                    var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                    promises.push(sqlQuery);
                     sqlQuery.then(function(){
                         sqlQuery.getProviders()[agenda.provider].done();
                     });
-                    promises.push(sqlQuery);
                 });
-                // when we have all replies
                 Promise.all(promises).then(results => {
-                    var events={};
-                    var count=0;
+                    var agendas=[];
                     results.forEach(function(result){
-                        result.rows.forEach(function(event){
-                            if(!events[event.date]){
-                                events[event.date] = [];
-                            }
-                            events[event.date].push(event);
-                            count++;
+                        result.rows.forEach(function(agenda){
+                            agendas.push(agenda);
+                        });
+                    });
+                    completeWithUserProfile(user_id, agendas, res);
+                });
+            }
+        });
+    },
+
+    events: function(user_id, start_date, end_date, res){
+        query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
+            query.getCentral().done();
+            if(err) {
+                return query.throwError(res);
+            }
+            // get promises from all query.getProviders()
+            var promises=[];
+            result.rows.forEach(function(agenda){
+                var sqlQuery=query.getProviders()[agenda.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [agenda.agenda_id, start_date, end_date, agenda.provider]);
+                sqlQuery.then(function(){
+                    sqlQuery.getProviders()[agenda.provider].done();
+                });
+                promises.push(sqlQuery);
+            });
+            // when we have all replies
+            Promise.all(promises).then(results => {
+                var events={};
+                var count=0;
+                results.forEach(function(result){
+                    result.rows.forEach(function(event){
+                        if(!events[event.date]){
+                            events[event.date] = [];
+                        }
+                        events[event.date].push(event);
+                        count++;
+                    });
+                });
+                res.statusCode=200;
+                res.send(events);
+                console.log("GET /events  : "+res.statusCode+" -----> count()="+count);
+            });
+        });
+    },
+    user_agendas: function(user_id, res){
+        console.log("GET /user_agendas");
+        query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
+            query.getCentral().done();
+            if(err) {
+                return query.throwError(res);
+            }
+            if(result.rows.length==0){
+                // if result=0 we will check our user
+                query.getCentral().provider.query("SELECT * from users where id=$1", [user_id], function(err, result){
+                    query.getCentral().done();
+                    if(err) {
+                        return query.throwError(res);
+                    }
+                    if(result.rows.length==0){
+                        // if result=0 then this user does not exist
+                        res.statusCode=404;
+                        res.json([]);
+                    }
+                    else{
+                        // if it exists then it just has no agendas
+                        res.statusCode=200;
+                        res.json([]);
+                    }
+                });
+            }
+            else{
+                // get promises from all query.getProviders()
+                var promises=[];
+                result.rows.forEach(function(agenda){
+                    var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                    promises.push(sqlQuery);
+                    sqlQuery.then(function(){
+                        sqlQuery.getProviders()[agenda.provider].done();
+                    });
+                });
+                Promise.all(promises).then(results => {
+                    var agendas=[];
+                    results.forEach(function(result){
+                        result.rows.forEach(function(agenda){
+                            agendas.push(agenda);
                         });
                     });
                     res.statusCode=200;
-                    res.send(events);
-                    console.log("GET /events  : "+res.statusCode+" -----> count()="+count);
-                });
-            });
-        }
-        else{
-            query.getCentral().provider.query("UPDATE anonymous_users set request_counter=request_counter+1, updated_at=NOW() where id=$1 RETURNING *", [user_id], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    return query.throwError(res);
-                }
-                // get promises from all query.getProviders()
-                var promises=[];
-                result.rows.forEach(function(anonymous_user){
-                    if(anonymous_user.request_counter>30){
-                        res.statusCode=429; // too many requests
-                        res.json({});
-                    }
-                    else{
-                        if(anonymous_user.provider){
-                            var query=query.getProviders()[anonymous_user.provider].client.query("SELECT agenda_events.id, $4::text as provider, agenda_events.agenda_id, to_char(start_time, 'YYYY-MM-DD') AS date, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.updated_at, agenda_events.created_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.agenda_id=$1 AND start_time::date >= $2 AND start_time::date <= $3", [anonymous_user.agenda_id, start_date, end_date, anonymous_user.provider]);
-                            query.then(function(){
-                                query.getProviders()[agenda.provider].done();
-                            });
-                            promises.push(query);
-                            Promise.all(promises).then(results => {
-                                var events={};
-                                results.forEach(function(result){
-                                    result.rows.forEach(function(event){
-                                        if(!events[event.date]){
-                                            events[event.date] = [];
-                                        }
-                                        events[event.date].push(event);
-                                    });
-                                });
-                                res.statusCode=200;
-                                res.send(events);
-                            });
-                        }
-                        else{
-                            res.statusCode=200;
-                            res.send({});
-                        }
-                    }
-                });
-            });
-        }
-
-    },
-    user_agendas: function(user_id, authenticated, res){
-        console.log("GET /user_agendas");
-        if(authenticated){
-            query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    return query.throwError(res);
-                }
-                if(result.rows.length==0){
-                    // if result=0 we will check our user
-                    query.getCentral().provider.query("SELECT edt_id, first_name, last_name from users where edt_id=$1", [user_id], function(err, result){
-                        query.getCentral().done();
-                        if(err) {
-                            return query.throwError(res);
-                        }
-                        if(result.rows.length==0){
-                            // if result=0 then this user does not exist
-                            res.statusCode=404;
-                            res.json([]);
-                        }
-                        else{
-                            // if it exists then it just has no agendas
-                            res.statusCode=200;
-                            res.json([]);
-                        }
-                    });
-                }
-                else{
-                    // get promises from all query.getProviders()
-                    var promises=[];
-                    result.rows.forEach(function(agenda){
-                        var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
-                        promises.push(sqlQuery);
-                        sqlQuery.then(function(){
-                            sqlQuery.getProviders()[agenda.provider].done();
-                        });
-                    });
-                    Promise.all(promises).then(results => {
-                        var agendas=[];
-                        results.forEach(function(result){
-                            result.rows.forEach(function(agenda){
-                                agendas.push(agenda);
-                            });
-                        });
-                        res.statusCode=200;
-                        res.send(agendas);
-                    });
-                }
-            });
-        }
-        else{
-            query.getCentral().provider.query("SELECT * FROM anonymous_users where id=$1", [user_id], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    res.statusCode=500;
                     res.send(agendas);
-                }
-                if(result.rows.length==0){
-                    query.getCentral().provider.query("SELECT edt_id, first_name, last_name from users where edt_id=$1", [user_id], function(err, result){
-                        query.getCentral().done();
-                        if(err) {
-                            return query.throwError(res);
-                        }
-                        if(result.rows.length==0){
-                            // if result=0 then this user does not exist
-                            res.statusCode=404;
-                            res.json([]);
-                        }
-                        else{
-                            // if it exists then it just has no agendas
-                            res.statusCode=200;
-                            res.json([]);
-                        }
-                    });
-                }
-                else{
-                    var promises=[];
-                    result.rows.forEach(function(anonymous_user){
-                        if(anonymous_user.provider&&anonymous_user.agenda_id){
-                            var query = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [anonymous_user.agenda_id, anonymous_user.provider]);
-                            promises.push(query);
-                            query.then(function(){
-                                query.getProviders()[anonymous_user.provider].done();
-                            });
-                        }
-                    });
-                    Promise.all(promises).then(results => {
-                        var agendas=[];
-                        results.forEach(function(result){
-                            result.rows.forEach(function(agenda){
-                                agendas.push(agenda);
-                            });
-                        });
-                        res.statusCode=200;
-                        res.send(agendas);
-                    });
-                }
-            });
-        }
+                });
+            }
+        });
     }
 }

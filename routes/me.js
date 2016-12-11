@@ -7,6 +7,7 @@ var query = require('../edt-query/query');
 var POST = require('../edt-query/post');
 var GET = require('../edt-query/get');
 var DELETE = require('../edt-query/delete');
+var PUT = require('../edt-query/put');
 
 var cert = {
     pub: fs.readFileSync('cert.pem')
@@ -36,20 +37,20 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-    GET.user(req.decoded.id, req.decoded.authenticated, res);
+    GET.user(req.decoded.id, res);
 });
 
 router.get('/agendas', function(req, res, next) {
-    GET.user_agendas(req.decoded.id, req.decoded.authenticated, res);
+    GET.user_agendas(req.decoded.id, res);
 });
 
 router.get('/events/', function(req, res, next) {
-    GET.events(req.decoded.id, req.decoded.authenticated, req.query.start_date, req.query.end_date, res);
+    GET.events(req.decoded.id, req.query.start_date, req.query.end_date, res);
 });
 
 router.post('/events', function(req, res, next) {
     if(req.body.provider && req.body.agenda_id && req.body.event_name && req.body.start_time && req.body.end_time && req.body.details){
-        POST.event(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.event_name, req.body.start_time, req.body.end_time, req.body.details, res);
+        POST.event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.event_name, req.body.start_time, req.body.end_time, req.body.details, res);
     }
     else{
         res.statusCode=403;
@@ -104,15 +105,62 @@ router.post('/events', function(req, res, next) {
     }
 });
 
-router.post('/firebase', function(req, res, next) {
-    if(req.body.firebase_token){
-        POST.firebase_token(req.decoded.id, req.decoded.authenticated, req.body.firebase_token, res);
+router.get('/accounts', function(req, res, next) {
+    GET.accounts(req.decoded.id, res);
+});
+
+router.get('/accounts/email', function(req, res, next) {
+    GET.accounts_email(req.decoded.id, res);
+});
+
+router.get('/accounts/facebook', function(req, res, next) {
+    GET.accounts_facebook(req.decoded.id, res);
+});
+
+
+router.put('/accounts/email', function(req, res, next) {
+    var email = req.body.email;
+    var password = req.body.password;
+    var first_name = req.body.first_name;
+    var last_name = req.body.last_name;
+
+    if(email&&password&&first_name&&last_name){
+        var header=req.headers['x-forwarded-for'];
+        if(header){
+            var ip_addr = header.split(",")[0];
+        }
+        else{
+            var ip_addr = req.connection.remoteAddress;
+        }
+        var access_token = req.body.access_token;
+        PUT.account_email(ip_addr, email, password, first_name, last_name, res);
     }
     else{
-        res.statusCode=400;
-        res.json({});
+        res.statusCode=422;
+        res.json({message: "Missing parameters"});
     }
 });
+
+router.put('/accounts/facebook', function(req, res, next) {
+    var facebook_token = req.body.facebook_token;
+
+    if(facebook_token){
+        var header=req.headers['x-forwarded-for'];
+        if(header){
+            var ip_addr = header.split(",")[0];
+        }
+        else{
+            var ip_addr = req.connection.remoteAddress;
+        }
+        var access_token = req.body.access_token;
+        PUT.account_facebook(ip_addr, facebook_token, res);
+    }
+    else{
+        res.statusCode=422;
+        res.json({message: "Missing parameters"});
+    }
+});
+
 
 
 module.exports = router;
