@@ -53,9 +53,9 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 }
 
 module.exports = {
-    notes: function(user_id, authenticated, provider, agenda_id, event_id, content, type, access_level, res){
+    notes: function(user_id, authenticated, provider, agenda_id, event_id, content, type, attachment, access_level, res){
         if(authenticated){
-            query.getCentral().provider.query("insert into user_notes(content, type, provider, event_id, user_id, public, created_at, updated_at) values($1, $2, $3, $4, $5, $6, NOW(), NOW()) returning created_at", [content, type, provider, event_id, user_id, access_level], function(err, result){
+            query.getCentral().provider.query("insert into user_notes(content, type, attachment, provider, event_id, user_id, public, created_at, updated_at) values($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) returning created_at", [content, type, attachment, provider, event_id, user_id, access_level], function(err, result){
                 query.getCentral().done();
                 if(err) {
                     return query.throwError(res);
@@ -85,6 +85,7 @@ module.exports = {
     								last_name: user.last_name,
     								profile_picture: user.profile_picture,
     								content: content,
+                                    attachment: attachment,
     								type: type,
     								access_level: access_level,
                                     created_at: created_at
