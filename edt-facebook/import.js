@@ -63,14 +63,14 @@ pool.connect(function(err, client, done) {
                     console.log(!response ? 'error occurred' : response.error);
                     return;
                 }
-                console.log("response="+JSON.stringify(response));});
+                console.log("response="+JSON.stringify(response));
                 client.query("update users set profile_picture=$1 where user_id=$2", [response.picture.data.url, userId], function(err, result) {
                     done();
                     if(err) {
                         return console.error('error running query', err);
                     }
-                    insertEvents(result.rows[0].id, response.data);
                 });
+            });
     }
 
     function insertEvents(agendaId, data){
