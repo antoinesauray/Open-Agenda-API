@@ -71,7 +71,7 @@ module.exports = {
              			query.getCentral().done();
     					if(result.rows.length!=0){
     						var user = result.rows[0];
-                            var topic="topics/"+provider+'_'+agenda_id;
+                            var topic="/topics/"+provider+'_'+agenda_id;
                             console.log("topic="+topic);
     						var message = {
     			    			to: topic, // required fill with device token or topics
