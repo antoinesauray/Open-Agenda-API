@@ -55,7 +55,7 @@ pool.connect(function(err, client, done) {
 
     exports.updatePicture = function(userId, facebookId, facebookToken){
             FB.setAccessToken(facebookToken);
-            FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
+            FB.api('/me', { fields: ['picture'] }, function (response) {
                 console.log("response: "+response);
                 if(!response || response.error) {
                     res.statusCode=400;
@@ -63,7 +63,7 @@ pool.connect(function(err, client, done) {
                     console.log(!response ? 'error occurred' : response.error);
                     return;
                 }
-                console.log(JSON.stringify(response));});
+                console.log("response="+JSON.stringify(response));});
                 client.query("update users set profile_picture=$1 where user_id=$2", [response.picture.data.url, userId], function(err, result) {
                     done();
                     if(err) {
