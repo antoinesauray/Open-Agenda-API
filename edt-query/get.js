@@ -122,22 +122,23 @@ module.exports = {
             }
         });
     },
-    notes: function(user_id, provider, event_id, res){
+    notes: function(event_id, user_id, provider, res){
         if(query.getProviders()[provider]){
-            query.getCentral().provider.query("SELECT type, content, attachment, first_name, last_name, picture, user_id, public, user_notes.created_at, user_notes.updated_at from user_notes JOIN users on user_id = edt_id where event_id = $1 AND provider=$2 AND (public=true OR (public=false AND user_id=$3))", [event_id, provider, user_id], function(err, result){
+            query.getCentral().provider.query("SELECT type, content, attachment, Coalesce(facebook_accounts.first_name, email_accounts.first_name) as first_name, Coalesce(facebook_accounts.last_name, email_accounts.last_name) as last_name, Coalesce(facebook_accounts.picture,email_accounts.picture) as profile_picture, user_id, public, user_notes.created_at, user_notes.updated_at from user_notes left JOIN users on user_id = id left join facebook_accounts on facebook_accounts.id=facebook_account left join email_accounts on email_accounts.id=email_account where event_id = $1 AND provider=$2 AND (public=true OR (public=false AND user_id=$3))", [event_id, provider, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
+					console.log(err);
                     return query.throwError(res);
                 }
                res.statusCode=200;
                 res.send(result.rows);
-                console.log("GET /notes : "+res.statusCode);
+                console.log("GET /providers/"+provider+"/events/"+event_id+"/notes : "+res.statusCode);
             });
         }
         else{
             res.statusCode=404;
             res.send();
-            console.log("GET /notes : "+res.statusCode);
+            console.log("GET providers/"+provider+"/events/"+event_id+"/notes : "+res.statusCode);
         }
     },
     providers: function(res){

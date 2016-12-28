@@ -35,12 +35,12 @@ router.use(function(req, res, next) {
 }
 });
 
-router.get('/notes/', function(req, res, next) {
-    GET.notes(req.decoded.id, req.query.provider, req.query.event_id, res);
+router.get('/:id/notes/', function(req, res, next) {
+    GET.notes(req.params.id, req.query.user_id, req.query.provider, res);
 });
 
-router.post('/notes/', function(req, res, next) {
-    POST.notes(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.event_id, req.body.content, req.body.type, req.body.attachment, req.body.access_level, res);
+router.post('/:id/notes/', function(req, res, next) {
+    POST.notes(req.params.id, req.body.user_id, req.body.provider, req.body.agenda_id, req.body.content, req.body.type, req.body.attachment, req.body.access_level, res);
 });
 
 module.exports = router;

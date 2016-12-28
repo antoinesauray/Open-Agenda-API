@@ -30,15 +30,15 @@ var createToken = function(user_id, auth_method){
 }
 
 var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_email, user, created, res){
-    query.getCentral().provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, updated_at=NOW() where facebook_id=$2 OR facebook_email=$3 RETURNING edt_id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
+    query.getCentral().provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, updated_at=NOW() where facebook_id=$2 OR facebook_email=$3 RETURNING id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
         query.getCentral().done();
         if(err) {
             return query.throwError(res);
         }
         if(result.rows.length!=0){
-            var token = jwt.sign({id: result.rows[0].edt_id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
+            var token = jwt.sign({id: result.rows[0].id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
             if(created){
-                fbImport.queryFacebook(result.rows[0].edt_id, facebook_id, facebook_token);
+                fbImport.queryFacebook(result.rows[0].id, facebook_id, facebook_token);
                 res.statusCode=201;
                 res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
                 console.log("POST /facebook_user : "+res.statusCode);
@@ -58,26 +58,26 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 }
 
 module.exports = {
-    notes: function(user_id, authenticated, provider, agenda_id, event_id, content, type, attachment, access_level, res){
-        if(authenticated){
+    notes: function(event_id, user_id, provider, agenda_id, content, type, attachment, access_level, res){
             query.getCentral().provider.query("insert into user_notes(content, type, attachment, provider, event_id, user_id, public, created_at, updated_at) values($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) returning created_at", [content, type, attachment, provider, event_id, user_id, access_level], function(err, result){
                 query.getCentral().done();
                 if(err) {
+					console.log(err);
                     return query.throwError(res);
                 }
                 res.statusCode=200;
                 res.json({message: "Note inserted"});
-                console.log("POST /notes : "+res.statusCode);
+                console.log("POST /providers/"+provider+"/events/"+event_id+"/notes : "+res.statusCode+" (content="+content+")");
 
                 if(access_level=='true'){
                     // if public we broadcast live
                     var created_at = result.rows[0].created_at;
-                    query.getCentral().provider.query("select * from users where edt_id=$1 limit 1", [user_id], function(err, result){
+                    query.getCentral().provider.query("select coalesce(facebook_accounts.first_name, email_accounts.first_name), coalesce(facebook_accounts.last_name, email_accounts.last_name), coalesce(facebook_accounts.picture, email_accounts.picture) from users LEFT JOIN facebook_accounts on facebook_accounts.id=facebook_account LEFT JOIN email_accounts on email_accounts.id=email_account  where users.id=$1 limit 1", [user_id], function(err, result){
              			query.getCentral().done();
     					if(result.rows.length!=0){
     						var user = result.rows[0];
                             var topic="/topics/"+provider+'_'+agenda_id;
-                            console.log("topic="+topic);
+                            //console.log("topic="+topic);
     						var message = {
     			    			to: topic, // required fill with device token or topics
         						collapse_key: provider+'_'+agenda_id,
@@ -98,26 +98,20 @@ module.exports = {
     						};
     						fcm.send(message)
       						.then(function(response){
-            					console.log("Successfully sent with response: ", response);
+            					//console.log("Successfully sent with response: ", response);
         					})
     						.catch(function(err){
-            					console.log("Something has gone wrong!");
+            					//console.log("Something has gone wrong!");
             					console.error(err);
     						});
     					}
     				});
                 }
             });
-        }
-        else{
-            res.statusCode=403;
-            res.json({message: "Anonymous users can not provide notes."});
-            console.log("POST /notes : "+res.statusCode);
-        }
     },
     firebase_token: function(user_id, authenticated, firebase_token, res){
         if(authenticated){
-            query.getCentral().provider.query("update users set firebase_token=$1 where edt_id=$2", [firebase_token, user_id], function(err, result){
+            query.getCentral().provider.query("update users set firebase_token=$1 where id=$2", [firebase_token, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
                     return query.throwError(res);
@@ -183,7 +177,6 @@ module.exports = {
         }
     },
     agendas: function(provider_id, agenda_id, user_id, authenticated, res){
-        if(authenticated){
             if(query.getProviders()[provider_id]){
                 query.getCentral().provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
                     query.getCentral().done();
@@ -200,25 +193,6 @@ module.exports = {
                 res.send();
                 console.log("POST /agendas : "+res.statusCode);
             }
-        }
-        else{
-            if(query.getProviders()[provider_id]){
-                query.getCentral().provider.query("update anonymous_users set provider=$1, agenda_id=$2, updated_at=NOW() where id=$3", [provider_id, agenda_id, user_id], function(err, result){
-                    query.getCentral().done();
-                    if(err) {
-                        return query.throwError(res);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
-                    console.log("POST /agendas : "+res.statusCode);
-                });
-            }
-            else{
-                res.statusCode=404;
-                res.send();
-                console.log("POST /agendas : "+res.statusCode);
-            }
-        }
     },
     signup_facebook: function(ip_addr, facebook_token, res){
         FB.setAccessToken(facebook_token);
@@ -233,8 +207,8 @@ module.exports = {
                 query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) RETURNING id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
                     query.getCentral().done();
                     if(err) {
-                        console.log("POST /sign_up_facebook : redirection to authenticate");
-                        module.exports.authenticate_facebook(ip_addr, facebook_token, res);
+						console.log(err);
+						return query.throwError(res);
                     }
                     else{
                         if(result.rows.length!=0){
@@ -242,6 +216,7 @@ module.exports = {
                             query.getCentral().provider.query("insert into users (ip_address, facebook_account) values($1, $2) RETURNING id", [ip_addr, account_id], function(err, result){
                                 query.getCentral().done();
                                 if(err) {
+									console.log(err);
                                     query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
                                         query.getCentral().done();
                                         res.statusCode=401;
@@ -343,8 +318,7 @@ module.exports = {
                         });
                     }
                     else{
-                        res.statusCode=403;
-                        res.json({message: "Authentication failed"});
+						module.exports.signup_facebook(ip_addr, facebook_token, res);
                     }
                 });
             }
