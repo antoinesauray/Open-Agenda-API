@@ -48,6 +48,11 @@ router.get('/events/', function(req, res, next) {
     GET.events(req.decoded.id, req.query.start_date, req.query.end_date, res);
 });
 
+
+router.post('/firebase/', function(req, res, next) {
+	POST.firebase_token(req.decoded.id, req.body.firebase_token, res);
+});
+
 router.post('/events', function(req, res, next) {
     if(req.body.provider && req.body.agenda_id && req.body.event_name && req.body.start_time && req.body.end_time && req.body.details){
         POST.event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.event_name, req.body.start_time, req.body.end_time, req.body.details, res);
@@ -60,7 +65,7 @@ router.post('/events', function(req, res, next) {
 
 router.delete('/events/:id', function(req, res, next) {
     if(req.params.id && req.query.provider){
-        DELETE.event(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, res);
+        DELETE.event(req.query.provider, req.query.agenda_id, req.params.id, req.decoded.id, req.decoded.authenticated, res);
     }
     else{
         res.statusCode=400;

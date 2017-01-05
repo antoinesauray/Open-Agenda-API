@@ -20,22 +20,32 @@ var cert = {
 }
 
 module.exports = {
-    event: function (provider_id, event_id, user_id, authenticated, res) {
+    event: function (provider_id, agenda_id, event_id, user_id, authenticated, res) {
             if(query.getProviders()[provider_id]){
-                query.getCentral().provider.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
-                    query.getCentral().done();
-                    if(err) {
-                        return query.throwError(res);
-                    }
-                    res.statusCode=200;
-                    res.json({message: "This event has been deleted"});
-                    console.log("DELETE /event : "+res.statusCode);
-					var eventName=event_id;
-					if(result.rows.length!=0){
-						eventName=result.rows[0].name;
-						fcm.updateClientsEvents("delete", user_id, provider_id, result.rows[0].agenda_id, result.rows[0].name);
+				query.getProviders()[provider_id].client.query("SELECT * from user_rights where user_id=$1 AND agenda_id=$2", [user_id, agenda_id], function(err, result){
+                	if(err){return query.throwError(res);}
+                	if(result.rows.length!=0){
+						query.getCentral().provider.query("DELETE FROM agenda_events WHERE id=$1 AND agenda_id IN(SELECT agenda_id FROM user_agendas where user_id=$2) RETURNING *", [event_id, user_id], function(err, result){
+                    		query.getCentral().done();
+                    		if(err) {
+                        		return query.throwError(res);
+                    		}
+                    		res.statusCode=200;
+                    		res.json({message: "This event has been deleted"});
+                    		console.log("DELETE /event : "+res.statusCode);
+							var eventName=event_id;
+							if(result.rows.length!=0){
+								eventName=result.rows[0].name;
+								fcm.updateClientsEvents("delete", user_id, provider_id, result.rows[0].agenda_id, result.rows[0].name);
+							}
+						});
 					}
-				});
+					else{
+						// no permission
+						res.statusCode=403;
+						res.json({message: "You do not have the rights for this operation."});
+					}
+				})
             }
             else{
                 res.statusCode=404;

@@ -50,10 +50,12 @@ var completeWithUserProfile = function(user_id, agendas, res){
             return query.throwError(res);
         }
         if(result.rows.length!=0){
+			console.log("200");
             res.statusCode=200;
             res.json({user_accounts: result.rows, id: user_id, agendas: agendas});
         }
         else{
+			console.log("401");
             res.statusCode=401;
             res.json({user_accounts: null, id: user_id, agendas: agendas});
         }
@@ -196,7 +198,7 @@ module.exports = {
         }
     },
     user: function(user_id, res){
-        console.log("GET /user");
+		process.stdout.write("GET /user : ");
         query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
             query.getCentral().done();
             if(err) {
@@ -226,7 +228,7 @@ module.exports = {
                 // get promises from all query.getProviders()
                 var promises=[];
                 result.rows.forEach(function(agenda){
-                    var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, is_editable($3::bigint, $1::int), agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider, user_id]);
+                    var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, is_editable($3::bigint, $1::int) as editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider, user_id]);
                     promises.push(sqlQuery);
                     sqlQuery.then(function(err, result){
                         sqlQuery.getProviders()[agenda.provider].done();
@@ -245,6 +247,29 @@ module.exports = {
         });
     },
 
+	event: function(event_id, provider, res){
+		if(query.getProviders()[provider]){
+			query.getProviders()[provider].client.query("SELECT * FROM agenda_events where id=$1 LIMIT 1", [event_id], function(err, result){
+				query.getProviders()[provider].done();
+            	if(err){
+                	return query.throwError(res);
+            	}
+				if(result.rows.length!=0){
+					res.statusCode=200;
+					res.send(result.rows[0]);
+				}
+				else{
+					res.statusCode=404;
+					res.json({});
+				}
+			});
+		}
+		else{
+			res.statusCode=404;
+			res.json({});
+		}
+        
+	},
     events: function(user_id, start_date, end_date, res){
         query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
             query.getCentral().done();

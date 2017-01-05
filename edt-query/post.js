@@ -6,6 +6,8 @@ var query=require('./query');
 var fcm=require('./fcm');
 var fbImport = require('../edt-facebook/import');
 
+var GET = require('./get');
+
 var credentials=query.credentials;
 var cert=query.cert;
 var hash=query.hash;
@@ -77,7 +79,7 @@ module.exports = {
                 }
             });
     },
-    firebase_token: function(user_id, authenticated, firebase_token, res){
+    firebase_token: function(user_id, firebase_token, res){
             query.getCentral().provider.query("update users set firebase_token=$1 where id=$2", [firebase_token, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
@@ -90,17 +92,34 @@ module.exports = {
     },
     event: function(user_id, provider_id, agenda_id, event_name, start_time, end_time, details, res){
         if(query.getProviders()[provider_id]){
-            console.log("details="+JSON.stringify(details));
-            query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id, more) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me', $5) RETURNING *", [event_name, agenda_id, start_time, end_time, details], function(err, result){
-                query.getProviders()[provider_id].done();
-                if(err) {
-                    return query.throwError(res);
-                }
-                res.statusCode=200;
-                res.json({message: "This event has been post"});
-                console.log("POST /event : "+res.statusCode);
-				fcm.updateClientsEvents("post", user_id, provider_id, agenda_id, event_name);
-            });
+			query.getProviders()[provider_id].client.query("SELECT * from user_rights where user_id=$1 AND agenda_id=$2", [user_id, agenda_id], function(err, result){
+				if(err){return query.throwError(res);}
+				if(result.rows.length!=0){
+					// ok we can insert
+					query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id, more) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me', $5) RETURNING *", [event_name, agenda_id, start_time, end_time, details], function(err, result){
+                		query.getProviders()[provider_id].done();
+                		if(err) {
+                    		return query.throwError(res);
+                		}
+						if(result.rows.length!=0){
+							var returnedEvent = result.rows[0];
+                			console.log("POST /event : "+res.statusCode);
+							fcm.updateClientsEvents("post", user_id, provider_id, agenda_id, event_name);
+							GET.event(returnedEvent.id, provider_id, res);
+						}
+						else{
+							res.statusCode=401;
+							res.json({});
+						}
+					});
+
+				}
+				else{
+					// no permission
+					res.statusCode=403;
+					res.json({message: "You do not have the rights for this operation"});
+				}
+			});
         }
         else{
             res.statusCode=404;

@@ -35,6 +35,10 @@ router.use(function(req, res, next) {
 }
 });
 
+router.get('/:id/', function(req, res, next) {
+    GET.events(req.params.id, req.query.provider, res);
+});
+
 router.get('/:id/notes/', function(req, res, next) {
     GET.notes(req.params.id, req.query.user_id, req.query.provider, res);
 });
