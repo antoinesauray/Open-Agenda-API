@@ -3,7 +3,7 @@ var jwt = require('jsonwebtoken');
 var fs = require('fs');
 
 var query=require('./query');
-
+var fcm=require('./fcm');
 var fbImport = require('../edt-facebook/import');
 
 var credentials=query.credentials;
@@ -19,11 +19,6 @@ var credentials = {
 var cert = {
     pub: fs.readFileSync('cert.pem')
 }
-
-var FCM = require('fcm-push');
-
-var serverKey = process.env.FIREBASE_KEY;
-var fcm = new FCM(serverKey);
 
 var createToken = function(user_id, auth_method){
     return jwt.sign({id: user_id, method: auth_method}, credentials.key, { algorithm: 'RS256'});
@@ -76,41 +71,13 @@ module.exports = {
              			query.getCentral().done();
     					if(result.rows.length!=0){
     						var user = result.rows[0];
-                            var topic="/topics/"+provider+'_'+agenda_id;
-                            //console.log("topic="+topic);
-    						var message = {
-    			    			to: topic, // required fill with device token or topics
-        						collapse_key: provider+'_'+agenda_id,
-        						data: {
-    								user_id: user_id,
-                                    provider: provider,
-                                    agenda_id: agenda_id,
-                                    event_id: event_id,
-            						first_name: user.first_name,
-    								last_name: user.last_name,
-    								profile_picture: user.profile_picture,
-    								content: content,
-                                    attachment: attachment,
-    								type: type,
-    								access_level: access_level,
-                                    created_at: created_at
-        						}
-    						};
-    						fcm.send(message)
-      						.then(function(response){
-            					//console.log("Successfully sent with response: ", response);
-        					})
-    						.catch(function(err){
-            					//console.log("Something has gone wrong!");
-            					console.error(err);
-    						});
+							fcm.sendNote(user_id, provider, agenda_id, event_id, user.first_name, user.last_name, user.profile_picture, content, attachment, type, access_level, created_at);
     					}
     				});
                 }
             });
     },
     firebase_token: function(user_id, authenticated, firebase_token, res){
-        if(authenticated){
             query.getCentral().provider.query("update users set firebase_token=$1 where id=$2", [firebase_token, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
@@ -120,18 +87,6 @@ module.exports = {
                 res.json({message: "Token updated"});
                 console.log("POST /firebase_token : "+res.statusCode);
             });
-        }
-        else{
-            query.getCentral().provider.query("update anonymous_users set firebase_token=$1, updated_at=NOW() where id=$2", [firebase_token, user_id], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    return query.throwError(res);
-                }
-                res.statusCode=200;
-                res.json({message: "Token updated"});
-                console.log("POST /firebase_token : "+res.statusCode);
-            });
-        }
     },
     event: function(user_id, provider_id, agenda_id, event_name, start_time, end_time, details, res){
         if(query.getProviders()[provider_id]){
@@ -144,6 +99,7 @@ module.exports = {
                 res.statusCode=200;
                 res.json({message: "This event has been post"});
                 console.log("POST /event : "+res.statusCode);
+				fcm.updateClientsEvents("post", user_id, provider_id, agenda_id, event_name);
             });
         }
         else{
@@ -186,6 +142,7 @@ module.exports = {
                     res.statusCode=200;
                     res.json({message: "This agenda has been post"});
                     console.log("POST /agendas : "+res.statusCode);
+					fcm.updateClientsAgendas("post", user_id, provider_id, agenda_id, agenda_id);
                 });
             }
             else{
@@ -204,7 +161,7 @@ module.exports = {
             }
             else{
                 // look in our database if this Facebook account exists
-                query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) RETURNING id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
+                query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) ON CONFLICT(id) do UPDATE SET email=$2, token=$3, first_name=$4, last_name=$5, picture=$6 where facebook_accounts.id=$1 RETURNING facebook_accounts.id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
                     query.getCentral().done();
                     if(err) {
 						console.log(err);
@@ -275,8 +232,8 @@ module.exports = {
                                 var user_id = result.rows[0].id;
                                 query.getUserProfile(user_id, function(accounts, agendas){
                                     res.statusCode=201;
-                                    res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
-                                    console.log("POST /sign_up_facebook : "+res.statusCode);
+                                    res.json({access_token: createToken(user_id, 'email'), id: user_id, user_accounts: accounts, agendas: agendas});
+                                    console.log("POST /sign_up_email : "+res.statusCode);
                                 });
                             }
                             else{
@@ -304,7 +261,7 @@ module.exports = {
             }
             else{
                 // look in our database if this Facebook account exists
-                query.getCentral().provider.query("SELECT users.id, first_name, last_name, email from users join facebook_accounts on facebook_accounts.id=$1", [response.id], function(err, result){
+                query.getCentral().provider.query("SELECT users.id, first_name, last_name, email from users join facebook_accounts on users.facebook_account=$1", [response.id], function(err, result){
                     query.getCentral().done();
                     if(err) {
                         return query.throwError(res);
@@ -314,7 +271,7 @@ module.exports = {
                         query.getUserProfile(user_id, function(accounts, agendas){
                             res.statusCode=200;
                             res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
-                            console.log("POST /sign_up_facebook : "+res.statusCode);
+                            console.log("POST /sign_in_facebook : "+res.statusCode);
                         });
                     }
                     else{
@@ -339,8 +296,8 @@ module.exports = {
                         if(hash==user.password){
                             query.getUserProfile(user.id, function(accounts, agendas){
                                 res.statusCode=200;
-                                res.json({access_token: createToken(user.id, 'facebook'), id: user.id, user_accounts: accounts, agendas: agendas});
-                                console.log("POST /sign_up_facebook : "+res.statusCode);
+                                res.json({access_token: createToken(user.id, 'email'), id: user.id, user_accounts: accounts, agendas: agendas});
+                                console.log("POST /sign_in_email: "+res.statusCode);
                             });
                         }
                         else{

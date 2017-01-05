@@ -60,7 +60,7 @@ module.exports = {
             }
             else{
                 // look in our database if this Facebook account exists
-                query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) RETURNING id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
+                query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) ON CONFLICT(id) DO NOTHING RETURNING id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
                     query.getCentral().done();
                     if(err) {
                         res.statusCode=401;

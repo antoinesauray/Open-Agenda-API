@@ -226,9 +226,9 @@ module.exports = {
                 // get promises from all query.getProviders()
                 var promises=[];
                 result.rows.forEach(function(agenda){
-                    var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+                    var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, is_editable($3::bigint, $1::int), agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider, user_id]);
                     promises.push(sqlQuery);
-                    sqlQuery.then(function(){
+                    sqlQuery.then(function(err, result){
                         sqlQuery.getProviders()[agenda.provider].done();
                     });
                 });
