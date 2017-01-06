@@ -162,15 +162,16 @@ module.exports = {
     },
 
     agenda: function(provider, agenda_id, user_id, res){
-        console.log("GET /agendas");
+        console.log("GET /agenda");
         if(query.getProviders()[provider]){
-            query.getProviders()[provider].client.query("SELECT id, name, is_editable($3,$1) as editable, agenda_entity_id, image, agenda_type_id, more, active, $2::text as provider from agendas JOIN entities on entities.id=agenda_entity_id where id = $1", [entity, provider, user_id], function(err, result){
-                query.getProviders()[agenda_id, provider, user_id].done();
+            query.getProviders()[provider].client.query("SELECT agendas.id, agendas.name, is_editable($3,$1) as editable, agenda_entity_id, entities.name as entity, coalesce(agendas.image, entities.image) as image, agendas.agenda_type_id, agendas.more, active, $2::text as provider from agendas JOIN entities on entities.id=agenda_entity_id where agendas.id = $1", [agenda_id, provider, user_id], function(err, result){
+                query.getProviders()[provider].done();
                 if(err) {
+			console.log(err);
                     return query.throwError(res);
                 }
                 res.statusCode=200;
-                res.send(result.rows);
+                res.send(result.rows[0]);
             });
         }
         else{
@@ -179,24 +180,25 @@ module.exports = {
         }
 
     },
-
+	
     agendas: function(provider, entity, user_id, res){
-        console.log("GET /agendas");
-        if(query.getProviders()[provider]){
-            query.getProviders()[provider].client.query("SELECT id, name, is_editable($3,$2) as editable, agenda_entity_id, agenda_type_id, more, active, $2::text as provider, $3::text as entity from agendas where agenda_entity_id = $1", [entity, provider, user_id], function(err, result){
+                if(query.getProviders()[provider]){
+            query.getProviders()[provider].client.query("SELECT agendas.id, agendas.name, is_editable($3,agendas.id) as editable, coalesce(agendas.image,entities.image, providers.image) as image, agenda_entity_id, agendas.agenda_type_id, agendas.more, active, $2::text as provider, entities.name as entity from agendas JOIN entities on entities.id=agenda_entity_id JOIN providers on providers.provider=$2 where agenda_entity_id = $1", [entity, provider, user_id], function(err, result){
                 query.getProviders()[provider].done();
                 if(err) {
+			console.log(err);
                     return query.throwError(res);
                 }
                 res.statusCode=200;
                 res.send(result.rows);
+		console.log("GET /agendas : "+result.rows.length);
+
             });
         }
         else{
             res.statusCode=404;
             res.send();
         }
-
     },
 
     entities: function(provider, res){

@@ -33,8 +33,8 @@ router.use(function(req, res, next) {
 });
 
 router.get('/', function(req, res, next) {
-    if(req.query.entity && req.query.provider){
-        GET.agendas(req.query.provider, req.query.entity, res);
+    if(req.query.entity && req.query.provider && req.decoded.id){
+        GET.agendas(req.query.provider, req.query.entity, req.decoded.id, res);
     }
     else{
         res.status(403);

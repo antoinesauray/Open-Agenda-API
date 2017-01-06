@@ -25,6 +25,24 @@ var cert = {
 var createToken = function(user_id, auth_method){
     return jwt.sign({id: user_id, method: auth_method}, credentials.key, { algorithm: 'RS256'});
 }
+function agenda_status(provider, agenda_id, user_id, status_code, res){
+        if(query.getProviders()[provider]){
+            query.getProviders()[provider].client.query("SELECT agendas.id, agendas.name, is_editable($3,$1) as editable, agenda_entity_id, entities.name as entity, coalesce(agendas.image, entities.image) as image, agendas.agenda_type_id, agendas.more, active, $2::text as provider from agendas JOIN entities on entities.id=agenda_entity_id where agendas.id = $1", [agenda_id, provider, user_id], function(err, result){
+                query.getProviders()[provider].done();
+                if(err) {
+			console.log(err);
+                    return query.throwError(res);
+                }
+                res.statusCode=status_code;
+                res.send(result.rows[0]);
+            });
+        }
+        else{
+            res.statusCode=404;
+            res.send();
+        }
+
+}
 
 var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_email, user, created, res){
     query.getCentral().provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, updated_at=NOW() where facebook_id=$2 OR facebook_email=$3 RETURNING id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
@@ -149,11 +167,14 @@ module.exports = {
                 query.getCentral().provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
                     query.getCentral().done();
                     if(err) {
-                        return query.throwError(res);
+						console.log("POST /agendas : "+res.statusCode);
+		    			agenda_status(provider_id, agenda_id, user_id, 303, res);
                     }
-                    console.log("POST /agendas : "+res.statusCode);
-		    fcm.updateClientsAgendas("post", user_id, provider_id, agenda_id, agenda_id, phoneId);
-		    GET.agenda(provider_id, agenda_id, user_id, res);
+					else{
+                    	console.log("POST /agendas : "+res.statusCode);
+		    			fcm.updateClientsAgendas("post", user_id, provider_id, agenda_id, agenda_id, phoneId);
+		    			agenda_status(provider_id, agenda_id, user_id, 201, res);
+					}
                 });
             }
             else{

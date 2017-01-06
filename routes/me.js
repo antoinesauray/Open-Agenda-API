@@ -75,7 +75,7 @@ router.delete('/events/:id', function(req, res, next) {
 
 router.delete('/agendas/:id', function(req, res, next) {
     if(req.params.id && req.query.provider && req.query.phone_id){
-        DELETE.agenda(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, req.query.phone_id, res);
+        DELETE.agenda(req.query.provider, req.params.id, req.decoded.id, req.query.phone_id, res);
     }
     else{
         res.statusCode=400;
@@ -85,7 +85,7 @@ router.delete('/agendas/:id', function(req, res, next) {
 
 router.post('/agendas', function(req, res, next) {
     if(req.body.provider && req.body.agenda_id && req.body.phone_id){
-        POST.agendas(req.body.provider, req.body.agenda_id, req.decoded.id, req.decoded.authenticated, req.body.phone_id, res);
+        POST.agendas(req.body.provider, req.body.agenda_id, req.decoded.id, req.body.phone_id, res);
     }
     else{
         res.statusCode=400;
@@ -101,7 +101,7 @@ router.post('/events', function(req, res, next) {
             POST.detailed_event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, more, req.body.phone_id, res);
         }
         else{
-            POST.event(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, req.body.phone_id, res);
+            POST.event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, req.body.phone_id, res);
         }
     }
     else{
