@@ -20,7 +20,7 @@ var cert = {
 }
 
 module.exports = {
-    event: function (provider_id, agenda_id, event_id, user_id, authenticated, res) {
+    event: function (provider_id, agenda_id, event_id, user_id, phone_id, res) {
             if(query.getProviders()[provider_id]){
 				query.getProviders()[provider_id].client.query("SELECT * from user_rights where user_id=$1 AND agenda_id=$2", [user_id, agenda_id], function(err, result){
                 	if(err){return query.throwError(res);}
@@ -36,7 +36,7 @@ module.exports = {
 							var eventName=event_id;
 							if(result.rows.length!=0){
 								eventName=result.rows[0].name;
-								fcm.updateClientsEvents("delete", user_id, provider_id, result.rows[0].agenda_id, result.rows[0].name);
+								fcm.updateClientsEvents("delete", user_id, provider_id, result.rows[0].agenda_id, result.rows[0].name, phone_id);
 							}
 						});
 					}
@@ -53,7 +53,7 @@ module.exports = {
                 console.log("DELETE /event : "+res.statusCode);
             }
     },
-    agenda: function (provider_id, agenda_id, user_id, authenticated, res) {
+    agenda: function (provider_id, agenda_id, user_id, phone_id, res) {
             query.getCentral().provider.query("DELETE FROM user_agendas WHERE provider=$1 AND agenda_id=$2 AND user_id=$3", [provider_id, agenda_id, user_id], function(err, result){
                 query.getCentral().done();
                 if(err) {
@@ -64,7 +64,7 @@ module.exports = {
                 console.log("DELETE /agenda : "+res.statusCode);
 				var agendaName = agenda_id;
 				if(result.rows.length!=0){agendaName=result.rows[0].name;}
-				fcm.updateClientsAgendas("delete", user_id, provider_id, agenda_id, agendaName);
+				fcm.updateClientsAgendas("delete", user_id, provider_id, agenda_id, agendaName, phone_id);
             });
     }
 }

@@ -54,8 +54,8 @@ router.post('/firebase/', function(req, res, next) {
 });
 
 router.post('/events', function(req, res, next) {
-    if(req.body.provider && req.body.agenda_id && req.body.event_name && req.body.start_time && req.body.end_time && req.body.details){
-        POST.event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.event_name, req.body.start_time, req.body.end_time, req.body.details, res);
+    if(req.body.provider && req.body.agenda_id && req.body.event_name && req.body.start_time && req.body.end_time && req.body.details && req.body.phone_id){
+        POST.event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.event_name, req.body.start_time, req.body.end_time, req.body.details, req.body.phone_id, res);
     }
     else{
         res.statusCode=403;
@@ -64,8 +64,8 @@ router.post('/events', function(req, res, next) {
 });
 
 router.delete('/events/:id', function(req, res, next) {
-    if(req.params.id && req.query.provider){
-        DELETE.event(req.query.provider, req.query.agenda_id, req.params.id, req.decoded.id, req.decoded.authenticated, res);
+    if(req.params.id && req.query.provider&&req.query.phone_id){
+        DELETE.event(req.query.provider, req.query.agenda_id, req.params.id, req.decoded.id, req.query.phone_id, res);
     }
     else{
         res.statusCode=400;
@@ -74,8 +74,8 @@ router.delete('/events/:id', function(req, res, next) {
 });
 
 router.delete('/agendas/:id', function(req, res, next) {
-    if(req.params.id && req.query.provider){
-        DELETE.agenda(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, res);
+    if(req.params.id && req.query.provider && req.query.phone_id){
+        DELETE.agenda(req.query.provider, req.params.id, req.decoded.id, req.decoded.authenticated, req.query.phone_id, res);
     }
     else{
         res.statusCode=400;
@@ -84,8 +84,8 @@ router.delete('/agendas/:id', function(req, res, next) {
 });
 
 router.post('/agendas', function(req, res, next) {
-    if(req.body.provider && req.body.agenda_id){
-        POST.agendas(req.body.provider, req.body.agenda_id, req.decoded.id, req.decoded.authenticated, res);
+    if(req.body.provider && req.body.agenda_id && req.body.phone_id){
+        POST.agendas(req.body.provider, req.body.agenda_id, req.decoded.id, req.decoded.authenticated, req.body.phone_id, res);
     }
     else{
         res.statusCode=400;
@@ -94,14 +94,14 @@ router.post('/agendas', function(req, res, next) {
 });
 
 router.post('/events', function(req, res, next) {
-    if(req.body.agenda_id && req.body.start_time && req.body.end_time && req.body.name && req.body.event_type){
+    if(req.body.agenda_id && req.body.start_time && req.body.end_time && req.body.name && req.body.event_type && req.body.phone_id){
         var sqlQuery=null;
         var more = req.body.more;
         if(more){
-            POST.detailed_event(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, more, res);
+            POST.detailed_event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, more, req.body.phone_id, res);
         }
         else{
-            POST.event(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, res);
+            POST.event(req.decoded.id, req.decoded.authenticated, req.body.provider, req.body.agenda_id, req.body.name, req.body.start_time, req.body.end_time, req.body.phone_id, res);
         }
     }
     else{

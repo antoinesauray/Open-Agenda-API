@@ -55,7 +55,7 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
 }
 
 module.exports = {
-    notes: function(event_id, user_id, provider, agenda_id, content, type, attachment, access_level, res){
+    notes: function(event_id, user_id, provider, agenda_id, content, type, attachment, access_level, phoneId, res){
             query.getCentral().provider.query("insert into user_notes(content, type, attachment, provider, event_id, user_id, public, created_at, updated_at) values($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) returning created_at", [content, type, attachment, provider, event_id, user_id, access_level], function(err, result){
                 query.getCentral().done();
                 if(err) {
@@ -73,10 +73,10 @@ module.exports = {
              			query.getCentral().done();
     					if(result.rows.length!=0){
     						var user = result.rows[0];
-							fcm.sendNote(user_id, provider, agenda_id, event_id, user.first_name, user.last_name, user.profile_picture, content, attachment, type, access_level, created_at);
-    					}
-    				});
-                }
+						fcm.sendNote(user_id, agenda_id, provider, event_id, user.first_name, user.last_name, user.profile_picture, content, attachment, type, access_level, created_at, phoneId);
+					}
+    			});
+               }
             });
     },
     firebase_token: function(user_id, firebase_token, res){
@@ -90,7 +90,7 @@ module.exports = {
                 console.log("POST /firebase_token : "+res.statusCode);
             });
     },
-    event: function(user_id, provider_id, agenda_id, event_name, start_time, end_time, details, res){
+    event: function(user_id, provider_id, agenda_id, event_name, start_time, end_time, details, phoneId, res){
         if(query.getProviders()[provider_id]){
 			query.getProviders()[provider_id].client.query("SELECT * from user_rights where user_id=$1 AND agenda_id=$2", [user_id, agenda_id], function(err, result){
 				if(err){return query.throwError(res);}
@@ -103,8 +103,8 @@ module.exports = {
                 		}
 						if(result.rows.length!=0){
 							var returnedEvent = result.rows[0];
-                			console.log("POST /event : "+res.statusCode);
-							fcm.updateClientsEvents("post", user_id, provider_id, agenda_id, event_name);
+                					console.log("POST /event : "+res.statusCode);
+							fcm.updateClientsEvents("post", user_id, provider_id, agenda_id, event_name, phoneId);
 							GET.event(returnedEvent.id, provider_id, res);
 						}
 						else{
@@ -127,8 +127,7 @@ module.exports = {
             console.log("POST /event : "+res.statusCode);
         }
     },
-    detailed_event: function(user_id, authenticated, provider_id, agenda_id, name, start_time, end_time, more, res){
-        if(authenticated){
+    detailed_event: function(user_id, provider_id, agenda_id, name, start_time, end_time, more, res){
             if(query.getProviders()[provider]){
                 query.getProviders()[provider_id].client.query("INSERT INTO agenda_events(created_at, updated_at, name, agenda_id, start_time, end_time, event_type_id) VALUES(NOW(), NOW(), $1, $2, $3, $4, 'me') RETURNING *", [name, agenda_id, start_time, end_time], function(err, result){
                     query.getProviders()[provider_id].done();
@@ -144,24 +143,17 @@ module.exports = {
                 res.send();
                 console.log("POST /detailed_event : "+res.statusCode);
             }
-        }
-        else{
-            res.statusCode=403;
-            res.send();
-            console.log("POST /detailed_event : "+res.statusCode);
-        }
     },
-    agendas: function(provider_id, agenda_id, user_id, authenticated, res){
+    agendas: function(provider_id, agenda_id, user_id, phoneId, res){
             if(query.getProviders()[provider_id]){
                 query.getCentral().provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
                     query.getCentral().done();
                     if(err) {
                         return query.throwError(res);
                     }
-                    res.statusCode=200;
-                    res.json({message: "This agenda has been post"});
                     console.log("POST /agendas : "+res.statusCode);
-					fcm.updateClientsAgendas("post", user_id, provider_id, agenda_id, agenda_id);
+		    fcm.updateClientsAgendas("post", user_id, provider_id, agenda_id, agenda_id, phoneId);
+		    GET.agenda(provider_id, agenda_id, user_id, res);
                 });
             }
             else{
@@ -294,7 +286,7 @@ module.exports = {
                         });
                     }
                     else{
-						module.exports.signup_facebook(ip_addr, facebook_token, res);
+			module.exports.signup_facebook(ip_addr, facebook_token, res);
                     }
                 });
             }

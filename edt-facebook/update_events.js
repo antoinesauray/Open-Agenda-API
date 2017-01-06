@@ -24,7 +24,7 @@ pool.connect(function(err, client, done) {
     if(err) {
         return console.error('error fetching client from pool', err);
     }
-    client.query('SELECT edt_id, facebook_id, facebook_token, first_name, last_name from users', function(err, result) {
+    client.query('SELECT users.id, facebook_accounts.id, facebook_accounts.token, firebase_token from users join facebook_accounts on users.facebook_account=facebook_accounts.id', function(err, result) {
         done();
         console.log('Connected to '+database+' as '+user);
         if(err) {
@@ -32,8 +32,8 @@ pool.connect(function(err, client, done) {
         }
         console.log(result.rows.length+" users to fetch events");
         result.rows.forEach(function(user){
-            if(user.edt_id && user.facebook_id && user.facebook_token){
-                fbImport.queryFacebook(user.edt_id, user.facebook_id, user.facebook_token);
+            if(user.id&& user.facebook_id && user.facebook_token){
+                fbImport.queryFacebook(user.id, user.facebook_id, user.facebook_token, user.firebase_token);
             }
             else{
                 console.log("missing facebook information");

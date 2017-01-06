@@ -161,10 +161,29 @@ module.exports = {
         });
     },
 
-    agendas: function(provider, entity, res){
+    agenda: function(provider, agenda_id, user_id, res){
         console.log("GET /agendas");
         if(query.getProviders()[provider]){
-            query.getProviders()[provider].client.query("SELECT id, name, editable, agenda_entity_id, agenda_type_id, more, active, $2::text as provider, $3::text as entity from agendas where agenda_entity_id = $1", [entity, provider, entity], function(err, result){
+            query.getProviders()[provider].client.query("SELECT id, name, is_editable($3,$1) as editable, agenda_entity_id, image, agenda_type_id, more, active, $2::text as provider from agendas JOIN entities on entities.id=agenda_entity_id where id = $1", [entity, provider, user_id], function(err, result){
+                query.getProviders()[agenda_id, provider, user_id].done();
+                if(err) {
+                    return query.throwError(res);
+                }
+                res.statusCode=200;
+                res.send(result.rows);
+            });
+        }
+        else{
+            res.statusCode=404;
+            res.send();
+        }
+
+    },
+
+    agendas: function(provider, entity, user_id, res){
+        console.log("GET /agendas");
+        if(query.getProviders()[provider]){
+            query.getProviders()[provider].client.query("SELECT id, name, is_editable($3,$2) as editable, agenda_entity_id, agenda_type_id, more, active, $2::text as provider, $3::text as entity from agendas where agenda_entity_id = $1", [entity, provider, user_id], function(err, result){
                 query.getProviders()[provider].done();
                 if(err) {
                     return query.throwError(res);
@@ -249,9 +268,10 @@ module.exports = {
 
 	event: function(event_id, provider, res){
 		if(query.getProviders()[provider]){
-			query.getProviders()[provider].client.query("SELECT * FROM agenda_events where id=$1 LIMIT 1", [event_id], function(err, result){
+			query.getProviders()[provider].client.query("SELECT agenda_events.id, agenda_id, $2::text as provider, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.created_at, agenda_events.updated_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.id=$1 LIMIT 1", [event_id, provider], function(err, result){
 				query.getProviders()[provider].done();
             	if(err){
+			console.log(err);
                 	return query.throwError(res);
             	}
 				if(result.rows.length!=0){

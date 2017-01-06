@@ -34,7 +34,7 @@ pool.connect(function(err, client, done) {
         }
         console.log('Connected to '+database+' as '+user);
     });
-    exports.queryFacebook = function(userId, facebookId, facebookToken){
+    exports.queryFacebook = function(userId, facebookId, facebookToken, firebaseToken){
             FB.setAccessToken(facebookToken);
             FB.api("/"+facebookId+"/events?fields=rsvp_status,attending_count,category,declined_count,interested_count,is_canceled,maybe_count,is_viewer_admin,is_page_owned,noreply_count,place,ticket_uri,type,start_time,end_time,name,description,cover", function (response) {
                         if (response && !response.error) {

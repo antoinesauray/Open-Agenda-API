@@ -5,7 +5,7 @@ var fcm = new FCM(serverKey);
 module.exports = {
 
 
-	updateClientsAgendas: function(update_type, sender_id, provider, agenda_id, agenda_name){
+	updateClientsAgendas: function(update_type, sender_id, provider, agenda_id, agenda_name, phone_id){
 		var topic="/topics/"+provider+'_'+agenda_id;
 		var message = {
     				to: topic,
@@ -15,7 +15,8 @@ module.exports = {
 						update_type: update_type,
 						update_method: 'agendas',
 						sender_id: sender_id,
-						entity_name: agenda_name
+						entity_name: agenda_name,
+						phone_id: phone_id
     				}
         };
 
@@ -28,7 +29,7 @@ module.exports = {
 		});
 
 	},
-	updateClientsEvents: function(update_type, sender_id, provider, agenda_id, event_name){
+	updateClientsEvents: function(update_type, sender_id, provider, agenda_id, event_name, phone_id){
 		var topic="/topics/"+provider+'_'+agenda_id;
 		var message = {
     				to: topic,
@@ -38,7 +39,8 @@ module.exports = {
 						update_type: update_type,
 						update_method: 'events',
 						sender_id: sender_id,
-						entity_name: event_name
+						entity_name: event_name,
+						phone_id: phone_id
     				}
         };
 
@@ -52,7 +54,7 @@ module.exports = {
 
 	},
 
-	sendNote: function(user_id, provider, agenda_id, event_id, first_name, last_name, profile_picture, content, attachment_type, attachment, access_level, created_at){
+	sendNote: function(user_id, provider, agenda_id, event_id, first_name, last_name, profile_picture, content, attachment_type, attachment, access_level, created_at, phone_id){
 							var topic="/topics/"+provider+'_'+agenda_id;
                             //console.log("topic="+topic);
                             var message = { 
@@ -71,17 +73,17 @@ module.exports = {
                                     attachment: attachment,
                                     attachment_type: attachment_type,
                                     access_level: access_level,
-                                    created_at: created_at
+                                    created_at: created_at,
+				    phone_id: phone_id
                                 }
                             };
                             fcm.send(message)
                             .then(function(response){
-                                //console.log("Successfully sent with response: ", response);
                             })
                             .catch(function(err){
-                                //console.log("Something has gone wrong!");
                                 console.error(err);
                         	});
 	}
 }
 	
+
