@@ -51,6 +51,6 @@ router.get('/:provider_id/events/:event_id/notes/', function(req, res, next) {
 });
 
 router.post('/:provider_id/events/:event_id/notes/', function(req, res, next) {
-    POST.notes(req.params.event_id, req.decoded.id, req.params.provider_id, req.body.agenda_id, req.body.content, req.body.type, req.body.attachment, req.body.access_level, res);});
+    POST.notes(req.params.event_id, req.decoded.id, req.params.provider_id, req.body.agenda_id, req.body.content, req.body.type, req.body.attachment, req.body.access_level, req.body.phone_id, res);});
 
 module.exports = router;
