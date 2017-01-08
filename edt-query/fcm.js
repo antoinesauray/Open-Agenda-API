@@ -81,6 +81,10 @@ module.exports = {
                             var message = { 
                                 to: topic, // required fill with device token or topics
                                 collapse_key: provider+'_'+agenda_id,
+				notification: {
+					title: content,
+					body: first_name+" "+last_name
+				},
                                 data: {
                                     type: 'message',
                                     user_id: user_id,
