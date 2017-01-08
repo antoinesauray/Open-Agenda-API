@@ -54,7 +54,7 @@ pool.connect(function(err, client, done) {
             user: user, //env var: PGUSER
             database: provider.database, //env var: PGDATABASE
             password: password, //env var: PGPASSWORD
-            host: address, // Server hosting the postgres database
+            host: provider.host, // Server hosting the postgres database
             port: port, //env var: PGPORT
             max: max_pool, // max number of clients in the pool
             min: min_pool,
