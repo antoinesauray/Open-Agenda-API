@@ -24,7 +24,7 @@ pool.connect(function(err, client, done) {
     if(err) {
         return console.error('error fetching client from pool', err);
     }
-    client.query('SELECT users.id, facebook_accounts.id, facebook_accounts.token, firebase_token from users join facebook_accounts on users.facebook_account=facebook_accounts.id', function(err, result) {
+    client.query('SELECT users.id as id, facebook_accounts.id as facebook_id, facebook_accounts.token as facebook_token, firebase_token from users join facebook_accounts on users.facebook_account=facebook_accounts.id', function(err, result) {
         done();
         console.log('Connected to '+database+' as '+user);
         if(err) {
