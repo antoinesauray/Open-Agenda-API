@@ -43,6 +43,27 @@ module.exports = {
 						phone_id: phone_id
     				}
         };
+	//promise style
+        fcm.send(message)
+        .then(function(response){})
+        .catch(function(err){
+                        console.log("Something has gone wrong!");
+                        console.error(err);
+                });
+
+        },
+
+	updateSingleClientEvents: function(firebase_token){
+                var message = {
+                                to: firebase_token,
+                                data: {
+                                        type: 'update',
+                                        entity_type: 'event',
+                                        update_type: 'post',
+                                        update_method: 'events'
+                                }
+        };
+
 
         //promise style
         fcm.send(message)
