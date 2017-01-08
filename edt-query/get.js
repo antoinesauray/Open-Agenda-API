@@ -183,7 +183,7 @@ module.exports = {
 	
     agendas: function(provider, entity, user_id, res){
                 if(query.getProviders()[provider]){
-            query.getProviders()[provider].client.query("SELECT agendas.id, agendas.name, is_editable($3,agendas.id) as editable, coalesce(agendas.image,entities.image, providers.image) as image, agenda_entity_id, agendas.agenda_type_id, agendas.more, active, $2::text as provider, entities.name as entity from agendas JOIN entities on entities.id=agenda_entity_id JOIN providers on providers.provider=$2 where agenda_entity_id = $1", [entity, provider, user_id], function(err, result){
+            query.getProviders()[provider].client.query("SELECT agendas.id, agendas.name, is_editable($3,agendas.id) as editable, coalesce(agendas.image,entities.image) as image, agenda_entity_id, agendas.agenda_type_id, agendas.more, active, $2::text as provider, entities.name as entity from agendas JOIN entities on entities.id=agenda_entity_id where agenda_entity_id = $1", [entity, provider, user_id], function(err, result){
                 query.getProviders()[provider].done();
                 if(err) {
 			console.log(err);
