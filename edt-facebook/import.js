@@ -82,6 +82,12 @@ pool.connect(function(err, client, done) {
                 }
                 console.log("event.cover="+image);
                 var more = JSON.stringify({facebook_id: event.id, image: image, rsvp_status: event.rsvp_status, attending_count: event.attending_count, category:event.category, declined_count: event.declined_count, interested_count: event.interested_count, is_canceled: event.is_canceled, maybe_count: event.maybe_count, is_viewer_admin: event.is_viewer_admin, is_page_owned: event.is_page_owned, noreply_count: event.noreply_count, place: event.place, ticket_uri: event.ticket_uri, type: event.type, desc: event.description});
+                if(!event.end_time){
+                  var end_time = new Date(event.start_time);
+                  end_time.setHours(23);
+                  end_time.setMinutes(59);
+                  event.end_time=end_time;
+                }
                 var query = "INSERT INTO agenda_events (start_time, end_time, name, more, created_at, updated_at, event_type_id, agenda_id) VALUES($1, $2, $3, $4, NOW(), NOW(), 'facebook', $5) ON CONFLICT ((more->>'facebook_id'), agenda_id) DO UPDATE SET start_time=$1, end_time=$2, name=$3, more=$4, updated_at=NOW()";
                 console.log(query);
                 client.query(query, [event.start_time, event.end_time, event.name, more, agendaId], function(err, result) {
