@@ -180,7 +180,7 @@ module.exports = {
         }
 
     },
-	
+
     agendas: function(provider, entity, user_id, res){
                 if(query.getProviders()[provider]){
             query.getProviders()[provider].client.query("SELECT agendas.id, agendas.name, is_editable($3,agendas.id) as editable, coalesce(agendas.image,entities.image) as image, agenda_entity_id, agendas.agenda_type_id, agendas.more, active, $2::text as provider, entities.name as entity from agendas JOIN entities on entities.id=agenda_entity_id where agenda_entity_id = $1", [entity, provider, user_id], function(err, result){
@@ -252,7 +252,7 @@ module.exports = {
                     var sqlQuery = query.getProviders()[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, is_editable($3::bigint, $1::int) as editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider, user_id]);
                     promises.push(sqlQuery);
                     sqlQuery.then(function(err, result){
-                        sqlQuery.getProviders()[agenda.provider].done();
+                        query.getProviders()[agenda.provider].done();
                     });
                 });
                 Promise.all(promises).then(results => {
@@ -290,7 +290,7 @@ module.exports = {
 			res.statusCode=404;
 			res.json({});
 		}
-        
+
 	},
     events: function(user_id, start_date, end_date, res){
         query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
