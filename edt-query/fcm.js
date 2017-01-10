@@ -54,6 +54,7 @@ module.exports = {
         },
 
 	updateSingleClientEvents: function(firebase_token){
+								console.log("firebase_token="+firebase_token);
                 var message = {
                                 to: firebase_token,
                                 data: {
@@ -108,7 +109,26 @@ module.exports = {
                             .catch(function(err){
                                 console.error(err);
                         	});
-	}
+	},
+	testTopic: function(provider, agenda_id){
+              var topic="/topics/"+provider+'_'+agenda_id;
+							console.log("creating "+topic);
+                            //console.log("topic="+topic);
+                            var message = { 
+                                to: topic, // required fill with device token or topics
+                                collapse_key: provider+'_'+agenda_id,
+                                data: {
+                                    type: 'test',
+                                }
+                            };
+                            fcm.send(message)
+                            .then(function(response){
+                            })
+                            .catch(function(err){
+                                console.error(err);
+                          });
+  }
+
 }
 	
 
