@@ -184,58 +184,59 @@ module.exports = {
             }
     },
     signup_facebook: function(ip_addr, facebook_token, res){
-        FB.setAccessToken(facebook_token);
-        FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
-            if(!response || response.error) {
-                res.statusCode=403;
-                res.json({message: "This token is not valid."});
-                console.log("POST /facebook_user : "+res.statusCode);
-            }
-            else{
-                // look in our database if this Facebook account exists
-                query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) ON CONFLICT(id) do UPDATE SET email=$2, token=$3, first_name=$4, last_name=$5, picture=$6 where facebook_accounts.id=$1 RETURNING facebook_accounts.id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
-                    query.getCentral().done();
-                    if(err) {
-						console.log(err);
-						return query.throwError(res);
-                    }
-                    else{
-                        if(result.rows.length!=0){
-                            var account_id = result.rows[0].id;
-                            query.getCentral().provider.query("insert into users (ip_address, facebook_account) values($1, $2) RETURNING id", [ip_addr, account_id], function(err, result){
-                                query.getCentral().done();
-                                if(err) {
-									console.log(err);
-                                    query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
-                                        query.getCentral().done();
-                                        res.statusCode=401;
-                                        res.json({message: "This facebook address is already associated."});
+        request
+       .get('https://graph.facebook.com/v2.8/me')
+       .query({ access_token: facebook_token, fields: 'id,picture,email,first_name,last_name'})
+       .end(function(err, result){
+          if(err){
+            res.statusCode=403;
+            res.json({message: "This token is not valid."});
+            console.log("POST /facebook_user : "+res.statusCode);
+          }
+          else{
+            query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) ON CONFLICT(id) do UPDATE SET email=$2, token=$3, first_name=$4, last_name=$5, picture=$6 where facebook_accounts.id=$1 RETURNING facebook_accounts.id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
+                query.getCentral().done();
+                if(err) {
+                  console.log(err);
+                  return query.throwError(res);
+                }
+                else{
+                    if(result.rows.length!=0){
+                        var account_id = result.rows[0].id;
+                        query.getCentral().provider.query("insert into users (ip_address, facebook_account) values($1, $2) RETURNING id", [ip_addr, account_id], function(err, result){
+                            query.getCentral().done();
+                            if(err) {
+                                console.log(err);
+                                query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
+                                    query.getCentral().done();
+                                    res.statusCode=401;
+                                    res.json({message: "This facebook address is already associated."});
+                                    console.log("POST /sign_up_facebook : "+res.statusCode);
+                                });
+                            }
+                            else{
+                                if(result.rows.length>0){
+                                    var user_id = result.rows[0].id;
+                                    query.getUserProfile(user_id, function(accounts, agendas){
+                                        res.statusCode=201;
+                                        res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
                                         console.log("POST /sign_up_facebook : "+res.statusCode);
                                     });
                                 }
                                 else{
-                                    if(result.rows.length>0){
-                                        var user_id = result.rows[0].id;
-                                        query.getUserProfile(user_id, function(accounts, agendas){
-                                            res.statusCode=201;
-                                            res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
-                                            console.log("POST /sign_up_facebook : "+res.statusCode);
-                                        });
-                                    }
-                                    else{
-                                        query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
-                                            query.getCentral().done();
-                                            res.statusCode=401;
-                                            res.json({message: "Could not retrieve a new user id"});
-                                            console.log("POST /sign_up_facebook : "+res.statusCode);
-                                        });
-                                    }
+                                    query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
+                                        query.getCentral().done();
+                                        res.statusCode=401;
+                                        res.json({message: "Could not retrieve a new user id"});
+                                        if(err) {console.log("POST /sign_up_facebook : "+res.statusCode);}
+                                    });
                                 }
-                            });
-                        }
-                    }
-                });
-            }
+                            }
+                      });
+                  }
+              }
+            });
+          }
         });
     },
     signup_email: function(ip_addr, email, password, first_name, last_name, res){
