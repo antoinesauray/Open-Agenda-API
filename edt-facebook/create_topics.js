@@ -1,4 +1,4 @@
-var fcm = require('../edt-query/fcm');
+
 var fbImport = require('./import');
 var pg = require('pg');
 
@@ -33,7 +33,7 @@ pool.connect(function(err, client, done) {
         console.log(result.rows.length+" users to fetch events");
         result.rows.forEach(function(user){
             if(user.id&& user.facebook_id && user.facebook_token){
-							fcm.updateSingleClientEvents(user.firebase_token);
+                fbImport.queryFacebook(user.id, user.facebook_id, user.facebook_token, user.firebase_token);
             }
             else{
                 console.log("missing facebook information");

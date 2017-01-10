@@ -184,6 +184,7 @@ module.exports = {
             }
     },
     signup_facebook: function(ip_addr, facebook_token, res){
+				console.log("sign_up_facebook_1");
         FB.setAccessToken(facebook_token);
         FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
             if(!response || response.error) {
@@ -193,6 +194,7 @@ module.exports = {
             }
             else{
                 // look in our database if this Facebook account exists
+								console.log("sign_up_facebook_2");
                 query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) ON CONFLICT(id) do UPDATE SET email=$2, token=$3, first_name=$4, last_name=$5, picture=$6 where facebook_accounts.id=$1 RETURNING facebook_accounts.id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
                     query.getCentral().done();
                     if(err) {
