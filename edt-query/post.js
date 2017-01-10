@@ -87,11 +87,14 @@ module.exports = {
                 if(access_level=='true'){
                     // if public we broadcast live
                     var created_at = result.rows[0].created_at;
-                    query.getCentral().provider.query("select coalesce(facebook_accounts.first_name, email_accounts.first_name), coalesce(facebook_accounts.last_name, email_accounts.last_name), coalesce(facebook_accounts.picture, email_accounts.picture) from users LEFT JOIN facebook_accounts on facebook_accounts.id=facebook_account LEFT JOIN email_accounts on email_accounts.id=email_account  where users.id=$1 limit 1", [user_id], function(err, result){
+                    query.getCentral().provider.query("select first_name, last_name, picture from user_infos where id=$1 limit 1", [user_id], function(err, result){
              			query.getCentral().done();
+									if(err){console.log(err);}
+									else{
     					if(result.rows.length!=0){
     						var user = result.rows[0];
-						fcm.sendNote(user_id, agenda_id, provider, event_id, user.first_name, user.last_name, user.profile_picture, content, attachment, type, access_level, created_at, phoneId);
+								fcm.sendNote(user_id, provider, agenda_id, event_id, user.first_name, user.last_name, user.picture, content, attachment, type, access_level, created_at, phoneId);
+							}
 					}
     			});
                }

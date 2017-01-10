@@ -6,7 +6,7 @@ module.exports = {
 
 
 	updateClientsAgendas: function(update_type, sender_id, provider, agenda_id, agenda_name, phone_id){
-		var topic="/topics/"+provider+'_'+agenda_id;
+		var topic=provider+'_'+agenda_id;
 		var message = {
     				to: topic,
     				data: {
@@ -30,7 +30,7 @@ module.exports = {
 
 	},
 	updateClientsEvents: function(update_type, sender_id, provider, agenda_id, event_name, phone_id){
-		var topic="/topics/"+provider+'_'+agenda_id;
+		var topic=provider+'_'+agenda_id;
 		var message = {
     				to: topic,
     				data: {
@@ -77,8 +77,8 @@ module.exports = {
 	},
 
 	sendNote: function(user_id, provider, agenda_id, event_id, first_name, last_name, profile_picture, content, attachment_type, attachment, access_level, created_at, phone_id){
-							var topic="/topics/"+provider+'_'+agenda_id;
-                            //console.log("topic="+topic);
+							var topic=provider+'_'+agenda_id;
+							console.log(topic);
                             var message = { 
                                 to: topic, // required fill with device token or topics
                                 collapse_key: provider+'_'+agenda_id,
@@ -107,11 +107,11 @@ module.exports = {
                             .then(function(response){
                             })
                             .catch(function(err){
-                                console.error(err);
+                                console.error("error: "+err);
                         	});
 	},
 	testTopic: function(provider, agenda_id){
-              var topic="/topics/"+provider+'_'+agenda_id;
+              var topic=provider+'_'+agenda_id;
 							console.log("creating "+topic);
                             //console.log("topic="+topic);
                             var message = { 
