@@ -192,13 +192,15 @@ module.exports = {
         request
        .get('https://graph.facebook.com/v2.8/me')
        .query({ access_token: facebook_token, fields: 'id,picture,email,first_name,last_name'})
-       .end(function(err, response){
+       .set('Accept', 'application/json')
+       .end(function(err, result){
           if(err){
             res.statusCode=403;
             res.json({message: "This token is not valid."});
             console.log("POST /facebook_user : "+res.statusCode);
           }
           else{
+            var response = result.body;
             query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) ON CONFLICT(id) do UPDATE SET email=$2, token=$3, first_name=$4, last_name=$5, picture=$6 where facebook_accounts.id=$1 RETURNING facebook_accounts.id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
                 query.getCentral().done();
                 if(err) {
@@ -293,7 +295,8 @@ module.exports = {
       request
      .get('https://graph.facebook.com/v2.8/me')
      .query({ access_token: facebook_token, fields: 'id,picture,email,first_name,last_name'})
-     .end(function(err, response){
+     .set('Accept', 'application/json')
+     .end(function(err, result){
             if(err) {
                 res.statusCode=403;
                 res.json({message: "This token is not valid."});
@@ -301,6 +304,7 @@ module.exports = {
             }
             else{
                 // look in our database if this Facebook account exists
+                var response = result.body;
                 query.getCentral().provider.query("SELECT users.id, first_name, last_name, email from users join facebook_accounts on users.facebook_account=$1", [response.id], function(err, result){
                     query.getCentral().done();
                     if(err) {
