@@ -308,12 +308,16 @@ module.exports = {
                 var response = result.body;
                 query.getCentral().provider.query("SELECT users.id, first_name, last_name, email from users join facebook_accounts on users.facebook_account=$1", [response.id], function(err, result){
                     query.getCentral().done();
+                    console.log("done()-1");
+                    var response = result.body;
                     if(err) {
                         return query.throwError(res);
                     }
                     if(result.rows.length!=0){
+                        console.log("result.rows.length!=0");
                         var user_id = result.rows[0].id;
                         query.getUserProfile(user_id, function(accounts, agendas){
+                            console.log("getUserProfile");
                             res.statusCode=200;
                             res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
                             console.log("POST /sign_in_facebook : "+res.statusCode);
