@@ -2,6 +2,8 @@ var FB = require('fb');
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
 
+var request = require('superagent');
+
 var query=require('./query');
 var fcm=require('./fcm');
 var fbImport = require('../edt-facebook/import');
