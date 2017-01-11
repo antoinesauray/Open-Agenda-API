@@ -292,7 +292,6 @@ module.exports = {
      .get('https://graph.facebook.com/v2.8/me')
      .query({ access_token: facebook_token, fields: 'id,picture,email,first_name,last_name'})
      .end(function(err, response){
-        if(err){
             if(err) {
                 res.statusCode=403;
                 res.json({message: "This token is not valid."});
@@ -319,7 +318,6 @@ module.exports = {
                 });
             }
         });
-      }
     },
 
     authenticate_email: function(ip_addr, email, password, res){
