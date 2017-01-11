@@ -82,25 +82,23 @@ module.exports = {
                             var message = { 
                                 to: topic, // required fill with device token or topics
                                 collapse_key: provider+'_'+agenda_id,
-				notification: {
-					title: content,
-					body: first_name+" "+last_name
-				},
                                 data: {
-                                    type: 'message',
-                                    user_id: user_id,
-                                    provider: provider,
-                                    agenda_id: agenda_id,
-                                    event_id: event_id,
-                                    first_name: first_name,
-                                    last_name: last_name,
-                                    profile_picture: profile_picture,
-                                    content: content,
-                                    attachment: attachment,
-                                    attachment_type: attachment_type,
-                                    access_level: access_level,
-                                    created_at: created_at,
-				    phone_id: phone_id
+																	title: content,
+																	body: first_name+" "+last_name,
+                                  type: 'message',
+                                  user_id: user_id,
+                                  provider: provider,
+                                  agenda_id: agenda_id,
+                                  event_id: event_id,
+                                  first_name: first_name,
+                                  last_name: last_name,
+                                  profile_picture: profile_picture,
+                                  content: content,
+                                  attachment: attachment,
+                                  attachment_type: attachment_type,
+                                  access_level: access_level,
+                                  created_at: created_at,
+				    											phone_id: phone_id
                                 }
                             };
                             fcm.send(message)
