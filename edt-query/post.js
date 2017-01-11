@@ -288,9 +288,12 @@ module.exports = {
         });
     },
     authenticate_facebook: function(ip_addr, facebook_token, res){
-        FB.setAccessToken(facebook_token);
-        FB.api('/me', { fields: ['id', 'picture', 'email', 'first_name', 'last_name'] }, function (response) {
-            if(!response || response.error) {
+      request
+     .get('https://graph.facebook.com/v2.8/me')
+     .query({ access_token: facebook_token, fields: 'id,picture,email,first_name,last_name'})
+     .end(function(err, response){
+        if(err){
+            if(err) {
                 res.statusCode=403;
                 res.json({message: "This token is not valid."});
                 console.log("POST /facebook_user : "+res.statusCode);
@@ -311,11 +314,12 @@ module.exports = {
                         });
                     }
                     else{
-			module.exports.signup_facebook(ip_addr, facebook_token, res);
+			                   module.exports.signup_facebook(ip_addr, facebook_token, res);
                     }
                 });
             }
         });
+      }
     },
 
     authenticate_email: function(ip_addr, email, password, res){
