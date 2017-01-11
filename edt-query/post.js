@@ -304,6 +304,7 @@ module.exports = {
             }
             else{
                 // look in our database if this Facebook account exists
+                console.log("https://graph.facebook.com -> code="+result.statusCode);
                 var response = result.body;
                 query.getCentral().provider.query("SELECT users.id, first_name, last_name, email from users join facebook_accounts on users.facebook_account=$1", [response.id], function(err, result){
                     query.getCentral().done();
