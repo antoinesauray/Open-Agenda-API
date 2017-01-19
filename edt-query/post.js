@@ -306,7 +306,8 @@ module.exports = {
                 // look in our database if this Facebook account exists
                 console.log("https://graph.facebook.com -> code="+result.statusCode);
                 var response = result.body;
-                query.getCentral().provider.query("SELECT users.id, first_name, last_name, email from users join facebook_accounts on users.facebook_account=$1", [response.id], function(err, result){
+                var facebook_id=response.id;
+                query.getCentral().provider.query("SELECT users.id, first_name, last_name, email from users join facebook_accounts on users.facebook_account=$1", [facebook_id], function(err, result){
                     query.getCentral().done();
                     console.log("done()-1");
                     var response = result.body;
@@ -316,7 +317,7 @@ module.exports = {
                     if(result.rows.length!=0){
                         console.log("result.rows.length!=0");
                         var user_id = result.rows[0].id;
-                        query.getCentral().provider.query("UPDATE facebook_accounts set token=$2 where id=$1", [response.id, facebook_token], function(err, result){
+                        query.getCentral().provider.query("UPDATE facebook_accounts set token=$2 where id=$1", [facebook_id, facebook_token], function(err, result){
                             query.getCentral().done();
                             query.getUserProfile(user_id, function(accounts, agendas){
                                 console.log("getUserProfile");
