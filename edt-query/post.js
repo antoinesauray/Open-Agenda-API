@@ -316,12 +316,16 @@ module.exports = {
                     if(result.rows.length!=0){
                         console.log("result.rows.length!=0");
                         var user_id = result.rows[0].id;
-                        query.getUserProfile(user_id, function(accounts, agendas){
-                            console.log("getUserProfile");
-                            res.statusCode=200;
-                            res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
-                            console.log("POST /sign_in_facebook : "+res.statusCode);
+                        query.getCentral().provider.query("UPDATE facebook_accounts set token=$2 where id=$1", [response.id, facebook_token], function(err, result){
+                            query.getCentral().done();
+                            query.getUserProfile(user_id, function(accounts, agendas){
+                                console.log("getUserProfile");
+                                res.statusCode=200;
+                                res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
+                                console.log("POST /sign_in_facebook : "+res.statusCode);
+                            });
                         });
+
                     }
                     else{
 			                   module.exports.signup_facebook(ip_addr, facebook_token, res);
