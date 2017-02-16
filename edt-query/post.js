@@ -6,7 +6,8 @@ var request = require('superagent');
 
 var query=require('./query');
 var fcm=require('./fcm');
-var fbImport = require('../edt-facebook/import');
+var fb_attending = require('../edt-facebook/import_attending');
+var fb_maybe = require('../edt-facebook/import_maybe');
 
 var GET = require('./get');
 
@@ -55,7 +56,9 @@ var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_emai
         if(result.rows.length!=0){
             var token = jwt.sign({id: result.rows[0].id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
             if(created){
-                fbImport.queryFacebook(result.rows[0].id, facebook_id, facebook_token);
+                fb_attending.queryFacebook(result.rows[0].id, facebook_id, facebook_token);
+		fb_maybe.queryFacebook(result.rows[0].id, facebook_id, facebook_token);
+
                 res.statusCode=201;
                 res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
                 console.log("POST /facebook_user : "+res.statusCode);
@@ -139,7 +142,8 @@ module.exports = {
 				}
 				else{
 					// no permission
-					res.statusCode=403;
+					console.log("POST /event: 400 (missing rights)");
+					res.statusCode=400;
 					res.json({message: "You do not have the rights for this operation"});
 				}
 			});

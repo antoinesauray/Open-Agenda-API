@@ -6,7 +6,6 @@ var jwt = require('jsonwebtoken');
 var FB = require('fb');
 var fs = require('fs');
 var crypto = require('crypto');
-var fbImport = require('../edt-facebook/import');
 
 cfg = require('../config');
 

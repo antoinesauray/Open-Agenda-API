@@ -29,6 +29,7 @@ router.use(function(req, res, next) {
       }
     });
   } else {
+	console.log("no token");
     return res.status(403).send({
         success: false,
         message: 'No token provided.'
@@ -58,6 +59,8 @@ router.post('/events', function(req, res, next) {
         POST.event(req.decoded.id, req.body.provider, req.body.agenda_id, req.body.event_name, req.body.start_time, req.body.end_time, req.body.details, req.body.phone_id, res);
     }
     else{
+	console.log("provider: "+req.body.provider);
+	console.log("POST /events : 400 (missing parameters)");
         res.statusCode=403;
         res.json({message: "Missing parameters."});
     }

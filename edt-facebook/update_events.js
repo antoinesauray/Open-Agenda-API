@@ -1,10 +1,11 @@
+if(process.argv.length>2){
+	console.log(process.argv[2]);
+	var fbImport = require(__dirname+"/"+process.argv[2]);
+	var pg = require('pg');
 
-var fbImport = require('./import');
-var pg = require('pg');
-
-var database = cfg.database;
-var port = cfg.port;
-var max_pool = cfg.max_pool;
+	var database = cfg.database;
+	var port = cfg.port;
+	var max_pool = cfg.max_pool;
 var idle_timeout = cfg.idle_timeout;
 var user   = cfg.user.facebook.name;
 var password   = cfg.user.facebook.password;
@@ -24,7 +25,7 @@ pool.connect(function(err, client, done) {
     if(err) {
         return console.error('error fetching client from pool', err);
     }
-    client.query('SELECT users.id as id, facebook_accounts.id as facebook_id, facebook_accounts.token as facebook_token, firebase_token from users join facebook_accounts on users.facebook_account=facebook_accounts.id', function(err, result) {
+    client.query("select users.id as id, facebook_accounts.id as facebook_id, facebook_accounts.token as facebook_token, firebase_token from users join facebook_accounts on users.facebook_account=facebook_accounts.id where users.id in(select user_id from user_agendas inner join agendas on agendas.agenda_type_id='facebook' and agenda_id=id where user_agendas.updated_at::time < now()::time and user_agendas.updated_at::time > now()::time - interval ' 15 minutes');", function(err, result) {
         done();
         console.log('Connected to '+database+' as '+user);
         if(err) {
@@ -41,3 +42,7 @@ pool.connect(function(err, client, done) {
         });
     });
 });
+}
+else{
+	console.log("Missing parameter");
+}

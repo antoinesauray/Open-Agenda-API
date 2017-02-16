@@ -34,9 +34,9 @@ pool.connect(function(err, client, done) {
         }
         console.log('Connected to '+database+' as '+user);
     });
-    exports.queryFacebook = function(userId, facebookId, facebookToken, firebaseToken){
+    exports.queryFacebook = function(userId, facebookId, facebookToken, firebaseToken
             FB.setAccessToken(facebookToken);
-            FB.api("/"+facebookId+"/events?fields=rsvp_status,attending_count,category,declined_count,interested_count,is_canceled,maybe_count,is_viewer_admin,is_page_owned,noreply_count,place,ticket_uri,type,start_time,end_time,name,description,cover", function (response) {
+            FB.api("/"+facebookId+"/events?type=attending&fields=rsvp_status,attending_count,category,declined_count,interested_count,is_canceled,maybe_count,is_viewer_admin,is_page_owned,noreply_count,place,ticket_uri,type,start_time,end_time,name,description,cover", function (response) {
                         if (response && !response.error) {
                             client.query("select * from agendas where agenda_type_id='facebook' and id IN(select agenda_id from user_agendas where user_id=$1)", [userId], function(err, result) {
                                 done();
@@ -88,7 +88,7 @@ pool.connect(function(err, client, done) {
                   end_time.setMinutes(59);
                   event.end_time=end_time;
                 }
-                var query = "INSERT INTO agenda_events (start_time, end_time, name, more, created_at, updated_at, event_type_id, agenda_id) VALUES($1, $2, $3, $4, NOW(), NOW(), 'facebook', $5) ON CONFLICT ((more->>'facebook_id'), agenda_id) DO UPDATE SET start_time=$1, end_time=$2, name=$3, more=$4, updated_at=NOW()";
+                var query = "INSERT INTO agenda_events (start_time, end_time, name, more, created_at, updated_at, event_type_id, agenda_id, rsvp_status) VALUES($1, $2, $3, $4, NOW(), NOW(), 'facebook', $5, 'attending') ON CONFLICT ((more->>'facebook_id'), agenda_id) DO UPDATE SET start_time=$1, end_time=$2, name=$3, more=$4, updated_at=NOW(), rsvp_status='attending'";
                 console.log(query);
                 client.query(query, [event.start_time, event.end_time, event.name, more, agendaId], function(err, result) {
                     done();
