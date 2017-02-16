@@ -1,6 +1,6 @@
 'use scrict';
 cfg = require('../config');
-
+var prepare = require('./prepare');
 var database = cfg.database;
 var port = cfg.port;
 var max_pool = cfg.max_pool;
@@ -34,20 +34,23 @@ pool.connect(function(err, client, done) {
         }
         console.log('Connected to '+database+' as '+user);
     });
-    exports.queryFacebook = function(userId, facebookId, facebookToken, firebaseToken){
+    exports.queryFacebook = function(userId, facebookId, facebookToken, firebaseToken, next){
             FB.setAccessToken(facebookToken);
             FB.api("/"+facebookId+"/events?type=declined&fields=rsvp_status,attending_count,category,declined_count,interested_count,is_canceled,maybe_count,is_viewer_admin,is_page_owned,noreply_count,place,ticket_uri,type,start_time,end_time,name,description,cover", function (response) {
                         if (response && !response.error) {
                             client.query("select * from agendas where agenda_type_id='facebook' and id IN(select agenda_id from user_agendas where user_id=$1)", [userId], function(err, result) {
                                 done();
                                 if(err) {
-                                    return console.error('error running query', err);
+                                    next();
                                 }
-                                insertEvents(result.rows[0].id, response.data);
+                                else{
+                                    insertEvents(result.rows[0].id, response.data, next);
+                                }
                             });
                         }
                         else{
                             console.log(response.error);
+                            next();
                         }
                 }
             );
@@ -73,30 +76,36 @@ pool.connect(function(err, client, done) {
             });
     }
 
-    function insertEvents(agendaId, data){
+    function insertEvents(agendaId, data, next){
+        var array = [];
         data.forEach(function(event){
-                /* handle the result */
-                var image="";
-                if(event.cover&&event.cover.source){
-                    image = event.cover.source;
+            var image="";
+            if(event.cover&&event.cover.source){
+                image = event.cover.source;
+            }
+            var more = JSON.stringify({facebook_id: event.id, image: image, rsvp_status: event.rsvp_status, attending_count: event.attending_count, category:event.category, declined_count: event.declined_count, interested_count: event.interested_count, is_canceled: event.is_canceled, maybe_count: event.maybe_count, is_viewer_admin: event.is_viewer_admin, is_page_owned: event.is_page_owned, noreply_count: event.noreply_count, place: event.place, ticket_uri: event.ticket_uri, type: event.type, desc: event.description});
+            if(!event.end_time){
+              var end_time = new Date(event.start_time);
+              end_time.setHours(23);
+              end_time.setMinutes(59);
+              event.end_time=end_time;
+            }
+            array.push( { 'start_time': event.start_time, 'end_time': event.end_time, 'name': event.name, 'more': more, 'agenda_id': agendaId, 'created_at': 'now()', 'updated_at': 'now()', 'rsvp_status': 'declined', 'event_type_id': 'facebook'} );
+        });
+        if(array.length!=0){
+            var statement = prepare.buildStatement('INSERT INTO agenda_events (start_time, end_time, name, more, agenda_id, created_at, updated_at, rsvp_status, event_type_id) VALUES', array);
+            client.query(statement, function(err, result) {
+                done();
+                if(err) {
+                    return console.error('error running query', err);
                 }
-                console.log("event.cover="+image);
-                var more = JSON.stringify({facebook_id: event.id, image: image, rsvp_status: event.rsvp_status, attending_count: event.attending_count, category:event.category, declined_count: event.declined_count, interested_count: event.interested_count, is_canceled: event.is_canceled, maybe_count: event.maybe_count, is_viewer_admin: event.is_viewer_admin, is_page_owned: event.is_page_owned, noreply_count: event.noreply_count, place: event.place, ticket_uri: event.ticket_uri, type: event.type, desc: event.description});
-                if(!event.end_time){
-                  var end_time = new Date(event.start_time);
-                  end_time.setHours(23);
-                  end_time.setMinutes(59);
-                  event.end_time=end_time;
+                else{
+                    console.log("success");
                 }
-                var query = "INSERT INTO agenda_events (start_time, end_time, name, more, created_at, updated_at, event_type_id, agenda_id, rsvp_status) VALUES($1, $2, $3, $4, NOW(), NOW(), 'facebook', $5, 'declined') ON CONFLICT ((more->>'facebook_id'), agenda_id) DO UPDATE SET start_time=$1, end_time=$2, name=$3, more=$4, updated_at=NOW(), rsvp_status='declined'";
-                console.log(query);
-                client.query(query, [event.start_time, event.end_time, event.name, more, agendaId], function(err, result) {
-                    done();
-                    if(err) {
-                        return console.error('error running query', err);
-                    }
-                });
+                next();
             });
+        }
+        next();
     }
 
 });
