@@ -41,7 +41,7 @@ pool.connect(function(err, client, done) {
     }
     var statement="select users.id as id, facebook_accounts.id as facebook_id, facebook_accounts.token as facebook_token, firebase_token from users join facebook_accounts on users.facebook_account=facebook_accounts.id where users.id in(select user_id from user_agendas inner join agendas on agendas.agenda_type_id='facebook' and agenda_id=id where user_agendas.updated_at::time < now()::time and user_agendas.updated_at::time > now()::time - interval ' 15 minutes');"
     var statement_test="select users.id as id, facebook_accounts.id as facebook_id, facebook_accounts.token as facebook_token, firebase_token from users join facebook_accounts on users.facebook_account=facebook_accounts.id";
-    client.query(statement_test, function(err, result) {
+    client.query(statement, function(err, result) {
         done();
         console.log('Connected to '+database+' as '+user);
         if(err) {
