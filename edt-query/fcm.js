@@ -1,5 +1,5 @@
 var FCM = require('fcm-push');
-var serverKey = process.env.FIREBASE_KEY;
+var serverKey = process.env.FIREBASEKEY;
 var fcm = new FCM(serverKey);
 
 module.exports = {

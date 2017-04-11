@@ -6,26 +6,48 @@ var jwt = require('jsonwebtoken');
 var FB = require('fb');
 var fs = require('fs');
 var crypto = require('crypto');
+var log = require('color-logs')(true, true, __filename);
 
 cfg = require('../config');
 
-var database = cfg.database;
-var user   = cfg.user.limited.name;
-var password   = cfg.user.limited.password;
-var address   = cfg.address;
-var port = cfg.port;
 var max_pool = cfg.max_pool;
 var min_pool = cfg.min_pool;
 var timeout = cfg.timeout;
 
-
-
+log.debug("user:" + process.env.USER)
+log.debug("password: ***********")
+log.debug("host:" + process.env.HOST)
+log.debug("port:" + process.env.PORT)
+log.debug("database:" + process.env.DATABASE)
+var Connection = require('tedious').Connection;
 var config = {
-  user: user, //env var: PGUSER
-  database: database, //env var: PGDATABASE
-  password: password, //env var: PGPASSWORD
-  host: address, // Server hosting the postgres database
-  port: port, //env var: PGPORT
+    userName: process.env.USER,
+    password: process.env.PASSWORD,
+    server: process.env.HOST,
+    port: process.env.PORT,
+    // If you are on Microsoft Azure, you need this:  
+    options: { encrypt: true, database: process.env.DATABASE }
+};
+var connection = new Connection(config);
+connection.on('connect', function (err) {
+    log.info("Connected to database");
+    setup();
+});  
+
+var Request = require('tedious').Request;
+var TYPES = require('tedious').TYPES;
+
+function setup() {
+    log.info("setup");
+}
+
+/*
+var config = {
+  user: process.env.USER, //env var: PGUSER
+  database: process.env.DATABASE, //env var: PGDATABASE
+  password: process.env.PASSWORD, //env var: PGPASSWORD
+  host: process.env.HOST, // Server hosting the postgres database
+  port: process.env.HOST, //env var: PGPORT
   max: max_pool, // max number of clients in the pool
   min: min_pool,
   idleTimeoutMillis: timeout, // how long a client is allowed to remain idle before being closed
@@ -82,6 +104,7 @@ pool.connect(function(err, client, done) {
 pool.on('error', function (err, client) {
   console.error('idle client error', err.message, err.stack)
 });
+*/
 
 var getAgendas = function(user_id, callback){
     central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){

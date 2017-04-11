@@ -20,11 +20,6 @@ var register = require('./routes/register');
 
 var app = express();
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-
-//app.use(logger('dev'));
-
 var logDirectory = path.join(__dirname, 'log')
 // ensure log directory exists
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)

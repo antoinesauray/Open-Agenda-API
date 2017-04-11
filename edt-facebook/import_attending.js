@@ -1,7 +1,9 @@
 'use scrict';
 cfg = require('../config');
+
+/*
 var prepare = require('./prepare');
-var database = cfg.database;
+var database = process.env.DATABASE;
 var port = cfg.port;
 var max_pool = cfg.max_pool;
 var idle_timeout = cfg.idle_timeout;
@@ -109,3 +111,4 @@ pool.connect(function(err, client, done) {
     }
 
 });
+*/

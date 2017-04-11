@@ -1,5 +1,6 @@
 'use scrict';
 cfg = require('../config');
+/*
 var prepare = require('./prepare');
 var database = cfg.database;
 var port = cfg.port;
@@ -17,7 +18,6 @@ pool = new pg.Pool({
   user: user, //env var: PGUSER
   database: database, //env var: PGDATABASE
   password: password, //env var: PGPASSWORD
-  host: address, // Server hosting the postgres database
   port: port, //env var: PGPORT
   max: max_pool, // max number of clients in the pool
   idleTimeoutMillis: idle_timeout, // how long a client is allowed to remain idle before being closed
@@ -109,3 +109,5 @@ pool.connect(function(err, client, done) {
     }
 
 });
+
+*/

@@ -1,5 +1,6 @@
 'use scrict';
 cfg = require('../config');
+/*
 var prepare = require('./prepare');
 var database = cfg.database;
 var port = cfg.port;
@@ -131,7 +132,9 @@ pool.connect(function(err, client, done) {
                     }
                 });
             });
-            */
+            //
     }
 
 });
+
+*/

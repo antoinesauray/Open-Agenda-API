@@ -1,0 +1,5 @@
+{
+    "max_pool": 100,
+    "min_pool": 2,
+    "timeout": 100000
+}
