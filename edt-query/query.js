@@ -23,8 +23,8 @@ var Connection = require('tedious').Connection;
 var config = {
     userName: process.env.USER,
     password: process.env.PASSWORD,
-    server: process.env.HOST,
-    port: process.env.PORT,
+    server: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     // If you are on Microsoft Azure, you need this:  
     options: { encrypt: true, database: process.env.DATABASE }
 };

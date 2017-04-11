@@ -64,5 +64,7 @@ app.use(function(err, req, res, next) {
   res.status(500).send('Something broke!');
 });
 
+app.listen(process.env.PORT || 8060);
+
 
 module.exports = app;
