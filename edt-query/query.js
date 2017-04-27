@@ -14,10 +14,13 @@ var max_pool = cfg.max_pool;
 var min_pool = cfg.min_pool;
 var timeout = cfg.timeout;
 
+var providers = [];
+var central={};
+
 log.debug("user:" + process.env.USER)
 log.debug("password: ***********")
-log.debug("host:" + process.env.HOST)
-log.debug("port:" + process.env.PORT)
+log.debug("host:" + process.env.DB_HOST)
+log.debug("port:" + process.env.DB_PORT)
 log.debug("database:" + process.env.DATABASE)
 var Connection = require('tedious').Connection;
 var config = {
@@ -31,108 +34,82 @@ var config = {
 var connection = new Connection(config);
 connection.on('connect', function (err) {
     log.info("Connected to database");
+    central.provider = connection;
     setup();
 });  
 
 var Request = require('tedious').Request;
 var TYPES = require('tedious').TYPES;
 
+
+
 function setup() {
-    log.info("setup");
+    log.debug("setup");
+    request = new Request("SELECT [Id], [Name], [Host], [Schema], [Database], [Port], [UserName], [Password] from Providers;", function(err) {  
+        if (err) {  
+            log.error(err);}  
+        });
+        request.on('row', function(columns) {  
+            var id = columns[0].value;
+            var name = columns[1].value;
+            var host = columns[2].value;
+            var schema = columns[3].value;
+            var database = columns[4].value;
+            var port = columns[5].value;
+            var username = columns[6].value;
+            var password = columns[7].value;
+
+            var config = {
+                userName: username,
+                password: password,
+                server: host,
+                port: port,
+                // If you are on Microsoft Azure, you need this:  
+                options: { encrypt: true, database: database, schema: schema }
+            };
+            var connectionProvider = new Connection(config);
+            connectionProvider.on('connect', function (err) {
+                log.info("Connected to provider ",name);
+                providers[id] = connectionProvider;
+            });  
+        });  
+        connection.execSql(request);
 }
 
-/*
-var config = {
-  user: process.env.USER, //env var: PGUSER
-  database: process.env.DATABASE, //env var: PGDATABASE
-  password: process.env.PASSWORD, //env var: PGPASSWORD
-  host: process.env.HOST, // Server hosting the postgres database
-  port: process.env.HOST, //env var: PGPORT
-  max: max_pool, // max number of clients in the pool
-  min: min_pool,
-  idleTimeoutMillis: timeout, // how long a client is allowed to remain idle before being closed
-};
-
-var pool = new pg.Pool(config);
-var providers = [];
-var central=null;
-
-pool.connect(function(err, client, done) {
-  if(err) {
-    return console.error('error fetching client from pool', err);
-  }
-  client.query('SELECT * from providers',function(err, result) {
-      done();
-
-      if(err) {
-          return console.error('error running query', err);
-      }
-      central = {"provider": client, "done": done};
-      // here we declare the routes used in the central provider
-      console.log(result.rows.length+' Providers available');
-      result.rows.forEach(function(provider){
-          var providerPool = new pg.Pool({
-            user: user, //env var: PGUSER
-            database: provider.database, //env var: PGDATABASE
-            password: password, //env var: PGPASSWORD
-            host: provider.host, // Server hosting the postgres database
-            port: port, //env var: PGPORT
-            max: max_pool, // max number of clients in the pool
-            min: min_pool,
-            idleTimeoutMillis: timeout, // how long a client is allowed to remain idle before being closed
-        });
-        providerPool.connect(function(err, client, done) {
-              if(err) {
-                  return console.error('error fetching client from pool', err);
-              }
-              providers[provider.provider] = {"client": client, "done": done};
-              client.query('SELECT $1::int AS number', ['1'], function(err, result) {
-                  done();
-                  if(err) {
-                      return console.error('error running query', err);
-                  }
-                  console.log('Connected to provider '+provider.provider+" as "+user);
-              });
-          });
-          providerPool.on('error', function (err, client) {
-            console.error('idle client error', err.message, err.stack)
-          });
-      });
-  });
-});
-
-pool.on('error', function (err, client) {
-  console.error('idle client error', err.message, err.stack)
-});
-*/
-
 var getAgendas = function(user_id, callback){
-    central.provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
-        central.done();
-        if(err) {
-            console.log(err);
-            return query.throwError(res);
-        }
-        else{
+     request = new Request("SELECT [AgendaId], [Provider], [CreatedAt] FROM UserAgendas where UserId=@UserId", function(err) {  
+        if (err) {  
+            log.error(err);
+        }  
+    });
+        request.addParameter('UserId', TYPES.Int, user_id);
+        var userAgendas = [];
+        request.on('row', function(columns) { 
+            var agendaId = columns[0].value;
+            var provider = columns[1].value; 
+            var createdAt = columns[2].value; 
+            userAgendas = userAgendas.push({agenda_id: agendaId, provider: provider, created_at: createdAt});
+        });
+         request.on('done', function(rowCount, more) {  
             var promises=[];
-            result.rows.forEach(function(agenda){
-                var sqlQuery = providers[agenda.provider].client.query("select agendas.id, $2::text as provider, agenda_types.image as image, entities.name as entity, agendas.name, agendas.editable, agendas.agenda_entity_id, agendas.agenda_type_id, agendas.more, agendas.active from agendas LEFT JOIN agenda_types ON agendas.agenda_type_id=agenda_types.id LEFT JOIN entities ON agendas.agenda_entity_id=entities.id where agendas.id =$1", [agenda.agenda_id, agenda.provider]);
+            userAgendas.forEach(function(agenda){
+                sqlQuery = connection.request()
+                    .input('AgendaId', sql.Int, agenda.agenda_id)
+                    .input('Provider', sql.NVarChar, agenda.provider)
+                    .query("select Agendas.Id, @Provider as provider, AgendaTypes.Image as image, Entities.Name as entity, Agendas.Name, Agendas.EntityId, Agendas.AgendaType, Agendas.Properties, Agendas.Active from Agendas LEFT JOIN AgendaTypes ON Agendas.AgendaType=AgendaTypes.Id LEFT JOIN Entities ON Agendas.EntityId=Entities.Id where Agendas.Id =@AgendaId");
                 promises.push(sqlQuery);
-                sqlQuery.then(function(){
-                    providers[agenda.provider].done();
-                });
             });
             Promise.all(promises).then(results => {
                 var agendas=[];
-                results.forEach(function(result){
-                    result.rows.forEach(function(agenda){
+                results.forEach(function(rows){
+                    rows.forEach(function(agenda){
                         agendas.push(agenda);
                     });
                 });
                 callback(agendas);
             });
-        }
-    });
+        });
+        central.provider.execSql(request);
 }
 
 var getAccounts= function(user_id, callback){
