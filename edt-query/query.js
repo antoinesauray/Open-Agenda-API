@@ -2,6 +2,7 @@
 
 var when = require('when');
 var pg = require('pg');
+const sql = require('mssql');
 var jwt = require('jsonwebtoken');
 var FB = require('fb');
 var fs = require('fs');
@@ -24,56 +25,66 @@ log.debug("port:" + process.env.DB_PORT)
 log.debug("database:" + process.env.DATABASE)
 var Connection = require('tedious').Connection;
 var config = {
-    userName: process.env.USER,
+    user: process.env.USER,
     password: process.env.PASSWORD,
     server: process.env.DB_HOST,
+    database: process.env.DATABASE,
     port: process.env.DB_PORT,
     // If you are on Microsoft Azure, you need this:  
-    options: { encrypt: true, database: process.env.DATABASE }
+    options: { encrypt: true }
 };
-var connection = new Connection(config);
-connection.on('connect', function (err) {
-    log.info("Connected to database");
-    central.provider = connection;
-    setup();
-});  
 
-var Request = require('tedious').Request;
-var TYPES = require('tedious').TYPES;
-
-
+const pool = new sql.ConnectionPool(config);
+pool.connect(function(err){
+    if(!err){
+        log.info("Connected to database");
+        central.pool = pool;
+        setup();
+    }
+    else{
+        log.error("Connection to database failed", err);
+    }
+});
 
 function setup() {
     log.debug("setup");
-    request = new Request("SELECT [Id], [Name], [Host], [Schema], [Database], [Port], [UserName], [Password] from Providers;", function(err) {  
-        if (err) {  
-            log.error(err);}  
-        });
-        request.on('row', function(columns) {  
-            var id = columns[0].value;
-            var name = columns[1].value;
-            var host = columns[2].value;
-            var schema = columns[3].value;
-            var database = columns[4].value;
-            var port = columns[5].value;
-            var username = columns[6].value;
-            var password = columns[7].value;
+    central.pool.request()
+    .query('SELECT [Id], [Name], [Host], [Schema], [Database], [Port], [UserName], [Password] from Providers;').then(result => {
+        result["recordset"].forEach(function(provider){
+                var id = provider["Id"];
+                var name = provider["Name"];
+                var host = provider["Host"];
+                var schema = provider["Schema"];
+                var database = provider["Database"];
+                var port = provider["Port"];
+                var user = provider["UserName"];
+                var password = provider["Password"];
 
-            var config = {
-                userName: username,
-                password: password,
-                server: host,
-                port: port,
-                // If you are on Microsoft Azure, you need this:  
-                options: { encrypt: true, database: database, schema: schema }
-            };
-            var connectionProvider = new Connection(config);
-            connectionProvider.on('connect', function (err) {
-                log.info("Connected to provider ",name);
-                providers[id] = connectionProvider;
-            });  
-        });  
-        connection.execSql(request);
+                var config = {
+                    userName: user,
+                    password: password,
+                    server: host,
+                    port: port,
+                    database: database, 
+                    schema: schema,
+                    // If you are on Microsoft Azure, you need this:  
+                    options: { encrypt: true }
+                };
+                const poolProvider = new sql.ConnectionPool(config);
+                poolProvider.connect(function(err){
+                    if(!err){
+                        log.info("Connected to provider ",name);
+                        providers[id] = pool;
+                    }
+                    else{
+                        log.error("Connection to provider failed", name);
+                    }
+                });
+            });
+        }).catch(err => {
+            // ... error checks 
+            if(err){log.error(err);}
+        })
 }
 
 var getAgendas = function(user_id, callback){

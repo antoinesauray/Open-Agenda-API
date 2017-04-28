@@ -17,6 +17,7 @@
     "jade": "~1.11.0",
     "jsonwebtoken": "^7.1.9",
     "morgan": "^1.7.0",
+    "mssql": "^4.0.4",
     "pg": "^6.1.0",
     "pg-escape": "^0.2.0",
     "pg-hstore": "^2.3.2",
