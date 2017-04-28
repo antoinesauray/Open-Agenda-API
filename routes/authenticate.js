@@ -15,7 +15,7 @@ router.get('/', function(req, res, next) {
   res.status(200).json({message: "Hello"});
 });
 
-router.post('/facebook', function(req, res, next) {
+router.post('/', function(req, res, next) {
     var access_token = req.body.access_token;
     if(access_token){
         var header=req.headers['x-forwarded-for'];

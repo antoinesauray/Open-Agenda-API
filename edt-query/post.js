@@ -2,7 +2,9 @@ var FB = require('fb');
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
 
-var request = require('superagent');
+var superagent = require('superagent');
+var log = require('color-logs')(true, true, __filename);
+var sql = require("mssql");
 
 var query=require('./query');
 var fcm=require('./fcm');
@@ -10,6 +12,9 @@ var fb_attending = require('../edt-facebook/import_attending');
 var fb_maybe = require('../edt-facebook/import_maybe');
 
 var GET = require('./get');
+
+var Request = require('tedious').Request,
+	TYPES = require('tedious').TYPES;
 
 var credentials=query.credentials;
 var cert=query.cert;
@@ -192,111 +197,28 @@ module.exports = {
                 console.log("POST /agendas : "+res.statusCode);
             }
     },
-    signup_facebook: function(ip_addr, facebook_token, res){
-        request
-       .get('https://graph.facebook.com/v2.8/me')
-       .query({ access_token: facebook_token, fields: 'id,picture,email,first_name,last_name'})
-       .set('Accept', 'application/json')
-       .end(function(err, result){
-          if(err){
-            res.statusCode=403;
-            res.json({message: "This token is not valid."});
-            console.log("POST /facebook_user : "+res.statusCode);
-          }
-          else{
-            var response = result.body;
-            query.getCentral().provider.query("insert into facebook_accounts(id, email, token, first_name, last_name, picture) values($1, $2, $3, $4, $5, $6) ON CONFLICT(id) do UPDATE SET email=$2, token=$3, first_name=$4, last_name=$5, picture=$6 where facebook_accounts.id=$1 RETURNING facebook_accounts.id", [response.id, response.email, facebook_token, response.first_name, response.last_name, response.picture.data.url], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                  console.log(err);
-                  return query.throwError(res);
-                }
-                else{
-                    if(result.rows.length!=0){
-                        var account_id = result.rows[0].id;
-                        query.getCentral().provider.query("insert into users (ip_address, facebook_account) values($1, $2) RETURNING id", [ip_addr, account_id], function(err, result){
-                            query.getCentral().done();
-                            if(err) {
-                                console.log(err);
-                                query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
-                                    query.getCentral().done();
-                                    res.statusCode=401;
-                                    res.json({message: "This facebook address is already associated."});
-                                    console.log("POST /sign_up_facebook : "+res.statusCode);
-                                });
-                            }
-                            else{
-                                if(result.rows.length>0){
-                                    var user_id = result.rows[0].id;
-                                    query.getUserProfile(user_id, function(accounts, agendas){
-                                        res.statusCode=201;
-                                        res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
-                                        console.log("POST /sign_up_facebook : "+res.statusCode);
-                                    });
-                                }
-                                else{
-                                    query.getCentral().provider.query("DELETE FROM facebook_accounts where id=$1", [account_id], function(err, result){
-                                        query.getCentral().done();
-                                        res.statusCode=401;
-                                        res.json({message: "Could not retrieve a new user id"});
-                                        if(err) {console.log("POST /sign_up_facebook : "+res.statusCode);}
-                                    });
-                                }
-                            }
-                      });
-                  }
-              }
-            });
-          }
-        });
-    },
-    signup_email: function(ip_addr, email, password, first_name, last_name, res){
-        hash(password, function(hashedPassword, salt){
-            query.getCentral().provider.query("INSERT INTO email_accounts (email, password, salt, first_name, last_name, created_at, updated_at) VALUES($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING id", [email, hashedPassword, salt, first_name, last_name], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    res.statusCode=401;
-                    res.json({message: "This email address already exists."});
-                    console.log("POST /sign_up_email_user : "+res.statusCode);
-                }
-                else{
-                    var account_id=result.rows[0].id;
-                    query.getCentral().provider.query("insert into users (ip_address, email_account) values($1, $2) RETURNING id", [ip_addr, account_id], function(err, result){
-                        query.getCentral().done();
-                        if(err) {
-                            query.getCentral().provider.query("DELETE FROM email_accounts where id=$1", [account_id], function(err, result){
-                                query.getCentral().done();
-                                res.statusCode=401;
-                                res.json({message: "This email address already exists."});
-                                console.log("POST /sign_up_email_user : "+res.statusCode);
-                            });
-                        }
-                        else{
-                            if(result.rows.length>0){
-                                var user_id = result.rows[0].id;
-                                query.getUserProfile(user_id, function(accounts, agendas){
-                                    res.statusCode=201;
-                                    res.json({access_token: createToken(user_id, 'email'), id: user_id, user_accounts: accounts, agendas: agendas});
-                                    console.log("POST /sign_up_email : "+res.statusCode);
-                                });
-                            }
-                            else{
-                                query.getCentral().provider.query("DELETE FROM email_accounts where id=$1", [account_id], function(err, result){
-                                    query.getCentral().done();
-                                    res.statusCode=401;
-                                    res.json({message: "Could not retrieve a new user id"});
-                                    console.log("POST /sign_up_email_user : "+res.statusCode);
-                                });
-                            }
-
-                        }
-                    });
+    signup_facebook: function(ip_addr, facebook_token, response, res){
+            var request = query.getCentral().pool.request();
+            request.input('FirstName', sql.NVarChar, response.first_name)
+            .input('LastName', sql.NVarChar, response.last_name)
+            .input('Picture', sql.VarChar, response.picture.data.url)
+            .input('FacebookId', sql.VarChar, response.id)
+            .input('FacebookEmail', sql.VarChar, response.email)
+            .input('FacebookToken', sql.VarChar, facebook_token)
+            .query("INSERT INTO Users(FirstName, LastName, Picture, FacebookId, FacebookEmail, FacebookToken) VALUES(@FirstName, @LastName, @Picture, @FacebookId, @FacebookEmail, @FacebookToken); SELECT SCOPE_IDENTITY() AS Id").then(result => {
+                var user_id = result["recordset"][0]["Id"];
+                log.debug("POST /authenticate code 201");
+                res.statusCode=201;
+                res.json({access_token: createToken(user_id, 'facebook'), id: user_id});
+            }).catch(function(err){
+                if(err){
+                    log.error(err);
+                    res.statusCode=500;
                 }
             });
-        });
     },
     authenticate_facebook: function(ip_addr, facebook_token, res){
-      request
+      superagent
      .get('https://graph.facebook.com/v2.8/me')
      .query({ access_token: facebook_token, fields: 'id,picture,email,first_name,last_name'})
      .set('Accept', 'application/json')
@@ -304,71 +226,43 @@ module.exports = {
             if(err) {
                 res.statusCode=403;
                 res.json({message: "This token is not valid."});
-                console.log("POST /facebook_user : "+res.statusCode);
+                log.debug("POST /facebook_user : ",res.statusCode);
             }
             else{
                 // look in our database if this Facebook account exists
-                console.log("https://graph.facebook.com -> code="+result.statusCode);
+                log.debug("https://graph.facebook.com code",result.statusCode);
                 var response = result.body;
                 var facebook_id=response.id;
-                query.getCentral().provider.query("SELECT users.id, first_name, last_name, email from users join facebook_accounts on users.facebook_account=$1", [facebook_id], function(err, result){
-                    query.getCentral().done();
-                    console.log("done()-1");
-                    var response = result.body;
-                    if(err) {
-                        return query.throwError(res);
-                    }
-                    if(result.rows.length!=0){
-                        console.log("result.rows.length!=0");
-                        var user_id = result.rows[0].id;
-                        query.getCentral().provider.query("UPDATE facebook_accounts set token=$2 where id=$1", [facebook_id, facebook_token], function(err, result){
-                            query.getCentral().done();
-                            query.getUserProfile(user_id, function(accounts, agendas){
-                                console.log("getUserProfile");
-                                res.statusCode=200;
-                                res.json({access_token: createToken(user_id, 'facebook'), id: user_id, user_accounts: accounts, agendas: agendas});
-                                console.log("POST /sign_in_facebook : "+res.statusCode);
-                            });
-                        });
 
+                query.getCentral().pool.request()
+                    .input('FacebookId', sql.VarChar, facebook_id)
+                    .query('SELECT TOP 1 Id, FirstName, LastName, FacebookEmail from Users where FacebookId=@FacebookId;').then(result => {
+                    var recordset = result["recordset"];
+                    if(recordset.length!=0){
+                            var columns = recordset[0];
+                            var user_id = columns["Id"];
+                            var first_name = columns["FirstName"];
+                            var last_name = columns["LastName"];
+                            query.getCentral().pool.request()
+                            .input('Token', sql.VarChar, facebook_token)
+                            .input('Id', sql.VarChar, facebook_id)
+                            .query("UPDATE Users set FacebookToken=@Token where FacebookId=@Id;").then(result => {
+                                    log.debug("generating token for user ",user_id, first_name, last_name);
+                                    res.statusCode=200;
+                                    res.json({access_token: createToken(user_id, 'facebook'), id: user_id});
+                                    log.debug("POST /sign_in_facebook : ", res.statusCode);
+                            }).catch(err => {
+                                if(err){
+                                    log.error(err);
+                                    res.statusCode=500;
+                                    res.json({});
+                                }
+                            });
                     }
                     else{
-			                   module.exports.signup_facebook(ip_addr, facebook_token, res);
+                        module.exports.signup_facebook(ip_addr, facebook_token, response, res);
                     }
                 });
-            }
-        });
-    },
-
-    authenticate_email: function(ip_addr, email, password, res){
-        query.getCentral().provider.query("SELECT users.id, first_name, last_name, email, password, salt from users join email_accounts on email_account=email_accounts.id where email=$1", [email], function(err, result){
-            query.getCentral().done();
-            if(err) {
-                console.log(err);
-                return query.throwError(res);
-            }
-            if(result.rows.length!=0){
-                // we check if the password is ok
-                    var user = result.rows[0];
-                    query.hashWithSalt(password, user.salt, function(hash){
-                        if(hash==user.password){
-                            query.getUserProfile(user.id, function(accounts, agendas){
-                                res.statusCode=200;
-                                res.json({access_token: createToken(user.id, 'email'), id: user.id, user_accounts: accounts, agendas: agendas});
-                                console.log("POST /sign_in_email: "+res.statusCode);
-                            });
-                        }
-                        else{
-                            res.statusCode=403;
-                            res.json({message: "The user and password combinaison does not match any user"});
-                            console.log("POST /sign_in_email_user : "+res.statusCode);
-                        }
-                    });
-            }
-            else{
-                    res.statusCode=403;
-                    res.json({message: "The user and password combinaison does not match any user"});
-                    console.log("POST /sign_in_email_user : "+res.statusCode);
             }
         });
     },
