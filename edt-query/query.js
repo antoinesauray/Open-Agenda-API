@@ -84,24 +84,22 @@ function setup() {
         }).catch(err => {
             // ... error checks 
             if(err){log.error(err);}
-        })
+        });
 }
 
 var getAgendas = function(user_id, callback){
-     request = new Request("SELECT [AgendaId], [Provider], [CreatedAt] FROM UserAgendas where UserId=@UserId", function(err) {  
-        if (err) {  
-            log.error(err);
-        }  
-    });
-        request.addParameter('UserId', TYPES.Int, user_id);
-        var userAgendas = [];
-        request.on('row', function(columns) { 
-            var agendaId = columns[0].value;
+     central.pool.request()
+     .input('UserId', sql.Int, user_id)
+    .query('SELECT [Id], [Name], [Host], [Schema], [Database], [Port], [UserName], [Password] from Providers;').then(result => {
+        log.debug(result);
+        //        var userAgendas = [];
+        /*
+        var agendaId = columns[0].value;
             var provider = columns[1].value; 
             var createdAt = columns[2].value; 
             userAgendas = userAgendas.push({agenda_id: agendaId, provider: provider, created_at: createdAt});
-        });
-         request.on('done', function(rowCount, more) {  
+            */
+            /*
             var promises=[];
             userAgendas.forEach(function(agenda){
                 sqlQuery = connection.request()
@@ -119,8 +117,8 @@ var getAgendas = function(user_id, callback){
                 });
                 callback(agendas);
             });
-        });
-        central.provider.execSql(request);
+            */
+    });
 }
 
 var getAccounts= function(user_id, callback){

@@ -2,6 +2,8 @@
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
 
+const sql = require('mssql');
+var log = require('color-logs')(true, true, __filename);
 var query=require('./query');
 
 var credentials=query.credentials;
@@ -63,8 +65,22 @@ var completeWithUserProfile = function(user_id, agendas, res){
 }
 
 module.exports = {
-    accounts: function(user_id, res){
-        query.getCentral().provider.query("SELECT 'email'::text as account, email, first_name, last_name, picture from email_accounts where id in (select email_account from users where id=$1) UNION SELECT 'facebook'::text as account, email, first_name, last_name, picture from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
+    account: function(user_id, res){
+        query.getCentral().pool.request()
+        .input('Id', sql.Int, user_id)
+        .query("SELECT FirstName, LastName, Picture, FacebookEmail, FacebookId from Users where id=@Id").then(result => {
+            log.debug(result);
+        }).catch(err => {
+            // ... error checks 
+            if(err){
+                log.error(err);
+                res.statusCode=500;
+                res.send();
+            }
+        });
+        
+        /*
+        , [user_id], function(err, result){
             query.getCentral().done();
             if(err) {
                 console.log(err);
@@ -82,47 +98,7 @@ module.exports = {
                 console.log("GET /accounts : "+res.statusCode);
             }
         });
-    },
-    accounts_email: function(user_id, res){
-        console.log("user_id="+user_id);
-        query.getCentral().provider.query("SELECT email, first_name, last_name, picture from email_accounts where id in (select email_account from users where id=$1)", [user_id], function(err, result){
-            query.getCentral().done();
-            if(err) {
-                console.log(err);
-                return query.throwError(res);
-            }
-            else{
-                if(result.rows.length==0){
-                    res.statusCode=404;
-                    res.send(result.rows);
-                }
-                else{
-                    res.statusCode=200;
-                    res.send(result.rows);
-                }
-                console.log("GET me/accounts/email : "+res.statusCode);
-            }
-        });
-    },
-    accounts_facebook: function(user_id, res){
-        query.getCentral().provider.query("SELECT email, first_name, last_name, picture from facebook_accounts where id in (select facebook_account from users where id=$1)", [user_id], function(err, result){
-            query.getCentral().done();
-            if(err) {
-                console.log(err);
-                return query.throwError(res);
-            }
-            else{
-                if(result.rows.length==0){
-                    res.statusCode=404;
-                    res.send(result.rows);
-                }
-                else{
-                    res.statusCode=200;
-                    res.send(result.rows);
-                }
-                console.log("GET me/accounts/facebook : "+res.statusCode);
-            }
-        });
+        */
     },
     notes: function(event_id, user_id, provider, res){
         if(query.getProviders()[provider]){
@@ -218,6 +194,24 @@ module.exports = {
             res.send();
         }
     },
+    user: function(userId, res){
+        query.getCentral().pool.request()
+        .input('Id', sql.Int, userId)
+        .query("SELECT TOP 1 FirstName, LastName, Picture, FacebookEmail from Users where Id=@Id").then(result => {
+            log.debug(result);
+            var recordset = result["recordset"][0];
+            res.status=200;
+            res.json({first_name: recordset["FirstName"], last_name: recordset["LastName"], picture: recordset["Picture"], email: recordset["FacebookEmail"]})
+        }).catch(err => {
+            // ... error checks 
+            if(err){
+                log.error(err);
+                res.statusCode=500;
+                res.send();
+            }
+        });
+    },
+    /*
     user: function(user_id, res){
 		process.stdout.write("GET /user : ");
         query.getCentral().provider.query("SELECT * FROM user_agendas where user_id=$1", [user_id], function(err, result){
@@ -267,7 +261,7 @@ module.exports = {
             }
         });
     },
-
+*/
 	event: function(event_id, provider, res){
 		if(query.getProviders()[provider]){
 			query.getProviders()[provider].client.query("SELECT agenda_events.id, agenda_id, $2::text as provider, start_time, end_time, name, event_type_id, color_light, color_dark, agenda_events.created_at, agenda_events.updated_at, more FROM agenda_events LEFT JOIN event_types ON event_types.id=agenda_events.event_type_id where agenda_events.id=$1 LIMIT 1", [event_id, provider], function(err, result){
