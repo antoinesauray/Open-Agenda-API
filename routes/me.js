@@ -10,18 +10,19 @@ var DELETE = require('../edt-query/delete');
 var PUT = require('../edt-query/put');
 
 var cert = {
-    pub: fs.readFileSync('cert.pem')
+    pub: fs.readFileSync('newpubkey.pem')
 }
 
 router.use(function(req, res, next) {
-  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+  var token = req.headers['x-access-token'] || req.body.token || req.query.token;
   // decode token
   if (token) {
     // verifies secret and checks exp
     jwt.verify(token, cert.pub, {algorithm: 'RS256'}, function(err, decoded) {
       if (err) {
+          console.log(err);
         res.statusCode=401;
-        return res.json({ success: false, message: 'Failed to authenticate token.' });
+        return res.json({ success: false, message: 'Failed to authenticate token' });
       } else {
         // if everything is good, save to request for use in other routes
         req.decoded = decoded;
