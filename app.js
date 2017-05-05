@@ -18,6 +18,8 @@ var me = require('./routes/me');
 var authenticate = require('./routes/authenticate');
 var register = require('./routes/register');
 
+var query = require('./edt-query/query');
+var log = require('color-logs')(true, true, __filename);
 var app = express();
 
 var logDirectory = path.join(__dirname, 'log')
@@ -64,7 +66,16 @@ app.use(function(err, req, res, next) {
   res.status(500).send('Something broke!');
 });
 
-app.listen(process.env.PORT || 8060);
+query.init(function(err){
+  if(!err){
+    var port = process.env.PORT || 8060;
+    log.info("listen on port",port);
+    app.listen(port);
+  }
+  else{
+    log.error("error:",err)
+  }
+});
 
 
 module.exports = app;

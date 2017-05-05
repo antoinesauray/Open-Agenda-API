@@ -33,97 +33,77 @@ var cert = {
 var createToken = function(user_id, auth_method){
     return jwt.sign({id: user_id, method: auth_method}, credentials.key, { algorithm: 'RS256'});
 }
-function agenda_status(provider, agenda_id, user_id, status_code, res){
+function agenda_status(provider, agendaId, userId, statusCode, res){
         if(query.getProviders()[provider]){
-            query.getProviders()[provider].client.query("SELECT agendas.id, agendas.name, is_editable($3,$1) as editable, agenda_entity_id, entities.name as entity, coalesce(agendas.image, entities.image) as image, agendas.agenda_type_id, agendas.more, active, $2::text as provider from agendas JOIN entities on entities.id=agenda_entity_id where agendas.id = $1", [agenda_id, provider, user_id], function(err, result){
-                query.getProviders()[provider].done();
-                if(err) {
-			console.log(err);
-                    return query.throwError(res);
+            query.getProviders()[provider].pool.request()
+            .input('AgendaId', sql.Int, agendaId)
+            .input('Provider', sql.Int, provider)
+            .query("SELECT Id, Name, EntityId, Entities.Name as EntityName, COALESCE(Agendas.Image, Entities.Image), Agendas.Type, Agendas.Properties, Active, '@Provider' as Provider from Agendas JOIN Entities on Entities.Id=EntityId WHERE Agendas.Id = @AgendaId").then(result => {
+                res.statusCode=200;
+                res.json(result["recordset"]);
+            }).catch(err => {
+                if(err){
+                    log.error(err);
+                    res.statusCode=500;
+                    res.send();
                 }
-                res.statusCode=status_code;
-                res.send(result.rows[0]);
             });
         }
         else{
             res.statusCode=404;
             res.send();
         }
-
-}
-
-var next_facebook = function(ip_addr, facebook_token, facebook_id, facebook_email, user, created, res){
-    query.getCentral().provider.query("UPDATE users set facebook_token=$1, ip_addr=$4, updated_at=NOW() where facebook_id=$2 OR facebook_email=$3 RETURNING id", [facebook_token,  facebook_id, facebook_email, ip_addr], function(err, result){
-        query.getCentral().done();
-        if(err) {
-            return query.throwError(res);
-        }
-        if(result.rows.length!=0){
-            var token = jwt.sign({id: result.rows[0].id, authenticated: true}, credentials.key, { algorithm: 'RS256'});
-            if(created){
-                fb_attending.queryFacebook(result.rows[0].id, facebook_id, facebook_token);
-		fb_maybe.queryFacebook(result.rows[0].id, facebook_id, facebook_token);
-
-                res.statusCode=201;
-                res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
-                console.log("POST /facebook_user : "+res.statusCode);
-            }
-            else{
-                res.statusCode=200;
-                res.json({token: token, first_name: user.first_name, last_name: user.last_name, facebook_email: user.facebook_email});
-                console.log("POST /facebook_user : "+res.statusCode);
-            }
-        }
-        else{
-            res.statusCode=401;
-            res.send("An error occured when trying to create a new user");
-            console.log("POST /facebook_user : "+res.statusCode);
-        }
-    });
 }
 
 module.exports = {
-    notes: function(event_id, user_id, provider, agenda_id, content, type, attachment, access_level, phoneId, res){
-            query.getCentral().provider.query("insert into user_notes(content, type, attachment, provider, event_id, user_id, public, created_at, updated_at) values($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) returning created_at", [content, type, attachment, provider, event_id, user_id, access_level], function(err, result){
-                query.getCentral().done();
-                if(err) {
-					console.log(err);
-                    return query.throwError(res);
-                }
-                res.statusCode=200;
-                res.json({message: "Note inserted"});
-                console.log("POST /providers/"+provider+"/events/"+event_id+"/notes : "+res.statusCode+" (content="+content+")");
-
-                if(access_level=='true'){
-                    // if public we broadcast live
-                    var created_at = result.rows[0].created_at;
-                    query.getCentral().provider.query("select first_name, last_name, picture from user_infos where id=$1 limit 1", [user_id], function(err, result){
-             			query.getCentral().done();
-									if(err){console.log(err);}
-									else{
-    					if(result.rows.length!=0){
-    						var user = result.rows[0];
-								fcm.sendNote(user_id, provider, agenda_id, event_id, user.first_name, user.last_name, user.picture, content, attachment, type, access_level, created_at, phoneId);
-							}
-					}
-    			});
-               }
-            });
+    notes: function(eventId, userId, provider, agendaId, content, type, attachment, accessLevel, phoneId, res){
+        query.getCentral().pool.request()
+        .input('EventId', sql.Int, eventId)
+        .input('UserId', sql.Int, userId)
+        .input('Provider', sql.Int, provider)
+        .input('AgendaId', sql.Int, agendaId)
+        .input('Content', sql.NVarChar, content)
+        .input('Type', sql.VarChar, type)
+        .input('Attachment', sql.VarChar, attachment)
+        .input('Public', sql.VarChar, accessLevel)
+        .query("INSERT INTO UserNotes(Content, Type, Attachment, Provider, EventId, UserId, Public) values(@Content, @Type, @Attachment, @Provider, @EventId, @UserId, @Public);  SELECT SCOPE_IDENTITY() UNION SELECT FirstName, LastName, Image WHERE Users.Id=@UserId;").then(result => {
+            res.statusCode=201;
+            var recordset = result["recordset"];
+            res.json(recordset);
+            if(access_level=='true'){
+                var user = recordset[0];
+                var firstName = user["FirstName"];
+                var lastName = user["LastName"];
+                var picture = user["Picture"];
+                var createdAt = user["CreatedAt"];
+                fcm.sendNote(userId, provider, agendaId, eventId, firstName, lastName, picture, content, attachment, type, accessLevel, createdAt, phoneId);
+            }
+        }).catch(err => {
+            if(err){
+                log.error(err);
+                res.statusCode=500;
+                res.send();
+            }
+        });
     },
-    firebase_token: function(user_id, firebase_token, res){
-            query.getCentral().provider.query("update users set firebase_token=$1 where id=$2", [firebase_token, user_id], function(err, result){
-                query.getCentral().done();
-                if(err) {
-                    return query.throwError(res);
-                }
-                res.statusCode=200;
-                res.json({message: "Token updated"});
-                console.log("POST /firebase_token : "+res.statusCode);
-            });
+    firebase_token: function(userId, firebaseToken, res){
+        query.getCentral().pool.request()
+        .input('FirebaseToken', sql.VarChar, firebaseToken)
+        .input('UserId', sql.Int, userId)
+        .query("UPDATE Users SET FireBaseToken=@FirebaseToken WHERE Id=@UserId; SELECT SCOPE_IDENTITY();").then(result => {
+            res.statusCode=200;
+            res.json(result["recordset"]);
+        }).catch(err => {
+            if(err){
+                log.error(err);
+                res.statusCode=500;
+                res.send();
+            }
+        });
     },
-    event: function(user_id, provider_id, agenda_id, event_name, start_time, end_time, details, phoneId, res){
+    event: function(user_id, providerId, agenda_id, event_name, start_time, end_time, details, phoneId, res){
         if(query.getProviders()[provider_id]){
-			query.getProviders()[provider_id].client.query("SELECT * from user_rights where user_id=$1 AND agenda_id=$2", [user_id, agenda_id], function(err, result){
+			query.getProviders()[providerId].client.query("SELECT * from user_rights where user_id=$1 AND agenda_id=$2", [user_id, agenda_id], function(err, result){
 				if(err){return query.throwError(res);}
 				if(result.rows.length!=0){
 					// ok we can insert
@@ -176,19 +156,20 @@ module.exports = {
                 console.log("POST /detailed_event : "+res.statusCode);
             }
     },
-    agendas: function(provider_id, agenda_id, user_id, phoneId, res){
+    agendas: function(providerId, agendaId, userId, phoneId, res){
             if(query.getProviders()[provider_id]){
-                query.getCentral().provider.query("INSERT INTO user_agendas(created_at, updated_at, provider, agenda_id, user_id) VALUES(NOW(), NOW(), $1, $2, $3)", [provider_id, agenda_id, user_id], function(err, result){
-                    query.getCentral().done();
-                    if(err) {
-						console.log("POST /agendas : "+res.statusCode);
-		    			agenda_status(provider_id, agenda_id, user_id, 303, res);
+                query.getProviders()[provider_id].request()
+                .input('Provider', sql.Int, providerId)
+                .input('AgendaId', sql.Int, agendaId)
+                .input('UserId', sql.Int, userId)
+                .query("INSERT INTO userAgendas(provider, agenda_id, user_id) VALUES(@Provider, @AgendaId, @UserId); SELECT SCOPE_IDENTITY()").then(result => {
+                        res.statusCode=201;
+                        res.json(result["recordset"]);
+                }).catch(err => {
+                    if(err){
+                        res.statusCode=500;
+                        res.send();
                     }
-					else{
-                    	console.log("POST /agendas : "+res.statusCode);
-		    			fcm.updateClientsAgendas("post", user_id, provider_id, agenda_id, agenda_id, phoneId);
-		    			agenda_status(provider_id, agenda_id, user_id, 201, res);
-					}
                 });
             }
             else{
