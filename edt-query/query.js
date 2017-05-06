@@ -30,7 +30,7 @@ function setup(callback) {
                 var password = provider["Password"];
 
                 var config = {
-                    userName: user,
+                    user: user,
                     password: password,
                     server: host,
                     port: port,
@@ -43,10 +43,11 @@ function setup(callback) {
                 poolProvider.connect(function(err){
                     if(!err){
                         log.info("Connected to provider ",name);
-                        providers[id] = pool;
+                        providers[id] = poolProvider;
                     }
                     else{
                         log.error("Connection to provider failed", name);
+                        log.error(err);
                     }
                 });
             });
