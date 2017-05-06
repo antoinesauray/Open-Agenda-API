@@ -11,42 +11,11 @@ var log = require('color-logs')(true, true, __filename);
 
 cfg = require('../config');
 
-var max_pool = cfg.max_pool;
-var min_pool = cfg.min_pool;
-var timeout = cfg.timeout;
-
 var providers = [];
 var central={};
 
-log.debug("user:" + process.env.USER)
-log.debug("password: ***********")
-log.debug("host:" + process.env.DB_HOST)
-log.debug("port:" + process.env.DB_PORT)
-log.debug("database:" + process.env.DATABASE)
-var Connection = require('tedious').Connection;
-var config = {
-    user: process.env.USER,
-    password: process.env.PASSWORD,
-    server: process.env.DB_HOST,
-    database: process.env.DATABASE,
-    port: process.env.DB_PORT,
-    // If you are on Microsoft Azure, you need this:  
-    options: { encrypt: true }
-};
 
-const pool = new sql.ConnectionPool(config);
-pool.connect(function(err){
-    if(!err){
-        log.info("Connected to database");
-        central.pool = pool;
-        setup();
-    }
-    else{
-        log.error("Connection to database failed", err);
-    }
-});
-
-function setup() {
+function setup(callback) {
     log.debug("setup");
     central.pool.request()
     .query('SELECT [Id], [Name], [Host], [Schema], [Database], [Port], [UserName], [Password] from Providers;').then(result => {
@@ -61,7 +30,7 @@ function setup() {
                 var password = provider["Password"];
 
                 var config = {
-                    userName: user,
+                    user: user,
                     password: password,
                     server: host,
                     port: port,
@@ -74,16 +43,21 @@ function setup() {
                 poolProvider.connect(function(err){
                     if(!err){
                         log.info("Connected to provider ",name);
-                        providers[id] = pool;
+                        providers[id] = poolProvider;
                     }
                     else{
                         log.error("Connection to provider failed", name);
+                        log.error(err);
                     }
                 });
             });
+            callback(null);
         }).catch(err => {
             // ... error checks 
-            if(err){log.error(err);}
+            if(err){
+                log.error(err);
+                callback(err);
+            }
         });
 }
 
@@ -168,5 +142,39 @@ module.exports = {
         res.status(400);
         res.json({message: "error"});
         return;
+    },
+    init: function(callback){
+        var max_pool = cfg.max_pool;
+        var min_pool = cfg.min_pool;
+        var timeout = cfg.timeout;
+
+        log.debug("user:" + process.env.USER)
+        log.debug("password: ***********")
+        log.debug("host:" + process.env.DB_HOST)
+        log.debug("port:" + process.env.DB_PORT)
+        log.debug("database:" + process.env.DATABASE)
+        var Connection = require('tedious').Connection;
+        var config = {
+            user: process.env.USER,
+            password: process.env.PASSWORD,
+            server: process.env.DB_HOST,
+            database: process.env.DATABASE,
+            port: process.env.DB_PORT,
+            // If you are on Microsoft Azure, you need this:  
+            options: { encrypt: true }
+        };
+
+        const pool = new sql.ConnectionPool(config);
+        pool.connect(function(err){
+            if(!err){
+                log.info("Connected to database");
+                central.pool = pool;
+                setup(callback);
+            }
+            else{
+                log.error("Connection to database failed", err);
+                callback(err);
+            }
+        });
     }
 }

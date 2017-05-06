@@ -10,7 +10,7 @@ var DELETE = require('../edt-query/delete');
 var PUT = require('../edt-query/put');
 
 var cert = {
-    pub: fs.readFileSync('newpubkey.pem')
+    pub: fs.readFileSync('cert.pem')
 }
 
 router.use(function(req, res, next) {
