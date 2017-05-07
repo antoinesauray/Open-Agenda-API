@@ -18,7 +18,7 @@ var central={};
 function setup(callback) {
     log.debug("setup");
     central.pool.request()
-    .query('SELECT [Id], [Name], [Host], [Schema], [Database], [Port], [UserName], [Password] from Providers;').then(result => {
+    .query('SELECT [Id], [Name], [Host], [Schema], [Database], [Port], [UserName], CONVERT(varchar, DecryptByKey(EncryptedPassword)) as Password from Providers;').then(result => {
         result["recordset"].forEach(function(provider){
                 var id = provider["Id"];
                 var name = provider["Name"];
@@ -28,7 +28,8 @@ function setup(callback) {
                 var port = provider["Port"];
                 var user = provider["UserName"];
                 var password = provider["Password"];
-
+                log.debug("username:",user);
+                log.debug("password:",password);
                 var config = {
                     user: user,
                     password: password,
@@ -169,7 +170,13 @@ module.exports = {
             if(!err){
                 log.info("Connected to database");
                 central.pool = pool;
-                setup(callback);
+                pool.request().query("OPEN SYMMETRIC KEY ProviderPwd_Key DECRYPTION BY CERTIFICATE ProviderCert;").then(result => {
+                    setup(callback);
+                }).catch(err => {
+                    if(err){
+                        log.error("Could not open certificate", err);
+                    }
+                });
             }
             else{
                 log.error("Connection to database failed", err);

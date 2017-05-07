@@ -5,6 +5,7 @@ var fs = require('fs');
 var query = require('../edt-query/query');
 
 var GET = require('../edt-query/get');
+var POST = require('../edt-query/post');
 
 var cert = {
     pub: fs.readFileSync('cert.pem')
@@ -38,7 +39,21 @@ router.get('/', function(req, res, next) {
         GET.entities(req.query.provider, res);
     }
     else{
-        res.status(403);
+        res.status(401);
+        res.json({message: "Missing parameters."});
+    }
+});
+
+router.post('/', function(req, res, next) {
+    var provider = req.body.provider;
+    var name = req.body.name;
+    var properties = req.body.properties;
+    var userId = req.decoded.id;
+    if(userId&&provider&&name&&properties){
+        POST.entities(userId, provider, name, properties, res);
+    }
+    else{
+        res.status(401);
         res.json({message: "Missing parameters."});
     }
 });

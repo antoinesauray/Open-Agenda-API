@@ -26,6 +26,10 @@ var logDirectory = path.join(__dirname, 'log')
 // ensure log directory exists
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
 
+/*
+openssl genrsa -out newkey.pem 2048
+openssl rsa -in newkey.pem -pubout -outform PEM -out cert.pem
+*/
 // create a rotating write stream
 var accessLogStream = FileStreamRotator.getStream({
   date_format: 'YYYYMMDD',

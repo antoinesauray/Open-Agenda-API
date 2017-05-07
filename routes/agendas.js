@@ -42,5 +42,21 @@ router.get('/', function(req, res, next) {
     }
 });
 
+router.post('/', function(req, res, next) {
+    var provider = req.body.provider;
+    var entity = req.body.entity;
+    var name = req.body.name;
+    var type = req.body.type;
+    var image = req.body.image;
+    var properties = req.body.properties;
+    var userId = req.decoded.id;
+    if(userId&&provider&&entity&&name&&properties&&type){
+        POST.agendas(userId, provider, entity, name, type, image, properties, res);
+    }
+    else{
+        res.status(401);
+        res.json({message: "Missing parameters"});
+    }
+});
 
 module.exports = router;
