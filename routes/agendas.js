@@ -3,7 +3,9 @@ var router = express.Router();
 var jwt    = require('jsonwebtoken');
 var fs = require('fs');
 var query = require('../edt-query/query');
+
 var GET = require('../edt-query/get');
+var POST = require('../edt-query/post');
 
 var cert = {
     pub: fs.readFileSync('cert.pem')
@@ -32,31 +34,5 @@ router.use(function(req, res, next) {
 }
 });
 
-router.get('/', function(req, res, next) {
-    if(req.query.entity && req.query.provider && req.decoded.id){
-        GET.agendas(req.query.provider, req.query.entity, req.decoded.id, res);
-    }
-    else{
-        res.status(403);
-        res.json({});
-    }
-});
-
-router.post('/', function(req, res, next) {
-    var provider = req.body.provider;
-    var entity = req.body.entity;
-    var name = req.body.name;
-    var type = req.body.type;
-    var image = req.body.image;
-    var properties = req.body.properties;
-    var userId = req.decoded.id;
-    if(userId&&provider&&entity&&name&&properties&&type){
-        POST.agendas(userId, provider, entity, name, type, image, properties, res);
-    }
-    else{
-        res.status(401);
-        res.json({message: "Missing parameters"});
-    }
-});
 
 module.exports = router;

@@ -34,28 +34,6 @@ router.use(function(req, res, next) {
 }
 });
 
-router.get('/', function(req, res, next) {
-    if(req.query.provider){
-        GET.entities(req.query.provider, res);
-    }
-    else{
-        res.status(401);
-        res.json({message: "Missing parameters."});
-    }
-});
 
-router.post('/', function(req, res, next) {
-    var provider = req.body.provider;
-    var name = req.body.name;
-    var properties = req.body.properties;
-    var userId = req.decoded.id;
-    if(userId&&provider&&name&&properties){
-        POST.entities(userId, provider, name, properties, res);
-    }
-    else{
-        res.status(401);
-        res.json({message: "Missing parameters."});
-    }
-});
 
 module.exports = router;
