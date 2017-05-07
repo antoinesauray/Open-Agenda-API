@@ -130,11 +130,12 @@ module.exports = {
         console.log("GET /entities");
         if(query.getProviders()[provider]){
              query.getCentral().pool.request()
-                .query("SELECT * from Entities where Public=true;").then(result => {
+                .query("SELECT Id, Name, Properties, Entities.CreatedAt FROM Entities LEFT JOIN UserEntityRights ON EntityId=Entities.Id WHERE COALESCE(AccessLevel, DefaultAccess)>=10;").then(result => {
                     res.statusCode=200;
                     res.json(result["recordset"]);
                 }).catch(err => {
                     if(err){
+                        log.error(err);
                         res.statusCode=500;
                         res.send();
                     }
@@ -149,10 +150,17 @@ module.exports = {
         query.getCentral().pool.request()
         .input('Id', sql.Int, userId)
         .query("SELECT TOP 1 FirstName, LastName, Picture, FacebookEmail from Users where Id=@Id").then(result => {
-            log.debug(result);
-            var recordset = result["recordset"][0];
-            res.status=200;
-            res.json({first_name: recordset["FirstName"], last_name: recordset["LastName"], picture: recordset["Picture"], email: recordset["FacebookEmail"]})
+            var recordset = result["recordset"];
+            if(recordset.length>0){
+                user = recordset[0];
+                res.statusCode=200;
+                res.json({firstName: user["FirstName"], lastName: user["LastName"], picture: user["Picture"], email: user["FacebookEmail"]})
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+            }
+
         }).catch(err => {
             // ... error checks 
             if(err){

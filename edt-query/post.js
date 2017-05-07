@@ -178,6 +178,54 @@ module.exports = {
                 console.log("POST /agendas : "+res.statusCode);
             }
     },
+    entities: function(userId, provider, name, properties, res){
+            if(query.getProviders()[provider]){
+                query.getProviders()[provider].request()
+                .input('Name', sql.NVarChar, name)
+                .input('Properties', sql.VarChar, properties)
+                .input('UserId', sql.Int, userId)
+                .query("IF EXISTS(SELECT AccessLevel FROM UserProviderRights WHERE UserId=@UserId AND AccessLevel>=20) INSERT INTO Entities(Name, Properties) VALUES(@Name, @Properties); SELECT SCOPE_IDENTITY()").then(result => {
+                        res.statusCode=201;
+                        res.json(result["recordset"]);
+                }).catch(err => {
+                    if(err){
+                        log.error(err);
+                        res.statusCode=500;
+                        res.send();
+                    }
+                });
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+                console.log("POST /agendas : "+res.statusCode);
+            }
+    },
+    agendas: function(userId, provider, entity, name, type, image, properties, res){
+            if(query.getProviders()[provider]){
+                query.getProviders()[provider].request()
+                .input('Name', sql.NVarChar, name)
+                .input('Type', sql.NVarChar, type)
+                .input('Image', sql.VarChar, image)
+                .input('Properties', sql.VarChar, properties)
+                .input('UserId', sql.Int, userId)
+                .query("IF EXISTS(SELECT COALESCE(AccessLevel, DefaultAccess) as Access FROM UserEntityRights JOIN Entities ON Entities.Id= UserEntityRights.EntityId WHERE EntityId=@EntityId AND UserId=@UserId AND Access>=20) INSERT INTO Agendas(Name, Type, Image, Properties) VALUES(@Name, @Type, @Image, @Properties); SELECT SCOPE_IDENTITY()").then(result => {
+                        res.statusCode=201;
+                        res.json(result["recordset"]);
+                }).catch(err => {
+                    if(err){
+                        log.error(err);
+                        res.statusCode=500;
+                        res.send();
+                    }
+                });
+            }
+            else{
+                res.statusCode=404;
+                res.send();
+                console.log("POST /agendas : "+res.statusCode);
+            }
+    },
     signup_facebook: function(ip_addr, facebook_token, response, res){
             var request = query.getCentral().pool.request();
             request.input('FirstName', sql.NVarChar, response.first_name)
@@ -190,7 +238,7 @@ module.exports = {
                 var user_id = result["recordset"][0]["Id"];
                 log.debug("POST /authenticate code 201");
                 res.statusCode=201;
-                res.json({access_token: createToken(user_id, 'facebook'), id: user_id});
+                res.json({access_token: createToken(user_id, 'facebook')});
             }).catch(function(err){
                 if(err){
                     log.error(err);
@@ -230,7 +278,7 @@ module.exports = {
                             .query("UPDATE Users set FacebookToken=@Token where FacebookId=@Id;").then(result => {
                                     log.debug("generating token for user ",user_id, first_name, last_name);
                                     res.statusCode=200;
-                                    res.json({access_token: createToken(user_id, 'facebook'), id: user_id});
+                                    res.json({access_token: createToken(user_id, 'facebook')});
                                     log.debug("POST /sign_in_facebook : ", res.statusCode);
                             }).catch(err => {
                                 if(err){
