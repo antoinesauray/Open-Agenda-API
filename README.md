@@ -1,6 +1,3 @@
-# Agenda API (formerly EDT API)
-Main API for the Agenda App
-=======
 # Open Agenda API
 Open-Agenda is a Software to manage big quantities of collaborative agendas  
 The code is made interact with a **SQL Server Database** (tested on Microsoft Azure)  
