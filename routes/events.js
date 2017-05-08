@@ -3,6 +3,7 @@ var router = express.Router();
 var jwt    = require('jsonwebtoken');
 var fs = require('fs');
 var query = require('../edt-query/query');
+var log = require('color-logs')(true, true, __filename);
 
 var GET = require('../edt-query/get');
 var POST = require('../edt-query/post');
@@ -13,7 +14,7 @@ var cert = {
 }
 
 router.use(function(req, res, next) {
-  var token = req.body.token || req.query.token || req.headers['x-access-token'];
+  var token = req.headers['x-access-token'] || req.body.token || req.query.token;
   // decode token
   if (token) {
     // verifies secret and checks exp
@@ -34,6 +35,7 @@ router.use(function(req, res, next) {
     });
 }
 });
+
 
 router.get('/:id/', function(req, res, next) {
     GET.events(req.params.id, req.query.provider, res);

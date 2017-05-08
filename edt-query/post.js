@@ -101,6 +101,7 @@ module.exports = {
             }
         });
     },
+    /*
     event: function(user_id, providerId, agenda_id, event_name, start_time, end_time, details, phoneId, res){
         if(query.getProviders()[provider_id]){
 			query.getProviders()[providerId].client.query("SELECT * from user_rights where user_id=$1 AND agenda_id=$2", [user_id, agenda_id], function(err, result){
@@ -156,35 +157,15 @@ module.exports = {
                 console.log("POST /detailed_event : "+res.statusCode);
             }
     },
-    agendas: function(providerId, agendaId, userId, phoneId, res){
-            if(query.getProviders()[provider_id]){
-                query.getProviders()[provider_id].request()
-                .input('Provider', sql.Int, providerId)
-                .input('AgendaId', sql.Int, agendaId)
-                .input('UserId', sql.Int, userId)
-                .query("INSERT INTO userAgendas(provider, agenda_id, user_id) VALUES(@Provider, @AgendaId, @UserId); SELECT SCOPE_IDENTITY()").then(result => {
-                        res.statusCode=201;
-                        res.json(result["recordset"]);
-                }).catch(err => {
-                    if(err){
-                        res.statusCode=500;
-                        res.send();
-                    }
-                });
-            }
-            else{
-                res.statusCode=404;
-                res.send();
-                console.log("POST /agendas : "+res.statusCode);
-            }
-    },
+    */
     entities: function(userId, provider, name, properties, res){
             if(query.getProviders()[provider]){
                 query.getProviders()[provider].request()
+                .input('Owner', sql.Int, userId)
                 .input('Name', sql.NVarChar, name)
                 .input('Properties', sql.VarChar, properties)
                 .input('UserId', sql.Int, userId)
-                .query("IF EXISTS(SELECT AccessLevel FROM UserProviderRights WHERE UserId=@UserId AND AccessLevel>=20) INSERT INTO Entities(Name, Properties) VALUES(@Name, @Properties); SELECT SCOPE_IDENTITY()").then(result => {
+                .query("IF EXISTS(SELECT AccessLevel FROM UserProviderRights WHERE UserId=@UserId AND AccessLevel>=20) INSERT INTO Entities(Owner, Name, Properties) VALUES(@Owner, @Name, @Properties); SELECT SCOPE_IDENTITY()").then(result => {
                         res.statusCode=201;
                         res.json(result["recordset"]);
                 }).catch(err => {
@@ -202,14 +183,17 @@ module.exports = {
             }
     },
     agendas: function(userId, provider, entity, name, type, image, properties, res){
-            if(query.getProviders()[provider]){
-                query.getProviders()[provider].request()
+        var provider = query.getProviders()[provider];
+            if(provider){
+                provider.request()
+                .input('EntityId', sql.Int, entity)
+                .input('Owner', sql.Int, userId)
                 .input('Name', sql.NVarChar, name)
                 .input('Type', sql.NVarChar, type)
                 .input('Image', sql.VarChar, image)
                 .input('Properties', sql.VarChar, properties)
                 .input('UserId', sql.Int, userId)
-                .query("IF EXISTS(SELECT COALESCE(AccessLevel, DefaultAccess) as Access FROM UserEntityRights JOIN Entities ON Entities.Id= UserEntityRights.EntityId WHERE EntityId=@EntityId AND UserId=@UserId AND Access>=20) INSERT INTO Agendas(Name, Type, Image, Properties) VALUES(@Name, @Type, @Image, @Properties); SELECT SCOPE_IDENTITY()").then(result => {
+                .query("IF EXISTS(SELECT * FROM UserEntityRights JOIN Entities ON Entities.Id= UserEntityRights.EntityId WHERE EntityId=@EntityId AND UserId=@UserId AND (Entities.Owner=@UserId OR COALESCE(AccessLevel, DefaultAccess)>=20) INSERT INTO Agendas(Owner, EntityId, Name, AgendaType, Image, Properties) VALUES(@Owner, @EntityId, @Name, @Type, @Image, @Properties); SELECT SCOPE_IDENTITY()").then(result => {
                         res.statusCode=201;
                         res.json(result["recordset"]);
                 }).catch(err => {
@@ -226,6 +210,45 @@ module.exports = {
                 console.log("POST /agendas : "+res.statusCode);
             }
     },
+    events: function(userId, providerId, agendaId, startTime, endTime, name, eventType, properties, res){
+            var provider = query.getProviders()[providerId];
+                if(provider){
+                    log.debug("starTime:",startTime);
+                    log.debug("endTime:",endTime);
+                    provider.request()
+                    .input('Owner', sql.Int, userId)
+                    .input('AgendaId', sql.Int, agendaId)
+                    .input('Name', sql.NVarChar, name)
+                    .input('StartTime', sql.VarChar, startTime)
+                    .input('EndTime', sql.VarChar, endTime)
+                    .input('Type', sql.NVarChar, eventType)
+                    .input('Properties', sql.VarChar, properties)
+                    .input('UserId', sql.Int, userId)
+                    .query("IF EXISTS(SELECT * FROM UserAgendaRights JOIN Agendas ON Agendas.Id= UserAgendaRights.AgendaId WHERE AgendaId=@AgendaId AND UserId=@UserId AND (Agendas.Owner=@UserId OR COALESCE(AccessLevel, DefaultAccess)>=20)) INSERT INTO AgendaEvents(Owner, AgendaId, Name, StartTime, EndTime, EventType, Properties) VALUES(@Owner, @AgendaId, @Name, @StartTime, @EndTime, @Type, @Properties); SELECT SCOPE_IDENTITY()").then(result => {
+                            if(result["rowsAffected"].length>1){
+                                res.statusCode=201;
+                                res.json(result["recordset"]);
+                            }
+                            else{
+                                res.statusCode=403;
+                                res.send();
+                            }
+                    }).catch(err => {
+                        if(err){
+                            log.error(err);
+                            res.statusCode=500;
+                            res.send();
+                        }
+                    });
+                }
+                else{
+                    res.statusCode=404;
+                    res.send();
+                    console.log("POST /events : "+res.statusCode);
+                }
+        },
+
+    
     signup_facebook: function(ip_addr, facebook_token, response, res){
             var request = query.getCentral().pool.request();
             request.input('FirstName', sql.NVarChar, response.first_name)

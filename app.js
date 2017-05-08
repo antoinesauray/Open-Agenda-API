@@ -13,6 +13,7 @@ var anonymous = require('./routes/anonymous');
 var providers = require('./routes/providers');
 var agendas = require('./routes/agendas');
 var entities = require('./routes/entities');
+var events = require('./routes/events');
 var me = require('./routes/me');
 
 var authenticate = require('./routes/authenticate');
@@ -48,7 +49,8 @@ app.use(cookieParser());
 app.use('/', routes);
 app.use('/providers', providers);
 app.use('/agendas', agendas);
-app.use('/entities', entities);
+//app.use('/entities', entities);
+app.use('/events', events);
 //app.use('/', notes);
 app.use('/anonymous', anonymous);
 app.use('/me', me);

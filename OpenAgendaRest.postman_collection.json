@@ -1,0 +1,322 @@
+{
+	"variables": [],
+	"info": {
+		"name": "EDT Rest",
+		"_postman_id": "e6c5e528-4e38-8636-6936-58c87bcd9009",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET",
+			"description": "",
+			"item": [
+				{
+					"name": "Me",
+					"request": {
+						"url": "{{host}}/me",
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Providers",
+					"request": {
+						"url": "{{host}}/providers",
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Entities",
+					"request": {
+						"url": "{{host}}/providers/{{provider}}/entities",
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Agendas",
+					"request": {
+						"url": "{{host}}/providers/{{provider}}/agendas?entity=1",
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Events",
+					"request": {
+						"url": "{{host}}/providers/{{provider}}/events?start_date=2017-05-01&end_date=2017-05-15&entity=2&agenda=2",
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "AgendaTypes",
+					"request": {
+						"url": "{{host}}/agendas/types?provider=1",
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "EventTypes",
+					"request": {
+						"url": "{{host}}/events/types?provider=1",
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "POST",
+			"description": "",
+			"item": [
+				{
+					"name": "Authenticate",
+					"request": {
+						"url": "{{host}}/authenticate",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "access_token",
+									"value": "EAACEdEose0cBAPexjEVALrrdtklMaFclfLtvM2pAi33ZAgFgiJEwmDgs5QL0QWcZAca6ThT34XGykZCOESASZCoqtZA64QeKGIzQ1ZCDDZAg1URccLuios1hpW0ZCZCZB3A0qbxZBPcSXZAMvWSPeDFuwC31np4iHvhTZBphHHHeNjurcGwZAzB7kpLYWI4Y03EDZByhcgZD",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Entities",
+					"request": {
+						"url": "{{host}}/entities",
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "Test Entity Name",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "provider",
+									"value": "3",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "properties",
+									"value": "{}",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Agendas",
+					"request": {
+						"url": "{{host}}/agendas",
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "provider",
+									"value": "1",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "entity",
+									"value": "3",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "name",
+									"value": "Hello!",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "properties",
+									"value": "{}",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "type",
+									"value": "personal",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Events",
+					"request": {
+						"url": "{{host}}/events",
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "provider",
+									"value": "1",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "agenda",
+									"value": "2",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "name",
+									"value": "Hello!",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "properties",
+									"value": "{}",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "type",
+									"value": "personal",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "start_time",
+									"value": "2017-05-07T12:00:00",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "end_time",
+									"value": "2017-05-07T14:00:00",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
