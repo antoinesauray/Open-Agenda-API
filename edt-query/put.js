@@ -11,7 +11,7 @@ var hashWithSalt=query.hashWithSalt;
 
 // sign with RSA SHA256
 var credentials = {
-    key: fs.readFileSync('newkey.pem')
+    key: fs.readFileSync('key.pem')
 }
 
 var cert = {
