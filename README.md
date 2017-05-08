@@ -9,7 +9,7 @@ The code is made interact with a **SQL Server Database** (tested on Microsoft Az
 ``` openssl genrsa -out key.pem 2048 ```
 * Generate an associated public key  
 ``` openssl rsa -in newkey.pem -pubout -outform PEM -out cert.pem ```
-* Set the required environment variables. Use ```export``` on Linux, $env:VARIABLE on Windows
+* Set the required environment variables. Use ```export``` on Linux, ```$env:VARIABLE``` on Windows
 * * ``` DB_HOST = "127.0.0.1" ```  
 The database host
 * * ``` DB_PORT = 1433 ```  
